@@ -1,0 +1,53 @@
+# Environment and secrets
+.env
+*.env
+.env.*
+!.env.example
+!frontend/.env.example
+
+# Python virtual environment
+venv/
+.venv/
+env/
+ENV/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Local databases
+healthtriage.db
+*.sqlite3
+*.db
+
+# Uploaded patient/medical files
+uploads/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Frontend build files
+dist/
+dist-ssr/
+build/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# IDE/editor files
+.vscode/
+.idea/
