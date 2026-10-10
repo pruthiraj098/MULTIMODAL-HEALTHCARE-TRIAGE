@@ -67,7 +67,14 @@ export default function AppLayout({
 
         {/* Content & Context Panel Layout */}
         <div className="app-content-and-context">
-          <main className="app-page-content" id="main-content">
+          <main
+            className={`app-page-content ${
+              currentPath === "/triage" || currentPath === "/voice" || currentPath === "/sana-voice"
+                ? "app-page-content-flush"
+                : ""
+            }`}
+            id="main-content"
+          >
             {children}
           </main>
 

@@ -5810,6 +5810,15 @@ textarea:not([class]):focus {
   -webkit-overflow-scrolling: touch;
 }
 
+.app-page-content-flush,
+.app-page-content:has(.sana-gemini-container) {
+  padding: 0 !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+}
+
 /* ============================================================
    APP SIDEBAR (CLEAN WHITE HOSPITAL DASHBOARD STYLE)
    ============================================================ */
@@ -6173,6 +6182,8 @@ textarea:not([class]):focus {
   display: flex;
   align-items: center;
   gap: 14px;
+  flex-shrink: 0;
+  min-width: 0;
 }
 
 .header-mobile-toggle {
@@ -6189,6 +6200,7 @@ textarea:not([class]):focus {
 .header-breadcrumb-block {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .breadcrumb-path {
@@ -6198,20 +6210,24 @@ textarea:not([class]):focus {
   font-size: 12px;
   color: var(--text-muted);
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .breadcrumb-title-row {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 
 .header-page-title {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 800;
   color: var(--text-heading);
   margin: 0;
   letter-spacing: -0.3px;
+  white-space: nowrap;
 }
 
 .header-status-pill {
@@ -6225,6 +6241,7 @@ textarea:not([class]):focus {
   padding: 3px 10px;
   border-radius: var(--radius-pill);
   border: 1px solid rgba(25, 135, 84, 0.25);
+  white-space: nowrap;
 }
 
 .status-live-dot {
@@ -6244,8 +6261,9 @@ textarea:not([class]):focus {
 
 .top-header-center {
   flex: 1;
-  max-width: 460px;
-  margin: 0 24px;
+  max-width: 420px;
+  margin: 0 16px;
+  min-width: 0;
 }
 
 .header-search-trigger {
@@ -6272,6 +6290,9 @@ textarea:not([class]):focus {
 .search-placeholder {
   flex: 1;
   text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .search-kbd {
@@ -7400,6 +7421,23 @@ textarea:not([class]):focus {
   }
   .header-mobile-toggle {
     display: block;
+  }
+  .app-top-header {
+    height: 56px;
+    padding: 0 14px;
+  }
+  .breadcrumb-path {
+    display: none;
+  }
+  .header-status-pill {
+    display: none;
+  }
+  .header-page-title {
+    font-size: 15px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 190px;
   }
   .top-header-center {
     display: none;

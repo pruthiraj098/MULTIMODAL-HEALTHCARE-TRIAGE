@@ -207,6 +207,34 @@ export default function AppSidebar({
           </div>
         )}
 
+        {/* Gemini-Style New Chat Action */}
+        <div style={{ padding: "6px 12px" }}>
+          <button
+            type="button"
+            onClick={() => handleNavClick("/triage")}
+            style={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: collapsed ? "center" : "flex-start",
+              gap: "10px",
+              background: "#EFF6FF",
+              color: "#1D4ED8",
+              border: "1px solid #DBEAFE",
+              borderRadius: "10px",
+              padding: collapsed ? "10px 0" : "9px 14px",
+              fontSize: "13.5px",
+              fontWeight: "700",
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+            }}
+            title="New Chat with SANA"
+          >
+            <Sparkles size={16} color="#2563EB" />
+            {!collapsed && <span>New Chat</span>}
+          </button>
+        </div>
+
         {/* Navigation Items Scroll Container */}
         <div className="sidebar-nav-scroll">
           {/* Primary Patient Section */}

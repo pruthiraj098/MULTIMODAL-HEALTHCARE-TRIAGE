@@ -6,3 +6,4 @@ export { default as AlertCard } from "./AlertCard";
 export { default as LoadingSkeleton } from "./LoadingSkeleton";
 export { default as PageHeader } from "./PageHeader";
 export { default as FloatingSanaAssistant } from "./FloatingSanaAssistant";
+export { default as ErrorBoundary } from "./ErrorBoundary";

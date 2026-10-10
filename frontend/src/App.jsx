@@ -28,6 +28,7 @@ import DoctorWorkspace from "./components/doctor";
 import NurseDashboard from "./components/nurse";
 import MedicalOfficerDashboard from "./components/medicalofficer";
 import AppLayout from "./components/layout/AppLayout";
+import ErrorBoundary from "./components/common/ErrorBoundary";
 import { API_URL } from "./config";
 
 
@@ -1389,6 +1390,9 @@ function App() {
         return <DoctorVisitCopilot goTo={goTo} />;
       case "/triage":
         return <TriagePage goTo={goTo} />;
+      case "/voice":
+      case "/sana-voice":
+        return <TriagePage goTo={goTo} initialVoiceOpen={true} />;
       case "/doctor":
         return (
           <DoctorWorkspace
@@ -1420,7 +1424,9 @@ function App() {
         onOpenDemo={() => setIsDemoOpen(true)}
         showContextPanel={path === "/dashboard"}
       >
-        {renderPageContent()}
+        <ErrorBoundary>
+          {renderPageContent()}
+        </ErrorBoundary>
       </AppLayout>
       {sharedModals}
     </>

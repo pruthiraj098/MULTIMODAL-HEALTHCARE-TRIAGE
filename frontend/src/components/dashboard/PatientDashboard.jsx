@@ -36,6 +36,7 @@ import {
   Smile
 } from "lucide-react";
 import SanaVoiceInterface from "../SanaVoiceInterface";
+import ErrorBoundary from "../common/ErrorBoundary";
 import { API_URL } from "../../config";
 
 export default function PatientDashboard({ goTo = () => {} }) {
@@ -966,11 +967,13 @@ export default function PatientDashboard({ goTo = () => {} }) {
       </div>
 
       {/* SANA Continuous Voice Studio Modal */}
-      <SanaVoiceInterface
-        isOpen={isSanaOpen}
-        onClose={() => setIsSanaOpen(false)}
-        userName={user?.full_name || "Patient"}
-      />
+      <ErrorBoundary context="voice" onClose={() => setIsSanaOpen(false)}>
+        <SanaVoiceInterface
+          isOpen={isSanaOpen}
+          onClose={() => setIsSanaOpen(false)}
+          userName={user?.full_name || "Patient"}
+        />
+      </ErrorBoundary>
 
       {/* Quick Daily Check-In Modal */}
       {showCheckinModal && (

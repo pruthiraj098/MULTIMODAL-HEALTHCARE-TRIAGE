@@ -6,26 +6,37 @@
 // Smart AI Nursing & Assessment Assistant
 // ============================================================
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import SanaVoiceInterface from "./SanaVoiceInterface";
 import SanaLanguageSelector from "./SanaLanguageSelector";
+import ErrorBoundary from "./common/ErrorBoundary";
 
 export default function SanaAgent({
   userName = "Patient",
   currentVitals = {},
   onVitalsUpdated = () => {},
+  isVoiceOpen = false,
+  onVoiceOpenChange = null,
 }) {
-  const [isVoiceStudioOpen, setIsVoiceStudioOpen] = useState(false);
+  const [isVoiceStudioOpen, setIsVoiceStudioOpen] = useState(isVoiceOpen);
   const [selectedLanguage, setSelectedLanguage] = useState("en");
   const [hasInteracted, setHasInteracted] = useState(false);
+
+  useEffect(() => {
+    if (typeof isVoiceOpen === "boolean") {
+      setIsVoiceStudioOpen(isVoiceOpen);
+    }
+  }, [isVoiceOpen]);
 
   const handleOpenVoice = () => {
     setHasInteracted(true);
     setIsVoiceStudioOpen(true);
+    if (onVoiceOpenChange) onVoiceOpenChange(true);
   };
 
   const handleCloseVoice = () => {
     setIsVoiceStudioOpen(false);
+    if (onVoiceOpenChange) onVoiceOpenChange(false);
   };
 
   return (
@@ -80,14 +91,16 @@ export default function SanaAgent({
       </section>
 
       {/* SANA Continuous Voice Studio Modal */}
-      <SanaVoiceInterface
-        isOpen={isVoiceStudioOpen}
-        onClose={handleCloseVoice}
-        userName={userName}
-        initialLanguage={selectedLanguage}
-        initialVitals={currentVitals}
-        onVitalsUpdated={onVitalsUpdated}
-      />
+      <ErrorBoundary context="voice" onClose={handleCloseVoice}>
+        <SanaVoiceInterface
+          isOpen={isVoiceStudioOpen}
+          onClose={handleCloseVoice}
+          userName={userName}
+          initialLanguage={selectedLanguage}
+          initialVitals={currentVitals}
+          onVitalsUpdated={onVitalsUpdated}
+        />
+      </ErrorBoundary>
     </>
   );
 }

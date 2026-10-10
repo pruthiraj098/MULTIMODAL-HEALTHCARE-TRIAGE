@@ -13,6 +13,7 @@ import SanaLanguageSelector from "./SanaLanguageSelector";
 import SanaTranscript from "./SanaTranscript";
 import sanaVoiceService from "../services/sanaVoiceService";
 import { API_URL } from "../config";
+import { Mic, AlertCircle, RotateCcw, ArrowLeft } from "lucide-react";
 
 const WELCOME_GREETINGS = {
   en: "Hello! I am SANA, how are you feeling today?",
@@ -33,7 +34,7 @@ export default function SanaVoiceInterface({
   initialReport = null,
   onVitalsUpdated = () => {},
   userName = "Patient",
-  autoStartSession = true,
+  autoStartSession = false,
 }) {
   // Conversational Session State: persistent until user explicitly clicks Stop
   const [sessionActive, setSessionActive] = useState(false);
@@ -553,7 +554,7 @@ export default function SanaVoiceInterface({
   if (!isOpen) return null;
 
   return (
-    <div className="sana-voice-modal-backdrop" onClick={stopSanaSession}>
+    <div className="sana-voice-modal-backdrop sana-modal-overlay" onClick={stopSanaSession}>
       {/* Hidden file inputs */}
       <input
         type="file"
@@ -643,6 +644,32 @@ export default function SanaVoiceInterface({
               }}
               variant="dropdown"
             />
+
+            <button
+              type="button"
+              className="sana-return-chat-btn"
+              onClick={() => {
+                stopSanaSession();
+                onClose();
+              }}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                background: "#F1F5F9",
+                border: "1px solid #CBD5E1",
+                borderRadius: "10px",
+                padding: "6px 12px",
+                fontSize: "12.5px",
+                fontWeight: "600",
+                color: "#15345B",
+                cursor: "pointer",
+              }}
+              title="Return to regular text chat"
+            >
+              <ArrowLeft size={14} />
+              <span>Back to Chat</span>
+            </button>
 
             <button
               type="button"
@@ -871,10 +898,70 @@ export default function SanaVoiceInterface({
           </div>
         )}
 
-        {/* Error Banner */}
+        {/* Error Banner with Retry and Text Chat Fallback */}
         {errorMessage && (
-          <div className="sana-studio-error" style={{ padding: "8px 24px", background: "#FEF7EA", color: "#C78116", borderBottom: "1px solid #F59E0B", fontSize: "13px", fontWeight: "600" }}>
-            <span>⚠️ {errorMessage}</span>
+          <div
+            className="sana-studio-error"
+            style={{
+              padding: "12px 24px",
+              background: "#FEF7EA",
+              color: "#9A3412",
+              borderBottom: "1px solid #F59E0B",
+              fontSize: "13.5px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "12px",
+              flexWrap: "wrap",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <AlertCircle size={18} color="#C78116" />
+              <span>{errorMessage}</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setErrorMessage("");
+                  startSanaSession();
+                }}
+                style={{
+                  background: "#1769D2",
+                  color: "#FFFFFF",
+                  border: "none",
+                  padding: "6px 12px",
+                  borderRadius: "8px",
+                  fontSize: "12.5px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                <RotateCcw size={14} /> Retry
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  stopSanaSession();
+                  onClose();
+                }}
+                style={{
+                  background: "#FFFFFF",
+                  color: "#15345B",
+                  border: "1px solid #CBD5E1",
+                  padding: "6px 12px",
+                  borderRadius: "8px",
+                  fontSize: "12.5px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                }}
+              >
+                Continue with Text Chat
+              </button>
+            </div>
           </div>
         )}
 
