@@ -1,320 +1,353 @@
-import React, { useState, useEffect } from "react";
-import SanaOrb from "../SanaOrb";
+import React, { useState } from "react";
+import {
+  Sparkles,
+  ShieldCheck,
+  Activity,
+  FileText,
+  TrendingUp,
+  Stethoscope,
+  Mic,
+  ArrowRight,
+  Play,
+  CheckCircle2,
+  Heart,
+  ChevronRight,
+  Globe,
+  Lock,
+  Clock,
+  PhoneCall,
+  UserCheck,
+  AlertTriangle,
+  Bot,
+  Search,
+  MapPin,
+  Calendar,
+  ClipboardList,
+  Volume2
+} from "lucide-react";
 
 export default function WelcomePage({
   goTo = () => {},
   onOpenDemo = () => {}
 }) {
-  const [sanaState, setSanaState] = useState("idle");
-  const [activeTab, setActiveTab] = useState("all");
+  const [selectedLang, setSelectedLang] = useState("English");
   const [sanaMessage, setSanaMessage] = useState(
-    "Hello! I am SANA, your Smart AI Nursing & Assessment Assistant. How can I assist with your health today?"
+    "Hello! I am SANA, your AI healthcare triage assistant. Tell me what symptoms you are experiencing today."
   );
+  const [isSpeakingAudio, setIsSpeakingAudio] = useState(false);
+  const [heroSearchQuery, setHeroSearchQuery] = useState("");
 
-  const sanaPhrases = [
-    { state: "listening", text: "Listening to your spoken symptoms..." },
-    { state: "thinking", text: "Analyzing symptoms, vital ranges, and medical safety guidelines..." },
-    { state: "speaking", text: "Ready. Your symptoms and vitals have been organized for clinical review." },
-    { state: "idle", text: "Tap me anytime to start an empathetic voice health check." }
+  const supportedLanguages = [
+    { code: "en", name: "English", sample: "Hello, how can I assist your health today?" },
+    { code: "or", name: "ଓଡ଼ିଆ (Odia)", sample: "ନମସ୍କାର, ଆପଣଙ୍କ ସ୍ୱାସ୍ଥ୍ୟ ସମସ୍ୟା କୁହନ୍ତୁ।" },
+    { code: "hi", name: "हिन्दी (Hindi)", sample: "नमस्ते, आप अपने लक्षणों के बारे में बताएं।" },
+    { code: "te", name: "తెలుగు (Telugu)", sample: "నమస్కారం, మీ ఆరోగ్య సమస్యలను వివరించండి." },
+    { code: "ta", name: "தமிழ் (Tamil)", sample: "வணக்கம், உங்கள் உடல்நலக் குறிகளைப் பகிருங்கள்." }
   ];
 
-  const handleOrbClick = () => {
-    const states = ["activating", "listening", "thinking", "speaking", "idle"];
-    const nextIdx = (states.indexOf(sanaState) + 1) % states.length;
-    const nextState = states[nextIdx];
-    setSanaState(nextState);
+  const handleLangChange = (langName) => {
+    setSelectedLang(langName);
+    const item = supportedLanguages.find((l) => l.name === langName);
+    if (item) {
+      setSanaMessage(item.sample);
+    }
+  };
 
-    if (nextState === "activating") {
-      setSanaMessage("Connecting to SANA clinical intelligence layer...");
-    } else if (nextState === "listening") {
-      setSanaMessage("🎙️ Listening... 'Describe any pain, fever, duration, or vital measurements.'");
-    } else if (nextState === "thinking") {
-      setSanaMessage("✦ Fusing voice evidence with deterministic vital rules...");
-    } else if (nextState === "speaking") {
-      setSanaMessage("🔊 SANA: 'I have logged your inputs for clinician review. Your vitals are within stable thresholds.'");
+  const handleTestVoiceAudio = () => {
+    setIsSpeakingAudio(true);
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(sanaMessage);
+      utterance.onend = () => setIsSpeakingAudio(false);
+      utterance.onerror = () => setIsSpeakingAudio(false);
+      window.speechSynthesis.speak(utterance);
     } else {
-      setSanaMessage("Hello! I am SANA, your Smart AI Nursing & Assessment Assistant.");
+      setTimeout(() => setIsSpeakingAudio(false), 2000);
+    }
+  };
+
+  const handleHeroSearch = (e) => {
+    e.preventDefault();
+    if (heroSearchQuery.trim()) {
+      sessionStorage.setItem("sana_prefill_query", heroSearchQuery.trim());
+      goTo("/triage");
     }
   };
 
   const capabilities = [
     {
       id: "triage",
-      icon: "🩺",
-      title: "AI Health Triage",
+      icon: Stethoscope,
+      title: "Symptom Assessment",
       desc: "Multimodal symptom evaluation with deterministic emergency red-flag checking.",
-      tag: "Core Clinical"
+      tag: "Clinical Triage"
     },
     {
       id: "sana",
-      icon: "❤️",
-      title: "SANA AI Assistant",
-      desc: "Voice-driven conversational nurse assistant supporting 6 regional Indian languages.",
+      icon: Mic,
+      title: "SANA Voice Assistant",
+      desc: "Conversational healthcare support in English, Odia, Hindi, Telugu, and Tamil.",
       tag: "Voice AI"
     },
     {
       id: "intelligence",
-      icon: "🧠",
+      icon: Activity,
       title: "Health Intelligence",
       desc: "Longitudinal health analysis detecting trends across vitals, reports, and visits.",
       tag: "Longitudinal"
     },
     {
       id: "ocr",
-      icon: "📄",
+      icon: FileText,
       title: "Medical Report OCR",
-      desc: "Extracts lab parameters from PDFs and scans with report-specific reference ranges.",
+      desc: "Extracts laboratory parameters from PDFs and scans with clinical reference ranges.",
       tag: "Diagnostics"
     },
     {
       id: "compare",
-      icon: "📊",
+      icon: TrendingUp,
       title: "Report Comparison",
-      desc: "Side-by-side analyte comparison across visits showing numerical trends (↑, ↓, →).",
+      desc: "Side-by-side analyte comparison across visits showing numerical trends.",
       tag: "Analytics"
     },
     {
-      id: "what-changed",
-      icon: "🔍",
-      title: "What Changed?",
-      desc: "Instant health delta detector highlighting improved, stable, and review-needed metrics.",
-      tag: "Delta AI"
-    },
-    {
-      id: "disease",
-      icon: "📚",
-      title: "Disease Intelligence",
-      desc: "Evidence-based knowledge base across 22 specialties with clinician decision support.",
-      tag: "Knowledge"
-    },
-    {
       id: "medication",
-      icon: "💊",
+      icon: Heart,
       title: "Medication Safety",
-      desc: "Rigorous drug-drug interaction checker, allergy alerts, and food timing warnings.",
+      desc: "Drug-drug interaction checks, allergy alerts, and clinician-approved schedules.",
       tag: "Safety Guard"
     },
     {
       id: "doctor",
-      icon: "👨‍⚕️",
+      icon: Stethoscope,
       title: "Doctor Workspace",
-      desc: "Complete clinical workspace for patient assessments, treatment plans, and orders.",
-      tag: "Clinician"
+      desc: "Clinical workspace for patient assessments, treatment plans, and approved orders.",
+      tag: "Physician"
     },
     {
       id: "nurse",
-      icon: "👩‍⚕️",
-      title: "Nurse Dashboard",
-      desc: "Rapid patient intake, vitals recording, triage priority assignment, and monitoring.",
+      icon: ClipboardList,
+      title: "Nurse Intake Desk",
+      desc: "Rapid patient intake, physiological vitals recording, and triage priority queue.",
       tag: "Nursing"
     },
     {
-      id: "mo",
-      icon: "🏛️",
-      title: "Medical Officer Hub",
-      desc: "Facility-wide operational oversight, emergency escalation tracking, and staff load.",
-      tag: "Leadership"
-    },
-    {
-      id: "queue",
-      icon: "🚦",
-      title: "Smart Healthcare Queue",
-      desc: "Real-time prioritized triage queue: Emergency (🔴), Urgent (🟡), and Routine (🟢).",
-      tag: "Operations"
-    },
-    {
-      id: "referral",
-      icon: "📑",
-      title: "Referral Management",
-      desc: "Standardized clinical referral slips with specialty matching and printable copies.",
-      tag: "Coordination"
-    },
-    {
       id: "vitals",
-      icon: "📈",
+      icon: Activity,
       title: "Health Monitoring",
       desc: "Longitudinal tracker for HR, SpO2, Blood Pressure, Temperature, and Respiration.",
       tag: "Vitals"
-    },
-    {
-      id: "facility",
-      icon: "🏥",
-      title: "Facility Intelligence",
-      desc: "Workflow modes for Govt Hospitals, PHCs, Screening Camps, and Campus Units.",
-      tag: "Facility SaaS"
     }
   ];
 
-  const steps = [
+  const workflowSteps = [
     {
       num: 1,
-      title: "Create an Account or Log In",
-      text: "Sign in securely with role-based credentials (Patient, Nurse, Doctor, Medical Officer, Admin)."
+      title: "Describe Symptoms",
+      text: "Converse naturally with SANA using voice or text in your regional language.",
+      badge: "Multimodal Voice & Text"
     },
     {
       num: 2,
-      title: "Enter Health Information",
-      text: "Maintain a secure longitudinal personal health profile with age, medical history, and allergies."
+      title: "AI Clinical Triage",
+      text: "Deterministic clinical safety rules cross-reference symptom severity and vital thresholds.",
+      badge: "Clinical Evidence"
     },
     {
       num: 3,
-      title: "Describe Symptoms via Voice or Text",
-      text: "Converse naturally with SANA in your preferred language or type your complaints."
+      title: "Reports & Health Data",
+      text: "Upload lab PDFs or diagnostic scans. Automated OCR extracts analytes and detects health deltas.",
+      badge: "Diagnostic Synthesis"
     },
     {
       num: 4,
-      title: "Add Optional Vitals",
-      text: "Provide Heart Rate, SpO2, Temperature, or Blood Pressure. Missing vitals never block triage."
+      title: "Clinician Review",
+      text: "Doctors and triage nurses review the structured clinical note and approve care plans.",
+      badge: "Human-in-the-Loop"
     },
     {
       num: 5,
-      title: "Upload Medical Reports",
-      text: "Upload pathology PDFs or scans; automated OCR extracts analytes and reference ranges."
-    },
-    {
-      num: 6,
-      title: "Upload Medical Images",
-      text: "Submit dermatological or clinical photos. AI provides structured observation without diagnosing."
-    },
-    {
-      num: 7,
-      title: "AI Multimodal Synthesis",
-      text: "AI organizes complaints, vitals, OCR, and history into a structured clinical note."
-    },
-    {
-      num: 8,
-      title: "Deterministic Safety Rules",
-      text: "Safety engine evaluates physiological red flags (HR >130, SpO2 <90%) with absolute priority."
-    },
-    {
-      num: 9,
-      title: "Human Healthcare Worker Review",
-      text: "Nurses and clinical reviewers review the structured note and prioritize queue status."
-    },
-    {
-      num: 10,
-      title: "Doctor Approves Treatment Plan",
-      text: "Licensed physicians formulate final clinical assessments, prescriptions, and follow-ups."
-    },
-    {
-      num: 11,
-      title: "SANA Explains Approved Plan",
-      text: "SANA clarifies doctor-approved prescriptions, food timings, and dosage reminders clearly."
-    },
-    {
-      num: 12,
-      title: "Follow-Up & Continuity of Care",
-      text: "Automated schedule reminders, adherence tracking, and specialist referral management."
+      title: "Continuous Follow-Up",
+      text: "Patients receive clinician-approved guidance, prescription timetables, and continuity alerts.",
+      badge: "Continuity of Care"
     }
   ];
 
   return (
-    <div className="welcome-page-root" style={{ minHeight: "100vh", background: "#f8fafc", color: "#0f172a" }}>
-      {/* Top Navigation Bar */}
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#F5F7FA",
+        color: "#202B3C",
+        fontFamily: "'Plus Jakarta Sans', 'Outfit', Inter, sans-serif"
+      }}
+    >
+      {/* 1. Top Utility Hotline Bar (Inspired by Narayana Health Reference) */}
+      <div
+        style={{
+          background: "#FFFFFF",
+          borderBottom: "1px solid #E0E6ED",
+          padding: "7px 36px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          fontSize: "13px",
+          color: "#596579"
+        }}
+        className="hidden md:flex"
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#C83D4D", fontWeight: "700" }}>
+            <span style={{ fontSize: "14px" }}>🚨</span>
+            <span>24/7 Emergency: 108 (Ambulance) / 112 (ER)</span>
+          </div>
+          <span style={{ color: "#E0E6ED" }}>|</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <PhoneCall size={14} className="text-blue-600" />
+            <span>Support Helpline: 1800-309-0309</span>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <MapPin size={14} className="text-teal-600" />
+            <span style={{ fontWeight: "600", color: "#202B3C" }}>Bhubaneswar / Regional Centers</span>
+          </div>
+          <span style={{ color: "#E0E6ED" }}>|</span>
+          <button
+            type="button"
+            onClick={() => goTo("/login")}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#1769D2",
+              fontWeight: "700",
+              cursor: "pointer",
+              fontSize: "13px"
+            }}
+          >
+            Patient / Staff Login
+          </button>
+        </div>
+      </div>
+
+      {/* 2. Main Hospital Navigation Header */}
       <header
         style={{
           position: "sticky",
           top: 0,
           zIndex: 100,
-          background: "rgba(255, 255, 255, 0.95)",
-          backdropFilter: "blur(10px)",
-          borderBottom: "1px solid #e2e8f0",
-          padding: "14px 28px",
+          background: "#FFFFFF",
+          borderBottom: "1px solid #E0E6ED",
+          padding: "14px 36px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.03)"
+          boxShadow: "0 2px 10px rgba(21, 52, 91, 0.04)"
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer" }} onClick={() => goTo("/welcome")}>
+        {/* Brand Logo with exact original asset */}
+        <div
+          style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer" }}
+          onClick={() => goTo("/welcome")}
+        >
           <div
             style={{
-              width: "40px",
-              height: "40px",
+              width: "44px",
+              height: "44px",
               borderRadius: "10px",
-              background: "linear-gradient(135deg, #2563eb, #0284c7)",
+              background: "#FFFFFF",
+              padding: "2px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#ffffff",
-              fontSize: "24px",
-              fontWeight: "bold",
-              boxShadow: "0 4px 12px rgba(37,99,235,0.25)"
+              border: "1px solid #E0E6ED",
+              boxShadow: "0 2px 6px rgba(21, 52, 91, 0.06)",
+              overflow: "hidden"
             }}
           >
-            +
+            <img
+              src="/logo.png"
+              alt="HealthTriage AI Logo"
+              style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
+            />
           </div>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ fontSize: "18px", fontWeight: "800", color: "#0f172a", letterSpacing: "-0.5px" }}>
-                HealthTriage AI
+              <span style={{ fontSize: "20px", fontWeight: "800", color: "#15345B", letterSpacing: "-0.3px" }}>
+                HealthTriage<span style={{ color: "#1769D2" }}> AI</span>
               </span>
               <span
                 style={{
-                  background: "#eff6ff",
-                  color: "#2563eb",
-                  border: "1px solid #bfdbfe",
+                  background: "#EBF3FC",
+                  color: "#1769D2",
+                  border: "1px solid rgba(23, 105, 210, 0.25)",
                   padding: "2px 8px",
-                  borderRadius: "12px",
+                  borderRadius: "20px",
                   fontSize: "11px",
                   fontWeight: "700"
                 }}
               >
-                PRO HEALTHCARE PLATFORM
+                CLINICAL PLATFORM
               </span>
             </div>
-            <div style={{ fontSize: "12px", color: "#64748b" }}>
-              Multimodal Human-in-the-Loop Healthcare Intelligence
+            <div style={{ fontSize: "12px", color: "#596579", fontWeight: "500" }}>
+              Trusted Healthcare Support, Powered by AI
             </div>
           </div>
         </div>
 
-        {/* Nav Links */}
-        <nav style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-          <a href="#how-it-works" style={{ textDecoration: "none", color: "#475569", fontSize: "14px", fontWeight: "600" }}>
+        {/* Navigation Links */}
+        <nav style={{ display: "flex", alignItems: "center", gap: "28px" }} className="hidden lg:flex">
+          <a href="#home" style={{ textDecoration: "none", color: "#1769D2", fontSize: "15px", fontWeight: "700" }}>
+            Home
+          </a>
+          <a href="#features" style={{ textDecoration: "none", color: "#202B3C", fontSize: "15px", fontWeight: "600" }}>
+            Features
+          </a>
+          <a href="#how-it-works" style={{ textDecoration: "none", color: "#202B3C", fontSize: "15px", fontWeight: "600" }}>
             How It Works
           </a>
-          <a href="#capabilities" style={{ textDecoration: "none", color: "#475569", fontSize: "14px", fontWeight: "600" }}>
-            Capabilities
+          <a href="#sana-voice" style={{ textDecoration: "none", color: "#202B3C", fontSize: "15px", fontWeight: "600" }}>
+            SANA AI
           </a>
-          <a href="#user-guide" style={{ textDecoration: "none", color: "#475569", fontSize: "14px", fontWeight: "600" }}>
-            User Guide
-          </a>
-          <a href="#safety-privacy" style={{ textDecoration: "none", color: "#475569", fontSize: "14px", fontWeight: "600" }}>
-            Safety & Safety Rules
+          <a href="#security" style={{ textDecoration: "none", color: "#202B3C", fontSize: "15px", fontWeight: "600" }}>
+            Security
           </a>
         </nav>
 
         {/* Action Buttons */}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <button
             type="button"
             onClick={onOpenDemo}
             style={{
-              background: "#f1f5f9",
-              color: "#334155",
-              border: "1px solid #cbd5e1",
-              padding: "8px 16px",
+              background: "#EBF3FC",
+              color: "#1769D2",
+              border: "1px solid rgba(23, 105, 210, 0.3)",
+              padding: "9px 18px",
               borderRadius: "10px",
-              fontSize: "13px",
-              fontWeight: "600",
-              cursor: "pointer"
+              fontSize: "14px",
+              fontWeight: "700",
+              cursor: "pointer",
+              transition: "all 0.15s ease"
             }}
           >
-            🚀 Try Live Scenarios
+            Live Demo Scenarios
           </button>
           <button
             type="button"
             onClick={() => goTo("/login")}
             style={{
-              background: "#ffffff",
-              color: "#2563eb",
-              border: "1px solid #2563eb",
-              padding: "8px 18px",
+              background: "#FFFFFF",
+              color: "#15345B",
+              border: "1px solid #CBD5E1",
+              padding: "9px 18px",
               borderRadius: "10px",
-              fontSize: "13px",
-              fontWeight: "600",
-              cursor: "pointer"
+              fontSize: "14px",
+              fontWeight: "700",
+              cursor: "pointer",
+              transition: "all 0.15s ease"
             }}
           >
             Login
@@ -323,779 +356,887 @@ export default function WelcomePage({
             type="button"
             onClick={() => goTo("/register")}
             style={{
-              background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
-              color: "#ffffff",
+              background: "#1769D2",
+              color: "#FFFFFF",
               border: "none",
-              padding: "8px 20px",
+              padding: "10px 22px",
               borderRadius: "10px",
-              fontSize: "13px",
-              fontWeight: "600",
+              fontSize: "14px",
+              fontWeight: "700",
               cursor: "pointer",
-              boxShadow: "0 4px 12px rgba(37,99,235,0.3)"
+              boxShadow: "0 2px 8px rgba(23, 105, 210, 0.3)",
+              transition: "all 0.15s ease"
             }}
           >
-            Create Account
+            Get Started
           </button>
         </div>
       </header>
 
-      {/* Emergency Alert Banner */}
-      <div
-        style={{
-          background: "#fef2f2",
-          borderBottom: "1px solid #fecaca",
-          padding: "10px 24px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "12px",
-          fontSize: "13px",
-          color: "#991b1b"
-        }}
-      >
-        <span style={{ fontSize: "16px" }}>🚨</span>
-        <strong>Immediate Emergency Notice:</strong> If you or someone around you is experiencing chest pain, severe breathlessness, or sudden weakness, seek immediate emergency medical care (Call <strong>112</strong> / <strong>108</strong>).
-      </div>
-
-      {/* Hero Section */}
+      {/* 3. Hero Section (Photographic Hospital Hero Banner) */}
       <section
+        id="home"
         style={{
-          padding: "60px 32px 80px",
-          maxWidth: "1280px",
-          margin: "0 auto",
-          display: "grid",
-          gridTemplateColumns: "1.1fr 0.9fr",
-          gap: "48px",
-          alignItems: "center"
+          position: "relative",
+          width: "100%",
+          minHeight: "480px",
+          maxHeight: "560px",
+          overflow: "hidden",
+          background: "#15345B"
         }}
       >
-        <div>
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "8px",
-              background: "linear-gradient(135deg, #eff6ff, #dbeafe)",
-              color: "#1d4ed8",
-              padding: "6px 14px",
-              borderRadius: "20px",
-              fontSize: "13px",
-              fontWeight: "700",
-              marginBottom: "18px"
-            }}
-          >
-            <span>✦</span> NEXT-GEN HEALTHCARE INTELLIGENCE
-          </div>
-          <h1
-            style={{
-              fontSize: "44px",
-              lineHeight: 1.15,
-              fontWeight: "800",
-              color: "#0f172a",
-              marginBottom: "18px",
-              letterSpacing: "-1px"
-            }}
-          >
-            Welcome to <span style={{ color: "#2563eb" }}>HealthTriage AI</span>
-          </h1>
-          <p
-            style={{
-              fontSize: "18px",
-              lineHeight: 1.55,
-              color: "#475569",
-              marginBottom: "32px",
-              maxWidth: "600px"
-            }}
-          >
-            AI-assisted healthcare triage, health intelligence and clinical decision support — designed to connect patients and healthcare professionals with multimodal safety, verified doctor workflows, and continuous AI nursing.
-          </p>
+        {/* Authentic Clinical Photography Asset */}
+        <img
+          src="/assets/hospital-hero.jpg"
+          alt="Compassionate healthcare interaction"
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            objectPosition: "center 25%",
+            position: "absolute",
+            inset: 0,
+            opacity: 0.88
+          }}
+        />
 
-          {/* Call to Actions */}
-          <div style={{ display: "flex", gap: "14px", flexWrap: "wrap", marginBottom: "36px" }}>
-            <button
-              type="button"
-              onClick={() => goTo("/register")}
+        {/* Subtle, Professional Clinical Overlay for contrast */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: "linear-gradient(90deg, rgba(21, 52, 91, 0.92) 0%, rgba(21, 52, 91, 0.70) 50%, rgba(21, 52, 91, 0.35) 100%)"
+          }}
+        />
+
+        {/* Hero Content Container */}
+        <div
+          style={{
+            position: "relative",
+            zIndex: 10,
+            maxWidth: "1320px",
+            margin: "0 auto",
+            padding: "64px 36px",
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            minHeight: "480px"
+          }}
+        >
+          <div style={{ maxWidth: "680px" }}>
+            <div
               style={{
-                background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
-                color: "#ffffff",
-                border: "none",
-                borderRadius: "12px",
-                padding: "14px 28px",
-                fontSize: "15px",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                background: "rgba(255, 255, 255, 0.15)",
+                border: "1px solid rgba(255, 255, 255, 0.3)",
+                borderRadius: "30px",
+                padding: "6px 14px",
+                fontSize: "13px",
                 fontWeight: "700",
-                cursor: "pointer",
-                boxShadow: "0 8px 20px rgba(37,99,235,0.35)",
+                color: "#FFFFFF",
+                marginBottom: "16px"
+              }}
+            >
+              <Sparkles size={14} className="text-sky-300" />
+              <span>Evidence-Based Multimodal Clinical Support</span>
+            </div>
+
+            <h1
+              style={{
+                fontSize: "46px",
+                lineHeight: 1.15,
+                fontWeight: "800",
+                color: "#FFFFFF",
+                marginBottom: "16px",
+                letterSpacing: "-1px"
+              }}
+            >
+              Trusted Healthcare Support, <br />
+              Powered by AI
+            </h1>
+
+            <p
+              style={{
+                fontSize: "18px",
+                lineHeight: 1.55,
+                color: "rgba(255, 255, 255, 0.92)",
+                marginBottom: "28px",
+                fontWeight: "500"
+              }}
+            >
+              Understand your health information, explore symptoms, and connect with smarter healthcare support.
+            </p>
+
+            {/* Find Doctor / Symptom Assessment Search Bar (Reference Pattern) */}
+            <form
+              onSubmit={handleHeroSearch}
+              style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "8px"
-              }}
-            >
-              <span>Get Started Now</span> →
-            </button>
-            <button
-              type="button"
-              onClick={() => goTo("/login")}
-              style={{
-                background: "#ffffff",
-                color: "#1e293b",
-                border: "1px solid #cbd5e1",
+                background: "#FFFFFF",
                 borderRadius: "12px",
-                padding: "14px 26px",
-                fontSize: "15px",
-                fontWeight: "600",
-                cursor: "pointer",
-                boxShadow: "0 2px 6px rgba(0,0,0,0.05)"
+                padding: "6px 8px 6px 16px",
+                maxWidth: "560px",
+                marginBottom: "28px",
+                boxShadow: "0 8px 24px rgba(0, 0, 0, 0.2)"
               }}
             >
-              Sign In to Portal
-            </button>
-            <button
-              type="button"
-              onClick={onOpenDemo}
-              style={{
-                background: "#f8fafc",
-                color: "#0284c7",
-                border: "1px solid #bae6fd",
-                borderRadius: "12px",
-                padding: "14px 22px",
-                fontSize: "14px",
-                fontWeight: "600",
-                cursor: "pointer"
-              }}
-            >
-              Explore 10 Demo Scenarios
-            </button>
-          </div>
+              <Search size={20} style={{ color: "#79869C", marginRight: "10px", flexShrink: 0 }} />
+              <input
+                type="text"
+                placeholder="Search symptoms, lab parameters, or ask SANA..."
+                value={heroSearchQuery}
+                onChange={(e) => setHeroSearchQuery(e.target.value)}
+                style={{
+                  flex: 1,
+                  border: "none",
+                  outline: "none",
+                  fontSize: "15px",
+                  color: "#202B3C",
+                  background: "transparent"
+                }}
+              />
+              <button
+                type="submit"
+                style={{
+                  background: "#1769D2",
+                  color: "#FFFFFF",
+                  border: "none",
+                  borderRadius: "8px",
+                  padding: "10px 18px",
+                  fontSize: "14px",
+                  fontWeight: "700",
+                  cursor: "pointer"
+                }}
+              >
+                Search
+              </button>
+            </form>
 
-          {/* Trust Highlights */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", borderTop: "1px solid #e2e8f0", paddingTop: "24px" }}>
-            <div>
-              <div style={{ fontSize: "20px", fontWeight: "800", color: "#0f172a" }}>6 Languages</div>
-              <div style={{ fontSize: "12px", color: "#64748b" }}>Odia, Hindi, Bengali, Telugu, Tamil, English</div>
-            </div>
-            <div>
-              <div style={{ fontSize: "20px", fontWeight: "800", color: "#2563eb" }}>100% Deterministic</div>
-              <div style={{ fontSize: "12px", color: "#64748b" }}>Safety engine priority over generative LLMs</div>
-            </div>
-            <div>
-              <div style={{ fontSize: "20px", fontWeight: "800", color: "#059669" }}>Human-in-the-Loop</div>
-              <div style={{ fontSize: "12px", color: "#64748b" }}>Doctors make all final clinical decisions</div>
+            {/* CTA Buttons */}
+            <div style={{ display: "flex", gap: "14px", flexWrap: "wrap" }}>
+              <button
+                type="button"
+                onClick={() => goTo("/register")}
+                style={{
+                  background: "#1769D2",
+                  color: "#FFFFFF",
+                  border: "none",
+                  borderRadius: "10px",
+                  padding: "14px 28px",
+                  fontSize: "16px",
+                  fontWeight: "700",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  boxShadow: "0 4px 14px rgba(23, 105, 210, 0.4)",
+                  transition: "all 0.15s ease"
+                }}
+              >
+                <span>Start Your Health Journey</span>
+                <ArrowRight size={18} />
+              </button>
+
+              <a
+                href="#features"
+                style={{
+                  background: "rgba(255, 255, 255, 0.18)",
+                  color: "#FFFFFF",
+                  border: "1px solid rgba(255, 255, 255, 0.4)",
+                  borderRadius: "10px",
+                  padding: "14px 24px",
+                  fontSize: "16px",
+                  fontWeight: "700",
+                  textDecoration: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  transition: "all 0.15s ease"
+                }}
+              >
+                Explore Features
+              </a>
             </div>
           </div>
         </div>
+      </section>
 
-        {/* Hero Interactive SANA Orb Card */}
+      {/* 4. Three Prominent Action Panels (Directly below hero, Narayana Reference Pattern) */}
+      <section
+        style={{
+          maxWidth: "1320px",
+          margin: "-32px auto 60px",
+          padding: "0 36px",
+          position: "relative",
+          zIndex: 20
+        }}
+      >
         <div
           style={{
-            background: "linear-gradient(145deg, #0f172a 0%, #1e293b 100%)",
-            borderRadius: "28px",
-            padding: "36px 32px",
-            color: "#ffffff",
-            boxShadow: "0 25px 50px -12px rgba(15, 23, 42, 0.45)",
-            position: "relative",
-            overflow: "hidden",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            textAlign: "center"
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+            gap: "20px"
           }}
         >
+          {/* Action 1: Symptom Assessment */}
           <div
+            onClick={() => goTo("/triage")}
             style={{
-              position: "absolute",
-              top: "-50px",
-              right: "-50px",
-              width: "200px",
-              height: "200px",
-              background: "radial-gradient(circle, rgba(56, 189, 248, 0.2) 0%, transparent 70%)",
-              borderRadius: "50%",
-              pointerEvents: "none"
+              background: "#1769D2",
+              color: "#FFFFFF",
+              borderRadius: "14px",
+              padding: "26px 28px",
+              boxShadow: "0 10px 28px rgba(23, 105, 210, 0.25)",
+              cursor: "pointer",
+              transition: "transform 0.15s ease, box-shadow 0.15s ease",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              minHeight: "150px"
             }}
-          />
+          >
+            <div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+                <h3 style={{ fontSize: "20px", fontWeight: "800", margin: 0 }}>
+                  Start Symptom Assessment
+                </h3>
+                <ArrowRight size={22} />
+              </div>
+              <p style={{ fontSize: "14px", color: "rgba(255, 255, 255, 0.88)", margin: 0, lineHeight: 1.5 }}>
+                Evaluate your symptoms in minutes with verified clinical red-flag checking.
+              </p>
+            </div>
+            <div style={{ marginTop: "16px", fontSize: "13px", fontWeight: "700", color: "#BAE6FD" }}>
+              Voice & Text Available →
+            </div>
+          </div>
 
+          {/* Action 2: Analyze Medical Reports */}
           <div
+            onClick={() => goTo("/reports")}
             style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "8px",
-              background: "rgba(255, 255, 255, 0.1)",
+              background: "#C83D4D",
+              color: "#FFFFFF",
+              borderRadius: "14px",
+              padding: "26px 28px",
+              boxShadow: "0 10px 28px rgba(200, 61, 77, 0.25)",
+              cursor: "pointer",
+              transition: "transform 0.15s ease, box-shadow 0.15s ease",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              minHeight: "150px"
+            }}
+          >
+            <div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+                <h3 style={{ fontSize: "20px", fontWeight: "800", margin: 0 }}>
+                  Analyze Medical Reports
+                </h3>
+                <ArrowRight size={22} />
+              </div>
+              <p style={{ fontSize: "14px", color: "rgba(255, 255, 255, 0.88)", margin: 0, lineHeight: 1.5 }}>
+                Upload laboratory PDFs or diagnostic scans to extract and track parameters.
+              </p>
+            </div>
+            <div style={{ marginTop: "16px", fontSize: "13px", fontWeight: "700", color: "#FECDD3" }}>
+              OCR Extraction & Trends →
+            </div>
+          </div>
+
+          {/* Action 3: Explore Health Monitoring */}
+          <div
+            onClick={() => goTo("/health")}
+            style={{
+              background: "#15345B",
+              color: "#FFFFFF",
+              borderRadius: "14px",
+              padding: "26px 28px",
+              boxShadow: "0 10px 28px rgba(21, 52, 91, 0.25)",
+              cursor: "pointer",
+              transition: "transform 0.15s ease, box-shadow 0.15s ease",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              minHeight: "150px"
+            }}
+          >
+            <div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+                <h3 style={{ fontSize: "20px", fontWeight: "800", margin: 0 }}>
+                  Explore Health Monitoring
+                </h3>
+                <ArrowRight size={22} />
+              </div>
+              <p style={{ fontSize: "14px", color: "rgba(255, 255, 255, 0.88)", margin: 0, lineHeight: 1.5 }}>
+                Track heart rate, blood pressure, oxygen saturation, and temperature history.
+              </p>
+            </div>
+            <div style={{ marginTop: "16px", fontSize: "13px", fontWeight: "700", color: "#93C5FD" }}>
+              Physiological Tracking →
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. How HealthTriage AI Works (5 Clean Clinical Steps) */}
+      <section
+        id="how-it-works"
+        style={{
+          maxWidth: "1320px",
+          margin: "0 auto 80px",
+          padding: "0 36px"
+        }}
+      >
+        <div style={{ textAlign: "center", marginBottom: "40px" }}>
+          <span
+            style={{
+              background: "#EBF3FC",
+              color: "#1769D2",
               padding: "4px 14px",
               borderRadius: "20px",
               fontSize: "12px",
-              fontWeight: "600",
-              color: "#38bdf8",
-              marginBottom: "20px"
+              fontWeight: "700",
+              display: "inline-block",
+              marginBottom: "8px"
             }}
           >
-            <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#38bdf8" }} />
-            CENTRAL AI LAYER
-          </div>
-
-          <h2 style={{ fontSize: "24px", fontWeight: "800", margin: "0 0 6px 0" }}>
-            Meet SANA
+            CLINICAL WORKFLOW
+          </span>
+          <h2 style={{ fontSize: "32px", fontWeight: "800", color: "#15345B", margin: "0 0 10px 0" }}>
+            How HealthTriage AI Works
           </h2>
-          <p style={{ fontSize: "13px", color: "#94a3b8", margin: "0 0 28px 0" }}>
-            Smart AI Nursing & Assessment Assistant
+          <p style={{ fontSize: "16px", color: "#596579", maxWidth: "620px", margin: "0 auto" }}>
+            A transparent 5-step clinical workflow designed for patient safety and physician empowerment.
           </p>
+        </div>
 
-          {/* Interactive SanaOrb Showcase */}
-          <div style={{ marginBottom: "24px", cursor: "pointer" }} onClick={handleOrbClick} title="Click to test SANA states">
-            <SanaOrb size="hero" state={sanaState} interactive={false} />
-          </div>
-
-          {/* SANA Live Status Dialogue */}
-          <div
-            style={{
-              background: "rgba(255, 255, 255, 0.08)",
-              border: "1px solid rgba(255, 255, 255, 0.15)",
-              borderRadius: "16px",
-              padding: "16px 20px",
-              width: "100%",
-              marginBottom: "20px",
-              minHeight: "76px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "13.5px",
-              lineHeight: 1.45,
-              color: "#e2e8f0"
-            }}
-          >
-            "{sanaMessage}"
-          </div>
-
-          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", justifyContent: "center" }}>
-            <button
-              onClick={() => {
-                setSanaState("listening");
-                setSanaMessage("🎙️ Listening to patient verbal symptoms in Odia/Hindi/English...");
-              }}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: "20px" }}>
+          {workflowSteps.map((step) => (
+            <div
+              key={step.num}
               style={{
-                background: "rgba(255, 255, 255, 0.12)",
-                border: "none",
-                color: "#e2e8f0",
-                padding: "6px 12px",
-                borderRadius: "8px",
-                fontSize: "11.5px",
-                cursor: "pointer"
+                background: "#FFFFFF",
+                border: "1px solid #E0E6ED",
+                borderRadius: "14px",
+                padding: "24px 20px",
+                boxShadow: "0 2px 8px rgba(21, 52, 91, 0.04)",
+                display: "flex",
+                flexDirection: "column"
               }}
             >
-              Simulate Voice Input
-            </button>
-            <button
-              onClick={() => {
-                setSanaState("thinking");
-                setSanaMessage("✦ Synthesizing lab analytes with vital bounds...");
-              }}
-              style={{
-                background: "rgba(255, 255, 255, 0.12)",
-                border: "none",
-                color: "#e2e8f0",
-                padding: "6px 12px",
-                borderRadius: "8px",
-                fontSize: "11.5px",
-                cursor: "pointer"
-              }}
-            >
-              Analyze Vitals
-            </button>
-            <button
-              onClick={() => {
-                setSanaState("speaking");
-                setSanaMessage("🔊 SANA explaining clinician treatment plan dosage & food warnings.");
-              }}
-              style={{
-                background: "rgba(255, 255, 255, 0.12)",
-                border: "none",
-                color: "#e2e8f0",
-                padding: "6px 12px",
-                borderRadius: "8px",
-                fontSize: "11.5px",
-                cursor: "pointer"
-              }}
-            >
-              Explain Treatment
-            </button>
-          </div>
+              <div
+                style={{
+                  width: "36px",
+                  height: "36px",
+                  borderRadius: "10px",
+                  background: "#1769D2",
+                  color: "#FFFFFF",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: "800",
+                  fontSize: "15px",
+                  marginBottom: "14px"
+                }}
+              >
+                {step.num}
+              </div>
+              <h3 style={{ fontSize: "17px", fontWeight: "800", color: "#15345B", marginBottom: "8px" }}>
+                {step.title}
+              </h3>
+              <p style={{ fontSize: "14px", color: "#596579", lineHeight: 1.5, flex: 1, marginBottom: "14px" }}>
+                {step.text}
+              </p>
+              <span
+                style={{
+                  fontSize: "11px",
+                  fontWeight: "700",
+                  color: "#1769D2",
+                  background: "#EBF3FC",
+                  padding: "4px 8px",
+                  borderRadius: "6px",
+                  alignSelf: "flex-start"
+                }}
+              >
+                {step.badge}
+              </span>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* Section 2: What HealthTriage AI Does */}
-      <section style={{ background: "#ffffff", padding: "80px 32px", borderTop: "1px solid #e2e8f0" }}>
-        <div style={{ maxWidth: "1200px", margin: "0 auto", textAlign: "center" }}>
-          <span style={{ color: "#2563eb", fontWeight: "700", fontSize: "13px", textTransform: "uppercase", letterSpacing: "1px" }}>
-            Clinical Foundations
-          </span>
-          <h2 style={{ fontSize: "34px", fontWeight: "800", color: "#0f172a", marginTop: "8px", marginBottom: "16px" }}>
-            What HealthTriage AI Does
-          </h2>
-          <p style={{ fontSize: "16px", color: "#64748b", maxWidth: "750px", margin: "0 auto 48px auto", lineHeight: 1.6 }}>
-            HealthTriage AI bridges the gap between community intake and specialized medical care. It provides structured decision support for triage, verifies medication safety, extracts diagnostic lab parameters, and empowers healthcare teams to save lives.
-          </p>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "28px", textAlign: "left" }}>
-            <div style={{ background: "#f8fafc", borderRadius: "18px", padding: "28px", border: "1px solid #e2e8f0" }}>
-              <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "#dbeafe", color: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px", marginBottom: "18px" }}>
-                🎯
-              </div>
-              <h3 style={{ fontSize: "19px", fontWeight: "700", color: "#0f172a", marginBottom: "10px" }}>
-                Multimodal Evidence Fusion
-              </h3>
-              <p style={{ fontSize: "14px", color: "#64748b", lineHeight: 1.6, margin: 0 }}>
-                Synthesizes patient complaints, voice transcripts in regional languages, physiological vitals, OCR report analytes, and visual observations into an immutable 5-section triage note.
-              </p>
-            </div>
-
-            <div style={{ background: "#f8fafc", borderRadius: "18px", padding: "28px", border: "1px solid #e2e8f0" }}>
-              <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "#fef3c7", color: "#d97706", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px", marginBottom: "18px" }}>
-                🛡️
-              </div>
-              <h3 style={{ fontSize: "19px", fontWeight: "700", color: "#0f172a", marginBottom: "10px" }}>
-                Deterministic Safety Guarantee
-              </h3>
-              <p style={{ fontSize: "14px", color: "#64748b", lineHeight: 1.6, margin: 0 }}>
-                Critical thresholds like SpO2 &lt;90% or Heart Rate &gt;130 BPM instantly trigger deterministic emergency escalations that Google Gemini or generative LLMs can never override.
-              </p>
-            </div>
-
-            <div style={{ background: "#f8fafc", borderRadius: "18px", padding: "28px", border: "1px solid #e2e8f0" }}>
-              <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "#dcfce7", color: "#16a34a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px", marginBottom: "18px" }}>
-                👨‍⚕️
-              </div>
-              <h3 style={{ fontSize: "19px", fontWeight: "700", color: "#0f172a", marginBottom: "10px" }}>
-                Human-in-the-Loop Review
-              </h3>
-              <p style={{ fontSize: "14px", color: "#64748b", lineHeight: 1.6, margin: 0 }}>
-                AI assists and organizes, but qualified nurses and doctors retain full authority to approve, modify, escalate, or prescribe clinician treatment plans.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Section 3: How It Works Workflow Diagram */}
-      <section id="how-it-works" style={{ padding: "80px 32px", background: "#f1f5f9" }}>
-        <div style={{ maxWidth: "1200px", margin: "0 auto", textAlign: "center" }}>
-          <span style={{ color: "#2563eb", fontWeight: "700", fontSize: "13px", textTransform: "uppercase", letterSpacing: "1px" }}>
-            End-to-End Clinical Flow
-          </span>
-          <h2 style={{ fontSize: "34px", fontWeight: "800", color: "#0f172a", marginTop: "8px", marginBottom: "40px" }}>
-            How It Works
-          </h2>
-
-          {/* Workflow Sequence */}
-          <div
-            style={{
-              background: "#ffffff",
-              borderRadius: "24px",
-              padding: "40px",
-              boxShadow: "0 4px 20px rgba(0,0,0,0.04)",
-              border: "1px solid #e2e8f0"
-            }}
-          >
+      {/* 6. SANA Multilingual Voice Assistance (Clean Hospital Assistant Showcase) */}
+      <section
+        id="sana-voice"
+        style={{
+          maxWidth: "1320px",
+          margin: "0 auto 80px",
+          padding: "0 36px"
+        }}
+      >
+        <div
+          style={{
+            background: "#FFFFFF",
+            border: "1px solid #E0E6ED",
+            borderRadius: "20px",
+            padding: "44px 40px",
+            boxShadow: "0 4px 16px rgba(21, 52, 91, 0.05)",
+            display: "grid",
+            gridTemplateColumns: "1.1fr 0.9fr",
+            gap: "40px",
+            alignItems: "center"
+          }}
+        >
+          <div>
             <div
               style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(5, 1fr)",
-                gap: "20px",
-                position: "relative"
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                background: "#E6F7F6",
+                color: "#159C98",
+                padding: "4px 14px",
+                borderRadius: "20px",
+                fontSize: "12px",
+                fontWeight: "700",
+                marginBottom: "14px"
               }}
             >
-              {/* Step 1 */}
-              <div style={{ textAlign: "center", padding: "16px" }}>
-                <div style={{ width: "52px", height: "52px", borderRadius: "50%", background: "#eff6ff", color: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px", margin: "0 auto 14px auto", fontWeight: "800" }}>
-                  1
-                </div>
-                <h4 style={{ fontSize: "15px", fontWeight: "700", color: "#0f172a", margin: "0 0 6px 0" }}>Patient / Worker</h4>
-                <p style={{ fontSize: "12.5px", color: "#64748b", margin: 0 }}>Voice, symptoms, optional vitals, reports &amp; images</p>
-              </div>
-
-              {/* Step 2 */}
-              <div style={{ textAlign: "center", padding: "16px" }}>
-                <div style={{ width: "52px", height: "52px", borderRadius: "50%", background: "#f5f3ff", color: "#7c3aed", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px", margin: "0 auto 14px auto", fontWeight: "800" }}>
-                  2
-                </div>
-                <h4 style={{ fontSize: "15px", fontWeight: "700", color: "#0f172a", margin: "0 0 6px 0" }}>AI Evidence Fusion</h4>
-                <p style={{ fontSize: "12.5px", color: "#64748b", margin: 0 }}>SANA + Gemini parses text, audio &amp; OCR data</p>
-              </div>
-
-              {/* Step 3 */}
-              <div style={{ textAlign: "center", padding: "16px" }}>
-                <div style={{ width: "52px", height: "52px", borderRadius: "50%", background: "#fef2f2", color: "#dc2626", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px", margin: "0 auto 14px auto", fontWeight: "800" }}>
-                  3
-                </div>
-                <h4 style={{ fontSize: "15px", fontWeight: "700", color: "#0f172a", margin: "0 0 6px 0" }}>Risk &amp; Safety Engine</h4>
-                <p style={{ fontSize: "12.5px", color: "#64748b", margin: 0 }}>Deterministic rule verification &amp; drug safety guard</p>
-              </div>
-
-              {/* Step 4 */}
-              <div style={{ textAlign: "center", padding: "16px" }}>
-                <div style={{ width: "52px", height: "52px", borderRadius: "50%", background: "#ecfdf5", color: "#059669", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px", margin: "0 auto 14px auto", fontWeight: "800" }}>
-                  4
-                </div>
-                <h4 style={{ fontSize: "15px", fontWeight: "700", color: "#0f172a", margin: "0 0 6px 0" }}>Clinical Review</h4>
-                <p style={{ fontSize: "12.5px", color: "#64748b", margin: 0 }}>Nurses &amp; Doctors review prioritized triage note</p>
-              </div>
-
-              {/* Step 5 */}
-              <div style={{ textAlign: "center", padding: "16px" }}>
-                <div style={{ width: "52px", height: "52px", borderRadius: "50%", background: "#fffbeb", color: "#d97706", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px", margin: "0 auto 14px auto", fontWeight: "800" }}>
-                  5
-                </div>
-                <h4 style={{ fontSize: "15px", fontWeight: "700", color: "#0f172a", margin: "0 0 6px 0" }}>Treatment &amp; Care</h4>
-                <p style={{ fontSize: "12.5px", color: "#64748b", margin: 0 }}>Clinician plan, referral slip, and SANA guidance</p>
-              </div>
+              <Globe size={14} />
+              <span>REGIONAL INDIAN LANGUAGES SUPPORT</span>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Section 4: Key Capabilities (15 Cards) */}
-      <section id="capabilities" style={{ padding: "80px 32px", background: "#ffffff" }}>
-        <div style={{ maxWidth: "1240px", margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: "48px" }}>
-            <span style={{ color: "#2563eb", fontWeight: "700", fontSize: "13px", textTransform: "uppercase", letterSpacing: "1px" }}>
-              Healthcare Intelligence Suite
-            </span>
-            <h2 style={{ fontSize: "34px", fontWeight: "800", color: "#0f172a", marginTop: "8px" }}>
-              Key Platform Capabilities
+            <h2 style={{ fontSize: "32px", fontWeight: "800", color: "#15345B", margin: "0 0 14px 0", lineHeight: 1.25 }}>
+              Speak Naturally with SANA. <br />
+              <span style={{ color: "#1769D2" }}>In Your Own Regional Language.</span>
             </h2>
-            <p style={{ fontSize: "16px", color: "#64748b", maxWidth: "650px", margin: "12px auto 0 auto" }}>
-              A fully integrated clinical ecosystem from patient symptom check-in to hospital bed management.
+            <p style={{ fontSize: "16px", color: "#596579", lineHeight: 1.6, marginBottom: "24px" }}>
+              SANA (Smart AI Nursing & Assessment Assistant) listens attentively and responds in Odia, Hindi, Telugu, Tamil, and English. Designed to support rural and regional accessibility with deterministic safety guardrails.
             </p>
-          </div>
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-              gap: "20px"
-            }}
-          >
-            {capabilities.map((c) => (
-              <div
-                key={c.id}
+            {/* Language Selector Chips */}
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "28px" }}>
+              {supportedLanguages.map((l) => (
+                <button
+                  key={l.code}
+                  type="button"
+                  onClick={() => handleLangChange(l.name)}
+                  style={{
+                    background: selectedLang === l.name ? "#1769D2" : "#F5F7FA",
+                    color: selectedLang === l.name ? "#FFFFFF" : "#202B3C",
+                    border: selectedLang === l.name ? "1px solid #1769D2" : "1px solid #E0E6ED",
+                    borderRadius: "8px",
+                    padding: "7px 14px",
+                    fontSize: "14px",
+                    fontWeight: "700",
+                    cursor: "pointer",
+                    transition: "all 0.15s ease"
+                  }}
+                >
+                  {l.name}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+              <button
+                type="button"
+                onClick={() => goTo("/triage")}
                 style={{
-                  background: "#ffffff",
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "16px",
-                  padding: "24px",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
-                  transition: "transform 0.2s ease, box-shadow 0.2s ease",
-                  cursor: "pointer"
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "translateY(-3px)";
-                  e.currentTarget.style.boxShadow = "0 10px 20px rgba(0,0,0,0.06)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.03)";
-                }}
-                onClick={() => goTo("/login")}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "14px" }}>
-                  <span style={{ fontSize: "30px" }}>{c.icon}</span>
-                  <span
-                    style={{
-                      background: "#f1f5f9",
-                      color: "#475569",
-                      padding: "3px 8px",
-                      borderRadius: "6px",
-                      fontSize: "11px",
-                      fontWeight: "700"
-                    }}
-                  >
-                    {c.tag}
-                  </span>
-                </div>
-                <h3 style={{ fontSize: "17px", fontWeight: "700", color: "#0f172a", margin: "0 0 8px 0" }}>
-                  {c.title}
-                </h3>
-                <p style={{ fontSize: "13.5px", color: "#64748b", lineHeight: 1.55, margin: 0 }}>
-                  {c.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Section 5, 6, 7: Audience Breakdown (Patients, Professionals, Facilities) */}
-      <section style={{ padding: "80px 32px", background: "#f8fafc", borderTop: "1px solid #e2e8f0" }}>
-        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: "50px" }}>
-            <span style={{ color: "#2563eb", fontWeight: "700", fontSize: "13px", textTransform: "uppercase", letterSpacing: "1px" }}>
-              Target Stakeholders
-            </span>
-            <h2 style={{ fontSize: "34px", fontWeight: "800", color: "#0f172a", marginTop: "8px" }}>
-              Engineered for Every Tier of Care
-            </h2>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "28px" }}>
-            {/* For Patients */}
-            <div style={{ background: "#ffffff", borderRadius: "20px", padding: "32px", border: "1px solid #e2e8f0" }}>
-              <div style={{ color: "#2563eb", fontSize: "28px", marginBottom: "14px" }}>🧑‍🤝‍🧑</div>
-              <h3 style={{ fontSize: "20px", fontWeight: "800", color: "#0f172a", marginBottom: "12px" }}>
-                For Patients
-              </h3>
-              <ul style={{ paddingLeft: "20px", color: "#64748b", fontSize: "14px", lineHeight: 1.7, margin: 0 }}>
-                <li>Voice-guided triage in your native Indian dialect</li>
-                <li>Longitudinal health timeline &amp; vitals tracking</li>
-                <li>Clear "What Changed?" report comparisons</li>
-                <li>SANA medication explanations &amp; dose reminders</li>
-                <li>Nearby emergency care finder with GPS routing</li>
-                <li>Doctor visit briefing copilot for appointments</li>
-              </ul>
-            </div>
-
-            {/* For Healthcare Professionals */}
-            <div style={{ background: "#ffffff", borderRadius: "20px", padding: "32px", border: "1px solid #e2e8f0" }}>
-              <div style={{ color: "#059669", fontSize: "28px", marginBottom: "14px" }}>🩺</div>
-              <h3 style={{ fontSize: "20px", fontWeight: "800", color: "#0f172a", marginBottom: "12px" }}>
-                For Healthcare Professionals
-              </h3>
-              <ul style={{ paddingLeft: "20px", color: "#64748b", fontSize: "14px", lineHeight: 1.7, margin: 0 }}>
-                <li>Dedicated Doctor Clinical Workspace &amp; Assessment Note</li>
-                <li>Clinician Treatment Plan creation &amp; prescription orders</li>
-                <li>Nurse patient intake with real-time vital alerts</li>
-                <li>Smart prioritized triage queue board (🔴 🟡 🟢)</li>
-                <li>Printable clinical referral slip generator</li>
-                <li>Evidence-based disease &amp; pharmacopeia intelligence</li>
-              </ul>
-            </div>
-
-            {/* For Healthcare Facilities */}
-            <div style={{ background: "#ffffff", borderRadius: "20px", padding: "32px", border: "1px solid #e2e8f0" }}>
-              <div style={{ color: "#7c3aed", fontSize: "28px", marginBottom: "14px" }}>🏥</div>
-              <h3 style={{ fontSize: "20px", fontWeight: "800", color: "#0f172a", marginBottom: "12px" }}>
-                For Facilities &amp; Public Health
-              </h3>
-              <ul style={{ paddingLeft: "20px", color: "#64748b", fontSize: "14px", lineHeight: 1.7, margin: 0 }}>
-                <li>Facility Admin Dashboard with staff workload KPIs</li>
-                <li>Configurable workflow modes (Govt Hospital, PHC, Camp)</li>
-                <li>De-identified regional symptom cluster surveillance</li>
-                <li>Public health anomaly early warning notifications</li>
-                <li>Resource requirement forecasting (Ambulance &amp; nurse load)</li>
-                <li>Complete audit trail compliance and access logging</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Section 8: User Guide (How to Use HealthTriage AI - 12 Steps) */}
-      <section id="user-guide" style={{ padding: "80px 32px", background: "#ffffff" }}>
-        <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: "48px" }}>
-            <span style={{ color: "#2563eb", fontWeight: "700", fontSize: "13px", textTransform: "uppercase", letterSpacing: "1px" }}>
-              Step-by-Step Instructions
-            </span>
-            <h2 style={{ fontSize: "34px", fontWeight: "800", color: "#0f172a", marginTop: "8px" }}>
-              How to Use HealthTriage AI
-            </h2>
-            <p style={{ fontSize: "15px", color: "#64748b", maxWidth: "600px", margin: "10px auto 0 auto" }}>
-              Follow this 12-step pathway for clinical assessments and care coordination.
-            </p>
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "20px"
-            }}
-          >
-            {steps.map((st) => (
-              <div
-                key={st.num}
-                style={{
-                  display: "flex",
-                  gap: "18px",
-                  padding: "20px",
-                  background: "#f8fafc",
-                  borderRadius: "16px",
-                  border: "1px solid #e2e8f0"
+                  background: "#1769D2",
+                  color: "#FFFFFF",
+                  border: "none",
+                  borderRadius: "10px",
+                  padding: "12px 24px",
+                  fontSize: "15px",
+                  fontWeight: "700",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px"
                 }}
               >
+                <Mic size={18} />
+                <span>Open SANA Voice Assistant</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleTestVoiceAudio}
+                style={{
+                  background: "#F5F7FA",
+                  color: "#15345B",
+                  border: "1px solid #E0E6ED",
+                  borderRadius: "10px",
+                  padding: "12px 20px",
+                  fontSize: "15px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px"
+                }}
+              >
+                <Volume2 size={18} className={isSpeakingAudio ? "text-blue-600 animate-pulse" : ""} />
+                <span>{isSpeakingAudio ? "Playing audio..." : "Preview Greeting Audio"}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Clinical Assistant Speech Card (Clean & Realistic) */}
+          <div
+            style={{
+              background: "#F5F7FA",
+              border: "1px solid #E0E6ED",
+              borderRadius: "16px",
+              padding: "24px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "16px"
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <div
                   style={{
                     width: "36px",
                     height: "36px",
                     borderRadius: "50%",
-                    background: "#2563eb",
-                    color: "#ffffff",
+                    background: "#1769D2",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: "14px",
+                    color: "#FFFFFF",
                     fontWeight: "800",
-                    flexShrink: 0
+                    fontSize: "14px"
                   }}
                 >
-                  {st.num}
+                  S
                 </div>
                 <div>
-                  <h4 style={{ fontSize: "15px", fontWeight: "700", color: "#0f172a", margin: "0 0 4px 0" }}>
-                    {st.title}
-                  </h4>
-                  <p style={{ fontSize: "13px", color: "#64748b", margin: 0, lineHeight: 1.5 }}>
-                    {st.text}
-                  </p>
+                  <div style={{ fontSize: "15px", fontWeight: "800", color: "#15345B" }}>SANA Assistant</div>
+                  <div style={{ fontSize: "12px", color: "#159C98", fontWeight: "600" }}>Active in {selectedLang}</div>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* Section 9 & 10: Safety Rules, Privacy & AI Limitations */}
-      <section id="safety-privacy" style={{ padding: "80px 32px", background: "#f8fafc", borderTop: "1px solid #e2e8f0" }}>
-        <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: "40px" }}>
-            <span style={{ color: "#dc2626", fontWeight: "700", fontSize: "13px", textTransform: "uppercase", letterSpacing: "1px" }}>
-              Medical Ethics &amp; AI Safety Guard
-            </span>
-            <h2 style={{ fontSize: "32px", fontWeight: "800", color: "#0f172a", marginTop: "8px" }}>
-              Privacy, Safety &amp; Clinical Limitations
-            </h2>
-          </div>
-
-          <div
-            style={{
-              background: "#ffffff",
-              border: "1px solid #fecaca",
-              borderRadius: "20px",
-              padding: "36px",
-              marginBottom: "30px",
-              boxShadow: "0 4px 14px rgba(220, 38, 38, 0.05)"
-            }}
-          >
-            <h3 style={{ fontSize: "18px", fontWeight: "700", color: "#991b1b", marginBottom: "14px", display: "flex", alignItems: "center", gap: "8px" }}>
-              <span>⚠️</span> Mandatory Clinical Disclaimer
-            </h3>
-            <p style={{ fontSize: "14px", color: "#475569", lineHeight: 1.6, margin: "0 0 16px 0" }}>
-              HealthTriage AI is an AI-assisted healthcare support and triage intelligence system. <strong>It does not replace a qualified healthcare professional or licensed physician.</strong>
-            </p>
-            <p style={{ fontSize: "14px", color: "#475569", lineHeight: 1.6, margin: 0 }}>
-              AI never autonomously prescribes medication, never makes definitive diagnoses from images or numerical lab changes, and never overrides emergency safety protocols. All prescription treatment plans must be formulated and approved by licensed medical doctors.
-            </p>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
-            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "18px", padding: "26px" }}>
-              <h4 style={{ fontSize: "16px", fontWeight: "700", color: "#0f172a", marginBottom: "10px" }}>
-                🔒 Strict Privacy &amp; Data Protection
-              </h4>
-              <p style={{ fontSize: "13px", color: "#64748b", lineHeight: 1.6, margin: 0 }}>
-                Longitudinal patient records are strictly access-controlled. Doctors only access authorized patients. Public health surveillance uses 100% de-identified symptom clusters with zero personally identifiable information (PII).
-              </p>
+              <span
+                style={{
+                  background: "#E8F5E9",
+                  color: "#198754",
+                  border: "1px solid rgba(25, 135, 84, 0.25)",
+                  padding: "3px 10px",
+                  borderRadius: "20px",
+                  fontSize: "12px",
+                  fontWeight: "700"
+                }}
+              >
+                ● Online
+              </span>
             </div>
 
-            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "18px", padding: "26px" }}>
-              <h4 style={{ fontSize: "16px", fontWeight: "700", color: "#0f172a", marginBottom: "10px" }}>
-                ⚡ Low-Connectivity &amp; Fallback Mode
-              </h4>
-              <p style={{ fontSize: "13px", color: "#64748b", lineHeight: 1.6, margin: 0 }}>
-                If internet or Gemini API access is temporarily interrupted, the system does not crash. Local deterministic risk rules, vital thresholds, stored medical records, and triage queue operations continue seamlessly.
-              </p>
+            <div
+              style={{
+                background: "#FFFFFF",
+                border: "1px solid #E0E6ED",
+                borderRadius: "12px",
+                padding: "16px",
+                fontSize: "15px",
+                color: "#202B3C",
+                lineHeight: 1.6
+              }}
+            >
+              “{sanaMessage}”
+            </div>
+
+            <div style={{ fontSize: "13px", color: "#596579", lineHeight: 1.5 }}>
+              🛡️ <strong>Safety Protocol:</strong> SANA analyzes patient complaints against deterministic clinical criteria and provides structured information for clinician review. SANA does not autonomously prescribe medications.
             </div>
           </div>
         </div>
       </section>
 
-      {/* Section 11: Call to Action & Footer */}
+      {/* 7. Comprehensive Clinical Capabilities */}
       <section
+        id="features"
         style={{
-          background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
-          color: "#ffffff",
-          padding: "70px 32px 50px",
-          textAlign: "center"
+          maxWidth: "1320px",
+          margin: "0 auto 80px",
+          padding: "0 36px"
         }}
       >
-        <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-          <h2 style={{ fontSize: "32px", fontWeight: "800", marginBottom: "14px" }}>
-            Experience the Future of AI-Assisted Healthcare
-          </h2>
-          <p style={{ fontSize: "16px", color: "#94a3b8", lineHeight: 1.6, marginBottom: "32px" }}>
-            Join patients, nurses, doctors, and healthcare administrators on the unified HealthTriage AI intelligence platform.
-          </p>
-
-          <div style={{ display: "flex", gap: "14px", justifyContent: "center", flexWrap: "wrap", marginBottom: "50px" }}>
-            <button
-              onClick={() => goTo("/register")}
-              style={{
-                background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
-                color: "#ffffff",
-                border: "none",
-                borderRadius: "12px",
-                padding: "14px 32px",
-                fontSize: "15px",
-                fontWeight: "700",
-                cursor: "pointer",
-                boxShadow: "0 6px 18px rgba(37,99,235,0.4)"
-              }}
-            >
-              Create Account
-            </button>
-            <button
-              onClick={() => goTo("/login")}
-              style={{
-                background: "rgba(255, 255, 255, 0.1)",
-                color: "#ffffff",
-                border: "1px solid rgba(255, 255, 255, 0.2)",
-                borderRadius: "12px",
-                padding: "14px 28px",
-                fontSize: "15px",
-                fontWeight: "600",
-                cursor: "pointer"
-              }}
-            >
-              Login to Platform
-            </button>
-            <button
-              onClick={onOpenDemo}
-              style={{
-                background: "transparent",
-                color: "#38bdf8",
-                border: "1px solid rgba(56, 189, 248, 0.4)",
-                borderRadius: "12px",
-                padding: "14px 24px",
-                fontSize: "15px",
-                fontWeight: "600",
-                cursor: "pointer"
-              }}
-            >
-              Evaluate Synthetic Scenarios
-            </button>
-          </div>
-
-          {/* Footer Meta */}
-          <div
+        <div style={{ textAlign: "center", marginBottom: "40px" }}>
+          <span
             style={{
-              borderTop: "1px solid rgba(255, 255, 255, 0.1)",
-              paddingTop: "30px",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              fontSize: "12.5px",
-              color: "#64748b",
-              flexWrap: "wrap",
-              gap: "16px"
+              background: "#EBF3FC",
+              color: "#1769D2",
+              padding: "4px 14px",
+              borderRadius: "20px",
+              fontSize: "12px",
+              fontWeight: "700",
+              display: "inline-block",
+              marginBottom: "8px"
             }}
           >
-            <div>
-              © 2026 HealthTriage AI. Multimodal Human-in-the-Loop Healthcare Intelligence Platform.
+            INTELLIGENCE MODULES
+          </span>
+          <h2 style={{ fontSize: "32px", fontWeight: "800", color: "#15345B", margin: "0 0 10px 0" }}>
+            Comprehensive Clinical Capabilities
+          </h2>
+          <p style={{ fontSize: "16px", color: "#596579", maxWidth: "600px", margin: "0 auto" }}>
+            Integrated modules connecting symptoms, diagnostic OCR, vitals tracking, and clinician desks.
+          </p>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "20px" }}>
+          {capabilities.map((item) => {
+            const IconComponent = item.icon;
+            return (
+              <div
+                key={item.id}
+                style={{
+                  background: "#FFFFFF",
+                  border: "1px solid #E0E6ED",
+                  borderRadius: "14px",
+                  padding: "22px 20px",
+                  boxShadow: "0 2px 8px rgba(21, 52, 91, 0.04)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "10px"
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div
+                    style={{
+                      width: "40px",
+                      height: "40px",
+                      borderRadius: "10px",
+                      background: "#EBF3FC",
+                      color: "#1769D2",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center"
+                    }}
+                  >
+                    <IconComponent size={20} />
+                  </div>
+                  <span
+                    style={{
+                      fontSize: "11px",
+                      fontWeight: "700",
+                      color: "#1769D2",
+                      background: "#EBF3FC",
+                      padding: "3px 8px",
+                      borderRadius: "6px"
+                    }}
+                  >
+                    {item.tag}
+                  </span>
+                </div>
+                <h3 style={{ fontSize: "17px", fontWeight: "800", color: "#15345B", margin: 0 }}>
+                  {item.title}
+                </h3>
+                <p style={{ fontSize: "14px", color: "#596579", lineHeight: 1.5, margin: 0 }}>
+                  {item.desc}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* 8. Security & Clinical Governance */}
+      <section
+        id="security"
+        style={{
+          maxWidth: "1320px",
+          margin: "0 auto 80px",
+          padding: "0 36px"
+        }}
+      >
+        <div
+          style={{
+            background: "#FFFFFF",
+            border: "1px solid #E0E6ED",
+            borderRadius: "20px",
+            padding: "36px 32px",
+            boxShadow: "0 4px 16px rgba(21, 52, 91, 0.04)",
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            gap: "28px"
+          }}
+        >
+          <div style={{ display: "flex", gap: "16px" }}>
+            <div
+              style={{
+                width: "44px",
+                height: "44px",
+                borderRadius: "10px",
+                background: "#FDF2F4",
+                color: "#C83D4D",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0
+              }}
+            >
+              <AlertTriangle size={22} />
             </div>
-            <div style={{ display: "flex", gap: "18px" }}>
-              <span>Emergency Helpline: 112 / 108</span>
-              <span>SANA Voice AI v2.0</span>
-              <span>HIPAA / Health Data Security Aligned</span>
+            <div>
+              <h3 style={{ fontSize: "17px", fontWeight: "800", color: "#15345B", marginBottom: "6px" }}>
+                Zero Autonomous Prescribing
+              </h3>
+              <p style={{ fontSize: "14px", color: "#596579", lineHeight: 1.5, margin: 0 }}>
+                HealthTriage AI does not autonomously prescribe medicines. Every medication decision requires review and approval from a registered doctor.
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: "16px" }}>
+            <div
+              style={{
+                width: "44px",
+                height: "44px",
+                borderRadius: "10px",
+                background: "#EBF3FC",
+                color: "#1769D2",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0
+              }}
+            >
+              <Lock size={22} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: "17px", fontWeight: "800", color: "#15345B", marginBottom: "6px" }}>
+                HIPAA & Data Privacy
+              </h3>
+              <p style={{ fontSize: "14px", color: "#596579", lineHeight: 1.5, margin: 0 }}>
+                Standard JWT encryption, role-based access control, and strict privacy protection. Patient health data is never sold or shared.
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: "16px" }}>
+            <div
+              style={{
+                width: "44px",
+                height: "44px",
+                borderRadius: "10px",
+                background: "#E8F5E9",
+                color: "#198754",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0
+              }}
+            >
+              <UserCheck size={22} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: "17px", fontWeight: "800", color: "#15345B", marginBottom: "6px" }}>
+                Human-in-the-Loop Validation
+              </h3>
+              <p style={{ fontSize: "14px", color: "#596579", lineHeight: 1.5, margin: 0 }}>
+                Deterministic physiological checks trigger doctor and triage nurse prioritization before clinical care plans take effect.
+              </p>
             </div>
           </div>
         </div>
       </section>
+
+      {/* 9. Hospital Footer with Original Logo */}
+      <footer
+        style={{
+          background: "#FFFFFF",
+          borderTop: "1px solid #E0E6ED",
+          padding: "44px 36px",
+          color: "#596579"
+        }}
+      >
+        <div
+          style={{
+            maxWidth: "1320px",
+            margin: "0 auto",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "24px"
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div
+              style={{
+                width: "42px",
+                height: "42px",
+                borderRadius: "10px",
+                background: "#FFFFFF",
+                padding: "2px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                border: "1px solid #E0E6ED",
+                boxShadow: "0 2px 6px rgba(21, 52, 91, 0.06)",
+                overflow: "hidden"
+              }}
+            >
+              <img
+                src="/logo.png"
+                alt="HealthTriage AI"
+                style={{ width: "100%", height: "100%", objectFit: "contain" }}
+              />
+            </div>
+            <div>
+              <div style={{ fontSize: "17px", fontWeight: "800", color: "#15345B" }}>
+                HealthTriage<span style={{ color: "#1769D2" }}> AI</span>
+              </div>
+              <div style={{ fontSize: "12px", color: "#596579" }}>
+                Multimodal Healthcare Triage Assistant
+              </div>
+            </div>
+          </div>
+
+          <div style={{ fontSize: "13px", color: "#596579" }}>
+            © {new Date().getFullYear()} HealthTriage AI. All rights reserved. Clinical decision support system.
+          </div>
+
+          <div style={{ display: "flex", gap: "20px", fontSize: "14px", fontWeight: "600" }}>
+            <button
+              type="button"
+              onClick={() => goTo("/welcome")}
+              style={{ background: "none", border: "none", color: "#596579", cursor: "pointer" }}
+            >
+              Home
+            </button>
+            <button
+              type="button"
+              onClick={() => goTo("/login")}
+              style={{ background: "none", border: "none", color: "#596579", cursor: "pointer" }}
+            >
+              Login
+            </button>
+            <button
+              type="button"
+              onClick={() => goTo("/register")}
+              style={{ background: "none", border: "none", color: "#596579", cursor: "pointer" }}
+            >
+              Register
+            </button>
+            <button
+              type="button"
+              onClick={onOpenDemo}
+              style={{ background: "none", border: "none", color: "#1769D2", cursor: "pointer", fontWeight: "700" }}
+            >
+              Demo Scenarios
+            </button>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

@@ -10,6 +10,7 @@ export default function SanaTranscript({
   messages = [],
   interimTranscript = "",
   isListening = false,
+  isFinalizing = false,
   isThinking = false,
   onReplayAudio = () => {},
   scrollRef = null,
@@ -349,16 +350,25 @@ export default function SanaTranscript({
         );
       })}
 
-      {/* Real-time Live Interim Speech Bubble */}
-      {isListening && interimTranscript && (
-        <div className="sana-transcript-bubble-row user interim">
-          <div className="transcript-avatar">🎙️</div>
+      {/* Real-time Live Interim & Accumulated Speech Bubble */}
+      {(isListening || isFinalizing) && interimTranscript && (
+        <div className={`sana-transcript-bubble-row user interim ${isFinalizing ? "finalizing" : ""}`}>
+          <div className="transcript-avatar">{isFinalizing ? "⏳" : "🎙️"}</div>
           <div className="transcript-card interim-card">
             <div className="transcript-card-header">
-              <span className="speaker-name">Speaking now...</span>
-              <span className="live-pulsing-badge">● Live</span>
+              <span className="speaker-name">
+                {isFinalizing ? "Finalizing what you said..." : "Hearing you live..."}
+              </span>
+              <span className="live-pulsing-badge">
+                {isFinalizing ? "● Processing" : "● Live Speech"}
+              </span>
             </div>
             <p className="interim-text">{interimTranscript}</p>
+            <div style={{ marginTop: "4px", fontSize: "11px", color: "#64748b" }}>
+              {isFinalizing
+                ? "Submitting your full symptom description to clinical triage..."
+                : "Speak continuously at your own pace. SANA waits for you to finish."}
+            </div>
           </div>
         </div>
       )}

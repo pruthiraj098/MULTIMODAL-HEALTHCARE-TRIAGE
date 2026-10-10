@@ -1,8 +1,10 @@
 // ============================================================
 // HealthTriage AI - SANA Voice Interface Component
 // Complete Two-Way Continuous Conversational Healthcare Voice Studio
-// State Flow: IDLE -> ACTIVATING -> LISTENING -> THINKING -> SPEAKING -> LISTENING...
-// Loops automatically until user explicitly presses "Stop SANA"
+// State Machine:
+// IDLE -> ACTIVATING -> LISTENING -> FINALIZING_TRANSCRIPT -> READY_TO_RESPOND -> THINKING -> SPEAKING -> READY / LISTENING
+// Listens until patient finishes; supports natural pauses, manual "Done Speaking",
+// symptom corrections, and robust multi-language audio synthesis.
 // ============================================================
 
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -12,10 +14,20 @@ import SanaTranscript from "./SanaTranscript";
 import sanaVoiceService from "../services/sanaVoiceService";
 import { API_URL } from "../config";
 
+const WELCOME_GREETINGS = {
+  en: "Hello! I am SANA, how are you feeling today?",
+  hi: "नमस्ते! मैं साना (SANA) हूँ। आज आप कैसा महसूस कर रहे हैं?",
+  or: "ନମସ୍କାର! ମୁଁ ସାନା (SANA)। ଆଜି ଆପଣ କିପରି ଅନୁଭବ କରୁଛନ୍ତି କୁହନ୍ତୁ?",
+  bn: "নমস্কার! আমি সানা (SANA)। আজ আপনি কেমন অনুভব করছেন বলুন?",
+  te: "నమస్కారం! నేను సానా (SANA)। ఈరోజు మీరు ఎలా ఉన్నారు?",
+  ta: "வணக்கம்! நான் சானா (SANA)। இன்று நீங்கள் எவ்வாறு உணர்கிறீர்கள்?",
+};
+
 export default function SanaVoiceInterface({
   isOpen = false,
   onClose = () => {},
   initialMessage = "",
+  initialLanguage = "en",
   initialVitals = {},
   initialImage = null,
   initialReport = null,
@@ -27,19 +39,26 @@ export default function SanaVoiceInterface({
   const [sessionActive, setSessionActive] = useState(false);
   const sessionActiveRef = useRef(false);
 
-  // SANA States: 'idle' | 'activating' | 'listening' | 'thinking' | 'speaking' | 'emergency'
+  // SANA States:
+  // 'idle' | 'activating' | 'listening' | 'finalizing_transcript' | 'ready_to_respond' | 'thinking' | 'speaking' | 'emergency'
   const [sanaState, setSanaState] = useState("idle");
   const sanaStateRef = useRef("idle");
-  const [selectedLanguage, setSelectedLanguage] = useState("en");
+  const [selectedLanguage, setSelectedLanguage] = useState(initialLanguage || "en");
+
+  // Keep selectedLanguage synchronized if initialLanguage prop changes
+  useEffect(() => {
+    if (initialLanguage) {
+      setSelectedLanguage(initialLanguage);
+    }
+  }, [initialLanguage]);
+
+  // Submission lock mutex to prevent duplicate AI queries
+  const isSubmittingRef = useRef(false);
 
   // Keep state ref synchronized for callbacks
   useEffect(() => {
     sanaStateRef.current = sanaState;
   }, [sanaState]);
-
-  // Silence retry tracker to prevent infinite loops if microphone is disconnected
-  const silenceRetriesRef = useRef(0);
-  const MAX_SILENCE_RETRIES = 6;
 
   // Dialogue transcript
   const [messages, setMessages] = useState([
@@ -47,19 +66,19 @@ export default function SanaVoiceInterface({
       id: "sana-greeting-initial",
       role: "assistant",
       spokenResponse:
-        "Hello! I am SANA, how are you feeling?",
+        WELCOME_GREETINGS[initialLanguage] || WELCOME_GREETINGS.en,
       content:
-        "Hello! I am SANA, how are you feeling?",
+        WELCOME_GREETINGS[initialLanguage] || WELCOME_GREETINGS.en,
       triageLevel: "SELF_CARE",
       triageBadge: {
         icon: "❤️",
         title: "SANA Ready",
         subtext: "Continuous voice & clinical assessment ready",
       },
-      screenSummary: "SANA is ready to listen to your symptoms in English, Hindi, Odia, or Bengali.",
+      screenSummary: "SANA is ready to listen to your symptoms in English, Hindi, Odia, Bengali, Telugu, or Tamil.",
       recommendedNextSteps: [
-        "Tap 'Talk to SANA' to start the continuous conversation.",
-        "SANA will listen, respond, and automatically listen again until you press Stop SANA.",
+        "Speak your symptoms naturally at your own pace.",
+        "SANA listens across natural pauses and will not interrupt until you finish or press Done Speaking.",
       ],
       safetyDisclaimer:
         "I am an AI triage assistant, not your treating doctor. If you experience severe pain, difficulty breathing, or sudden numbness, seek emergency care immediately.",
@@ -67,7 +86,9 @@ export default function SanaVoiceInterface({
     },
   ]);
 
-  const [interimSpeech, setInterimSpeech] = useState("");
+  // Live Speech State tracking
+  const [liveTranscript, setLiveTranscript] = useState("");
+  const liveTranscriptRef = useRef("");
   const [typedMessage, setTypedMessage] = useState(initialMessage || "");
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -102,7 +123,7 @@ export default function SanaVoiceInterface({
   // Auto-scroll transcript on updates
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, interimSpeech, sanaState]);
+  }, [messages, liveTranscript, sanaState]);
 
   // Forward refs for internal turn coordination
   const messagesRef = useRef(messages);
@@ -125,6 +146,7 @@ export default function SanaVoiceInterface({
   // ============================================================
   const stopSanaSession = useCallback(() => {
     sessionActiveRef.current = false;
+    isSubmittingRef.current = false;
     setSessionActive(false);
 
     if (restartTimerRef.current) {
@@ -134,8 +156,8 @@ export default function SanaVoiceInterface({
 
     sanaVoiceService.stopAll();
     setSanaState("idle");
-    setInterimSpeech("");
-    silenceRetriesRef.current = 0;
+    setLiveTranscript("");
+    liveTranscriptRef.current = "";
   }, []);
 
   // Clean shutdown when modal closes
@@ -146,107 +168,27 @@ export default function SanaVoiceInterface({
   }, [isOpen, stopSanaSession]);
 
   // ============================================================
-  // START LISTENING TURN (With Continuous Conversation Loop)
-  // ============================================================
-  const startListeningTurn = useCallback(() => {
-    if (!sessionActiveRef.current) {
-      setSanaState("idle");
-      return;
-    }
-
-    // Stop speaking immediately before listening to prevent audio feedback
-    sanaVoiceService.stopSpeaking();
-    setSanaState("listening");
-    setErrorMessage("");
-
-    sanaVoiceService.startListening({
-      lang: selectedLanguageRef.current,
-      onStart: () => {
-        if (!sessionActiveRef.current) {
-          sanaVoiceService.stopListening();
-          setSanaState("idle");
-          return;
-        }
-        setSanaState("listening");
-      },
-      onInterim: (interim) => {
-        if (!sessionActiveRef.current) return;
-        setInterimSpeech(interim);
-      },
-      onResult: (finalText) => {
-        if (!sessionActiveRef.current) return;
-        setInterimSpeech("");
-        silenceRetriesRef.current = 0;
-        // Process user speech and advance conversation
-        submitTurnToSana(finalText);
-      },
-      onEnd: (finalText) => {
-        // If final text was received, it's already sent in onResult
-        if (finalText && finalText.trim()) {
-          return;
-        }
-
-        // If turn ended without user speech while session is still active
-        if (sessionActiveRef.current && sanaStateRef.current === "listening") {
-          silenceRetriesRef.current += 1;
-          if (silenceRetriesRef.current < MAX_SILENCE_RETRIES) {
-            // Restart listening seamlessly after brief 250ms silence pause
-            restartTimerRef.current = setTimeout(() => {
-              if (sessionActiveRef.current) {
-                startListeningTurn();
-              }
-            }, 250);
-          } else {
-            // Paused after extended silence: keep session open, let user speak when ready
-            setSanaState("idle");
-            setInterimSpeech("");
-          }
-        }
-      },
-      onError: (errObj) => {
-        const { message, errorType, isFatal } =
-          typeof errObj === "string"
-            ? { message: errObj, errorType: "error", isFatal: false }
-            : errObj;
-
-        if (errorType === "no-speech") {
-          // Patient is pausing to think; safely restart listening if session is still active
-          if (sessionActiveRef.current && sanaStateRef.current === "listening") {
-            silenceRetriesRef.current += 1;
-            if (silenceRetriesRef.current < MAX_SILENCE_RETRIES) {
-              restartTimerRef.current = setTimeout(() => {
-                if (sessionActiveRef.current) {
-                  startListeningTurn();
-                }
-              }, 250);
-              return;
-            }
-          }
-        }
-
-        if (isFatal) {
-          setErrorMessage(message);
-          stopSanaSession();
-          return;
-        }
-
-        if (errorType !== "aborted" && errorType !== "no-speech") {
-          setErrorMessage(message);
-        }
-      },
-    });
-  }, [stopSanaSession]);
-
-  // ============================================================
   // SUBMIT TURN TO SANA BACKEND
   // ============================================================
   const submitTurnToSana = async (userText) => {
-    if (!userText.trim() && !activeImage && !activeReport) return;
+    const cleanInput = (userText || "").trim();
+    if (!cleanInput && !activeImage && !activeReport) {
+      setSanaState("idle");
+      isSubmittingRef.current = false;
+      return;
+    }
 
-    // Smart interruption: halt any ongoing speech immediately
+    // Atomic submission lock to prevent duplicate queries
+    if (isSubmittingRef.current) {
+      console.log("[SANA Voice] Submission already in flight, ignoring duplicate call.");
+      return;
+    }
+    isSubmittingRef.current = true;
+
+    // Transition State: FINALIZING_TRANSCRIPT -> READY_TO_RESPOND -> THINKING
+    setSanaState("thinking");
     sanaVoiceService.stopSpeaking();
 
-    const cleanInput = userText.trim();
     const userMsgId = `user-${Date.now()}`;
 
     // Add user turn to dialogue history
@@ -264,10 +206,10 @@ export default function SanaVoiceInterface({
 
     const nextConversation = [...messagesRef.current, userTurn];
     setMessages(nextConversation);
-    setInterimSpeech("");
+    setLiveTranscript("");
+    liveTranscriptRef.current = "";
     setTypedMessage("");
     setErrorMessage("");
-    setSanaState("thinking");
 
     try {
       const token = localStorage.getItem("token");
@@ -347,6 +289,9 @@ export default function SanaVoiceInterface({
       setActiveImage(null);
       setActiveReport(null);
 
+      // Release submission mutex once response turn is fully in state
+      isSubmittingRef.current = false;
+
       // Play SANA spoken response
       if (data.spoken_response) {
         sanaVoiceService.speak({
@@ -360,14 +305,23 @@ export default function SanaVoiceInterface({
           // After SANA finishes speaking, automatically return to LISTENING if session is active!
           onEnd: () => {
             if (sessionActiveRef.current) {
-              startListeningTurn();
+              // Brief pause before listening resumes to prevent mic hearing tail audio
+              restartTimerRef.current = setTimeout(() => {
+                if (sessionActiveRef.current) {
+                  startListeningTurn();
+                }
+              }, 400);
             } else {
               setSanaState("idle");
             }
           },
           onError: () => {
             if (sessionActiveRef.current) {
-              startListeningTurn();
+              restartTimerRef.current = setTimeout(() => {
+                if (sessionActiveRef.current) {
+                  startListeningTurn();
+                }
+              }, 400);
             } else {
               setSanaState("idle");
             }
@@ -383,11 +337,12 @@ export default function SanaVoiceInterface({
       }
     } catch (err) {
       console.error("[SANA Voice Interface] Error:", err);
+      isSubmittingRef.current = false;
       setErrorMessage(
         "I'm having trouble connecting right now. Please try speaking again or type below."
       );
 
-      // Even on temporary network glitch, keep session alive and let user retry speaking
+      // Keep session alive and allow user to retry
       if (sessionActiveRef.current) {
         restartTimerRef.current = setTimeout(() => {
           if (sessionActiveRef.current) {
@@ -401,16 +356,115 @@ export default function SanaVoiceInterface({
   };
 
   // ============================================================
+  // START LISTENING TURN (Accurate Multi-Phrase State Machine)
+  // ============================================================
+  const startListeningTurn = useCallback(() => {
+    if (!sessionActiveRef.current) {
+      setSanaState("idle");
+      return;
+    }
+
+    // Stop speaking immediately before listening to avoid audio feedback
+    sanaVoiceService.stopSpeaking();
+    setSanaState("listening");
+    setErrorMessage("");
+    setLiveTranscript("");
+    liveTranscriptRef.current = "";
+
+    sanaVoiceService.startListening({
+      lang: selectedLanguageRef.current,
+      silenceThresholdMs: 2600, // Configurable silence threshold (2.6 seconds)
+      onStart: () => {
+        if (!sessionActiveRef.current) {
+          sanaVoiceService.stopListening();
+          setSanaState("idle");
+          return;
+        }
+        setSanaState("listening");
+      },
+      onInterim: ({ fullLiveTranscript }) => {
+        if (!sessionActiveRef.current) return;
+        setLiveTranscript(fullLiveTranscript);
+        liveTranscriptRef.current = fullLiveTranscript;
+      },
+      onTurnComplete: (completeUtterance, triggerReason) => {
+        if (!sessionActiveRef.current) return;
+        console.log(`[SANA Voice] Turn complete (reason=${triggerReason}): "${completeUtterance}"`);
+
+        setSanaState("finalizing_transcript");
+        setLiveTranscript(completeUtterance);
+        liveTranscriptRef.current = completeUtterance;
+
+        // Transition through state machine: FINALIZING_TRANSCRIPT -> READY_TO_RESPOND -> submit
+        setTimeout(() => {
+          if (sessionActiveRef.current && !isSubmittingRef.current) {
+            setSanaState("ready_to_respond");
+            submitTurnToSana(completeUtterance);
+          }
+        }, 180);
+      },
+      onEnd: () => {
+        // If turn ended without user speech while session is still active, safely stay ready
+        if (sessionActiveRef.current && sanaStateRef.current === "listening" && !isSubmittingRef.current) {
+          restartTimerRef.current = setTimeout(() => {
+            if (sessionActiveRef.current && sanaStateRef.current === "listening") {
+              startListeningTurn();
+            }
+          }, 350);
+        }
+      },
+      onError: (errObj) => {
+        const { message, errorType, isFatal } =
+          typeof errObj === "string"
+            ? { message: errObj, errorType: "error", isFatal: false }
+            : errObj;
+
+        if (errorType === "no-speech") {
+          // Patient took a quiet pause; safely restart listening if session is still active
+          if (sessionActiveRef.current && sanaStateRef.current === "listening" && !isSubmittingRef.current) {
+            restartTimerRef.current = setTimeout(() => {
+              if (sessionActiveRef.current && sanaStateRef.current === "listening") {
+                startListeningTurn();
+              }
+            }, 300);
+            return;
+          }
+        }
+
+        if (isFatal) {
+          setErrorMessage(message);
+          stopSanaSession();
+          return;
+        }
+
+        if (errorType !== "aborted" && errorType !== "no-speech") {
+          setErrorMessage(message);
+        }
+      },
+    });
+  }, [stopSanaSession]);
+
+  // ============================================================
+  // USER EXPLICIT "DONE SPEAKING" ACTION
+  // ============================================================
+  const handleDoneSpeaking = () => {
+    if (sanaStateRef.current === "listening") {
+      setSanaState("finalizing_transcript");
+      // Trigger voice service immediate finalization
+      sanaVoiceService.finalizeTurnNow();
+    }
+  };
+
+  // ============================================================
   // START SANA CONVERSATIONAL SESSION
   // ============================================================
   const startSanaSession = useCallback(() => {
     sessionActiveRef.current = true;
+    isSubmittingRef.current = false;
     setSessionActive(true);
     setSanaState("activating");
     setErrorMessage("");
-    silenceRetriesRef.current = 0;
 
-    // Small delay for microphone initialization UX
     setTimeout(() => {
       if (sessionActiveRef.current) {
         startListeningTurn();
@@ -427,6 +481,19 @@ export default function SanaVoiceInterface({
 
   // Primary Action Button Toggle (Start / Stop)
   const handlePrimaryAction = () => {
+    if (sanaState === "speaking") {
+      // Barge-in: user interrupted SANA speaking
+      sanaVoiceService.stopSpeaking();
+      startListeningTurn();
+      return;
+    }
+
+    if (sanaState === "listening" && liveTranscript.trim()) {
+      // If user taps orb while speaking, submit current turn
+      handleDoneSpeaking();
+      return;
+    }
+
     if (sessionActiveRef.current) {
       stopSanaSession();
     } else {
@@ -450,17 +517,10 @@ export default function SanaVoiceInterface({
           setSanaState("idle");
         }
       },
-      onError: () => {
-        if (sessionActiveRef.current) {
-          startListeningTurn();
-        } else {
-          setSanaState("idle");
-        }
-      },
     });
   };
 
-  // Multimodal file handlers
+  // Handle image upload
   const handleImageFile = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -475,6 +535,7 @@ export default function SanaVoiceInterface({
     e.target.value = "";
   };
 
+  // Handle report upload
   const handleReportFile = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -485,18 +546,14 @@ export default function SanaVoiceInterface({
         data: reader.result,
       });
     };
-    if (file.name.endsWith(".txt") || file.type.startsWith("text/")) {
-      reader.readAsText(file);
-    } else {
-      reader.readAsDataURL(file);
-    }
+    reader.readAsDataURL(file);
     e.target.value = "";
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="sana-modal-overlay" onClick={stopSanaSession}>
+    <div className="sana-voice-modal-backdrop" onClick={stopSanaSession}>
       {/* Hidden file inputs */}
       <input
         type="file"
@@ -535,7 +592,7 @@ export default function SanaVoiceInterface({
             {/* Live Session & Microphone Indicator */}
             <div
               className={`mic-live-indicator ${
-                sessionActive && sanaState === "listening"
+                sessionActive && (sanaState === "listening" || sanaState === "finalizing_transcript")
                   ? "active"
                   : sessionActive
                   ? "session-live"
@@ -545,7 +602,9 @@ export default function SanaVoiceInterface({
               <span className="indicator-dot" />
               <span>
                 {sessionActive && sanaState === "listening"
-                  ? "🎙️ LISTENING (MICROPHONE ON)"
+                  ? "🎙️ LISTENING (SPEAK CONTINUOUSLY)"
+                  : sessionActive && sanaState === "finalizing_transcript"
+                  ? "⏳ FINALIZING SPEECH..."
                   : sessionActive && sanaState === "speaking"
                   ? "🔊 SANA SPEAKING"
                   : sessionActive && sanaState === "thinking"
@@ -558,17 +617,31 @@ export default function SanaVoiceInterface({
           </div>
 
           <div className="sana-header-controls">
-            {/* 4 Supported Languages */}
+            {/* Multilingual Selector */}
             <SanaLanguageSelector
               currentLanguage={selectedLanguage}
               onLanguageChange={(newLang) => {
                 setSelectedLanguage(newLang);
+                setMessages((prev) => {
+                  if (prev.length === 1 && prev[0].id === "sana-greeting-initial") {
+                    const localizedText = WELCOME_GREETINGS[newLang] || WELCOME_GREETINGS.en;
+                    return [
+                      {
+                        ...prev[0],
+                        spokenResponse: localizedText,
+                        content: localizedText,
+                        audioBase64: null,
+                      },
+                    ];
+                  }
+                  return prev;
+                });
                 if (sessionActiveRef.current) {
                   sanaVoiceService.stopSpeaking();
                   startListeningTurn();
                 }
               }}
-              variant="pill"
+              variant="dropdown"
             />
 
             <button
@@ -600,143 +673,179 @@ export default function SanaVoiceInterface({
           </div>
         )}
 
-        {/* ===================================================
-            CENTER HERO: Futuristic SANA Energy Orb & Prompts
-        =================================================== */}
-        <section className="sana-hero-stage">
-          <div className="sana-orb-anchor">
-            <SanaOrb
-              state={sanaState}
-              size="hero"
-              onClick={handlePrimaryAction}
-              interactive={true}
+        {/* Compact Clinical Status & Mode Indicator Strip */}
+        <div
+          style={{
+            padding: "8px 24px",
+            background:
+              sanaState === "listening"
+                ? "#E8F5E9"
+                : sanaState === "thinking"
+                ? "#EBF3FC"
+                : sanaState === "speaking"
+                ? "#E6F7F6"
+                : "#F8FAFC",
+            borderBottom: "1px solid #E2E8F0",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            fontSize: "13px",
+            color: "#15345B"
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span
+              style={{
+                width: "8px",
+                height: "8px",
+                borderRadius: "50%",
+                background:
+                  sanaState === "listening"
+                    ? "#198754"
+                    : sanaState === "speaking"
+                    ? "#159C98"
+                    : sanaState === "thinking"
+                    ? "#1769D2"
+                    : "#94A3B8"
+              }}
+              className={sanaState === "listening" || sanaState === "speaking" ? "animate-pulse" : ""}
             />
+            <span style={{ fontWeight: "700" }}>
+              {sanaState === "listening" && "Listening... Speak continuously (tap Done Speaking when finished)"}
+              {sanaState === "finalizing_transcript" && "Finalizing speech..."}
+              {sanaState === "thinking" && "Analyzing with deterministic clinical safety rules..."}
+              {sanaState === "speaking" && "SANA is speaking... (tap microphone to pause)"}
+              {sanaState === "emergency" && "Clinical Alert Active"}
+              {sanaState === "idle" && (sessionActive ? "Continuous session active — ready to listen" : "SANA AI Assistant Ready")}
+            </span>
           </div>
 
-          <div className="sana-hero-captions">
-            <h3 className="sana-stage-prompt">
-              {sanaState === "listening" && "Listening... Speak naturally"}
-              {sanaState === "activating" && "Starting SANA..."}
-              {sanaState === "thinking" && "Thinking & checking clinical safety..."}
-              {sanaState === "speaking" && "SANA is speaking..."}
-              {sanaState === "emergency" && "🚨 Emergency Assistance Advised"}
-              {sanaState === "idle" && (sessionActive ? "Listening paused — tap to speak" : "Tap to talk with SANA")}
-            </h3>
-
-            <p className="sana-privacy-subtext">
-              {sessionActive ? (
-                <span>
-                  🟢 Continuous session active — SANA will listen after each response. Press <strong>Stop SANA</strong> when finished.
-                </span>
-              ) : (
-                <span>
-                  🔒 Privacy First: Microphone is OFF until you tap to talk. No unauthorized background recording.
-                </span>
-              )}
-            </p>
-          </div>
-
-          {/* Prominent Action Controls: Talk & Stop SANA */}
-          <div className="sana-hero-actions">
-            {!sessionActive ? (
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            {(sanaState === "listening" || sanaState === "finalizing_transcript") && (
               <button
                 type="button"
-                className="sana-main-talk-btn"
-                onClick={startSanaSession}
+                onClick={handleDoneSpeaking}
+                style={{
+                  background: "#198754",
+                  color: "#FFFFFF",
+                  border: "none",
+                  padding: "4px 12px",
+                  borderRadius: "14px",
+                  fontSize: "12px",
+                  fontWeight: "700",
+                  cursor: "pointer"
+                }}
               >
-                <span className="mic-icon">🎙️</span>
-                <span>Talk to SANA</span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="sana-stop-cancel-btn"
-                onClick={stopSanaSession}
-                title="Stop microphone, audio, and end conversation session"
-              >
-                <span className="stop-square">⏹</span>
-                <span>Stop SANA</span>
+                ✓ Done Speaking
               </button>
             )}
 
-            {/* Quick Vitals Toggle */}
+            {sessionActive && (
+              <button
+                type="button"
+                onClick={stopSanaSession}
+                style={{
+                  background: "#F1F5F9",
+                  color: "#C83D4D",
+                  border: "1px solid #E2E8F0",
+                  padding: "4px 10px",
+                  borderRadius: "14px",
+                  fontSize: "12px",
+                  fontWeight: "700",
+                  cursor: "pointer"
+                }}
+              >
+                Stop SANA
+              </button>
+            )}
+
             <button
               type="button"
-              className={`sana-vitals-drawer-btn ${showVitalsDrawer ? "open" : ""}`}
               onClick={() => setShowVitalsDrawer(!showVitalsDrawer)}
+              style={{
+                background: showVitalsDrawer ? "#EBF3FC" : "#FFFFFF",
+                border: "1px solid #E2E8F0",
+                color: "#1769D2",
+                padding: "4px 10px",
+                borderRadius: "14px",
+                fontSize: "12px",
+                fontWeight: "700",
+                cursor: "pointer"
+              }}
             >
-              ❤️ {showVitalsDrawer ? "Hide Vitals" : "Optional Vitals"}
+              {showVitalsDrawer ? "Hide Vitals" : "Optional Vitals"}
             </button>
           </div>
-        </section>
+        </div>
 
-        {/* ===================================================
-            OPTIONAL PATIENT VITALS DRAWER
-        =================================================== */}
+        {/* Optional Patient Vitals Drawer */}
         {showVitalsDrawer && (
-          <section className="sana-vitals-drawer">
-            <div className="drawer-header">
-              <strong>❤️ Patient Vitals (Optional)</strong>
-              <small>You can type vitals here or speak them naturally (e.g., "my oxygen is 94")</small>
+          <section className="sana-vitals-drawer" style={{ background: "#FFFFFF", borderBottom: "1px solid #E0E6ED", padding: "14px 24px" }}>
+            <div className="drawer-header" style={{ marginBottom: "8px" }}>
+              <strong style={{ fontSize: "13.5px", color: "#15345B" }}>Optional Physiological Vitals</strong>
+              <small style={{ color: "#596579", marginLeft: "10px" }}>You can enter vitals here or speak them naturally</small>
             </div>
-            <div className="drawer-grid">
+            <div className="drawer-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "10px" }}>
               <div className="drawer-field">
-                <label>SpO₂ Oxygen</label>
-                <div className="drawer-input-row">
+                <label style={{ fontSize: "12px", fontWeight: "700", color: "#596579" }}>SpO₂ Oxygen</label>
+                <div className="drawer-input-row" style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                   <input
                     type="number"
                     placeholder="98"
                     value={vitals.spo2 || ""}
                     onChange={(e) => setVitals({ ...vitals, spo2: e.target.value })}
+                    style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid #CBD5E1", fontSize: "14px" }}
                   />
-                  <span>%</span>
+                  <span style={{ fontSize: "12px", color: "#596579" }}>%</span>
                 </div>
               </div>
 
               <div className="drawer-field">
-                <label>Heart Rate</label>
-                <div className="drawer-input-row">
+                <label style={{ fontSize: "12px", fontWeight: "700", color: "#596579" }}>Heart Rate</label>
+                <div className="drawer-input-row" style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                   <input
                     type="number"
                     placeholder="72"
                     value={vitals.heart_rate || ""}
                     onChange={(e) => setVitals({ ...vitals, heart_rate: e.target.value })}
+                    style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid #CBD5E1", fontSize: "14px" }}
                   />
-                  <span>BPM</span>
+                  <span style={{ fontSize: "12px", color: "#596579" }}>BPM</span>
                 </div>
               </div>
 
               <div className="drawer-field">
-                <label>Temperature</label>
-                <div className="drawer-input-row">
+                <label style={{ fontSize: "12px", fontWeight: "700", color: "#596579" }}>Temperature</label>
+                <div className="drawer-input-row" style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                   <input
                     type="number"
                     step="0.1"
                     placeholder="98.6"
                     value={vitals.temperature || ""}
                     onChange={(e) => setVitals({ ...vitals, temperature: e.target.value })}
+                    style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid #CBD5E1", fontSize: "14px" }}
                   />
-                  <span>°F</span>
+                  <span style={{ fontSize: "12px", color: "#596579" }}>°F</span>
                 </div>
               </div>
 
               <div className="drawer-field">
-                <label>Blood Pressure</label>
-                <div style={{ display: "flex", gap: "6px" }}>
+                <label style={{ fontSize: "12px", fontWeight: "700", color: "#596579" }}>Blood Pressure</label>
+                <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
                   <input
                     type="number"
                     placeholder="120"
                     value={vitals.systolic_bp || ""}
                     onChange={(e) => setVitals({ ...vitals, systolic_bp: e.target.value })}
-                    style={{ width: "65px" }}
+                    style={{ width: "60px", padding: "6px 6px", borderRadius: "6px", border: "1px solid #CBD5E1", fontSize: "14px" }}
                   />
-                  <span style={{ alignSelf: "center" }}>/</span>
+                  <span style={{ color: "#596579" }}>/</span>
                   <input
                     type="number"
                     placeholder="80"
                     value={vitals.diastolic_bp || ""}
                     onChange={(e) => setVitals({ ...vitals, diastolic_bp: e.target.value })}
-                    style={{ width: "65px" }}
+                    style={{ width: "60px", padding: "6px 6px", borderRadius: "6px", border: "1px solid #CBD5E1", fontSize: "14px" }}
                   />
                 </div>
               </div>
@@ -746,49 +855,100 @@ export default function SanaVoiceInterface({
 
         {/* Active Multimodal Attachment Chips */}
         {(activeImage || activeReport) && (
-          <div className="sana-active-attachments-tray">
+          <div className="sana-active-attachments-tray" style={{ padding: "8px 24px", background: "#F5F7FA", borderBottom: "1px solid #E0E6ED" }}>
             {activeImage && (
-              <span className="sana-att-chip">
+              <span className="sana-att-chip" style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#EBF3FC", padding: "4px 10px", borderRadius: "8px", fontSize: "13px", color: "#1769D2" }}>
                 📷 {activeImage.name}
-                <button
-                  type="button"
-                  onClick={() => setActiveImage(null)}
-                  title="Remove image"
-                >
-                  ×
-                </button>
+                <button type="button" onClick={() => setActiveImage(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#1769D2" }}>×</button>
               </span>
             )}
             {activeReport && (
-              <span className="sana-att-chip">
+              <span className="sana-att-chip" style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#EBF3FC", padding: "4px 10px", borderRadius: "8px", fontSize: "13px", color: "#1769D2", marginLeft: "8px" }}>
                 📄 {activeReport.name}
-                <button
-                  type="button"
-                  onClick={() => setActiveReport(null)}
-                  title="Remove report"
-                >
-                  ×
-                </button>
+                <button type="button" onClick={() => setActiveReport(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#1769D2" }}>×</button>
               </span>
             )}
           </div>
         )}
 
-        {/* Friendly Error or Status Banner */}
+        {/* Error Banner */}
         {errorMessage && (
-          <div className="sana-studio-error">
+          <div className="sana-studio-error" style={{ padding: "8px 24px", background: "#FEF7EA", color: "#C78116", borderBottom: "1px solid #F59E0B", fontSize: "13px", fontWeight: "600" }}>
             <span>⚠️ {errorMessage}</span>
           </div>
         )}
 
         {/* ===================================================
-            LIVE CONVERSATION TRANSCRIPT VIEWPORT
+            LIVE CONVERSATION TRANSCRIPT VIEWPORT (SPACIOUS GEMINI-STYLE FEED)
         =================================================== */}
-        <section className="sana-transcript-viewport">
+        <section
+          className="sana-transcript-viewport"
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            padding: "24px 28px",
+            background: "#FFFFFF",
+            minHeight: "360px"
+          }}
+        >
+          {/* Gemini-Inspired Empty State Prompt & Suggestion Chips */}
+          {messages.length <= 1 && (
+            <div style={{ textAlign: "center", margin: "20px auto 30px", maxWidth: "600px" }}>
+              <div style={{ fontSize: "28px", fontWeight: "800", color: "#15345B", marginBottom: "8px" }}>
+                Where should we start?
+              </div>
+              <p style={{ fontSize: "15px", color: "#596579", lineHeight: 1.5, marginBottom: "24px" }}>
+                Tell me what is concerning you, and I'll help you explore symptoms and understand the next clinical steps.
+              </p>
+
+              {/* 4 Clickable Suggestion Chips (Gemini Reference Style) */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "10px", textAlign: "left" }}>
+                {[
+                  "I have a persistent dry cough and mild fever for 2 days",
+                  "Help me understand my latest blood test report",
+                  "What are the common signs of elevated blood pressure?",
+                  "Check potential drug interactions for my medications"
+                ].map((chipText, cIdx) => (
+                  <button
+                    key={cIdx}
+                    type="button"
+                    onClick={() => {
+                      setTypedMessage(chipText);
+                      submitTurnToSana(chipText);
+                    }}
+                    style={{
+                      background: "#F5F7FA",
+                      border: "1px solid #E0E6ED",
+                      borderRadius: "12px",
+                      padding: "12px 14px",
+                      fontSize: "13.5px",
+                      color: "#15345B",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                      textAlign: "left",
+                      transition: "all 0.15s ease"
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = "#1769D2";
+                      e.currentTarget.style.background = "#EBF3FC";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = "#E0E6ED";
+                      e.currentTarget.style.background = "#F5F7FA";
+                    }}
+                  >
+                    ✦ {chipText}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <SanaTranscript
             messages={messages}
-            interimTranscript={interimSpeech}
+            interimTranscript={liveTranscript}
             isListening={sanaState === "listening"}
+            isFinalizing={sanaState === "finalizing_transcript"}
             isThinking={sanaState === "thinking"}
             onReplayAudio={handleReplayAudio}
             scrollRef={scrollRef}
@@ -796,9 +956,15 @@ export default function SanaVoiceInterface({
         </section>
 
         {/* ===================================================
-            FOOTER: Text Fallback & Multimodal File Uploads
+            FOOTER COMPOSER: GEMINI REFERENCE INSPIRED CLEAN PROMPT BAR
         =================================================== */}
-        <footer className="sana-studio-footer">
+        <footer
+          style={{
+            padding: "16px 24px",
+            background: "#FFFFFF",
+            borderTop: "1px solid #E0E6ED"
+          }}
+        >
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -806,49 +972,124 @@ export default function SanaVoiceInterface({
                 submitTurnToSana(typedMessage);
               }
             }}
-            className="sana-input-form"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              background: "#F5F7FA",
+              border: "1px solid #CBD5E1",
+              borderRadius: "16px",
+              padding: "6px 8px 6px 14px",
+              gap: "8px"
+            }}
           >
             {/* Attachment Buttons */}
-            <div className="sana-tool-btn-group">
-              <button
-                type="button"
-                className="sana-tool-btn"
-                onClick={() => photoInputRef.current?.click()}
-                title="Attach medical/rash photo"
-              >
-                📷 Photo
-              </button>
+            <button
+              type="button"
+              onClick={() => photoInputRef.current?.click()}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#596579",
+                cursor: "pointer",
+                padding: "6px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center"
+              }}
+              title="Attach clinical photo"
+            >
+              📷
+            </button>
 
-              <button
-                type="button"
-                className="sana-tool-btn"
-                onClick={() => fileInputRef.current?.click()}
-                title="Upload lab report or PDF"
-              >
-                📄 Report
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#596579",
+                cursor: "pointer",
+                padding: "6px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center"
+              }}
+              title="Upload lab report"
+            >
+              📄
+            </button>
 
-            {/* Text message fallback */}
+            {/* Input Composer Field (16px readable text) */}
             <input
               type="text"
-              className="sana-text-fallback-input"
-              placeholder="Or type your symptoms here if in a noisy room..."
+              placeholder="Ask SANA or describe your symptoms..."
               value={typedMessage}
               onChange={(e) => setTypedMessage(e.target.value)}
               disabled={sanaState === "thinking"}
+              style={{
+                flex: 1,
+                border: "none",
+                background: "transparent",
+                outline: "none",
+                fontSize: "16px",
+                color: "#15345B",
+                padding: "8px 4px"
+              }}
             />
 
+            {/* Practical Clearly Labeled Microphone Control Button */}
+            <button
+              type="button"
+              onClick={handlePrimaryAction}
+              style={{
+                width: "42px",
+                height: "42px",
+                borderRadius: "50%",
+                background:
+                  sanaState === "listening"
+                    ? "#198754"
+                    : sanaState === "speaking"
+                    ? "#159C98"
+                    : "#1769D2",
+                color: "#FFFFFF",
+                border: "none",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                boxShadow: "0 2px 6px rgba(21, 52, 91, 0.15)",
+                transition: "all 0.15s ease",
+                flexShrink: 0
+              }}
+              title={sessionActive ? "Click to pause / submit speech" : "Talk with SANA (Microphone)"}
+            >
+              <Mic size={20} />
+            </button>
+
+            {/* Send Button */}
             <button
               type="submit"
-              className="sana-send-turn-btn"
               disabled={
                 sanaState === "thinking" ||
                 (!typedMessage.trim() && !activeImage && !activeReport)
               }
-              title="Send symptoms"
+              style={{
+                background: "#15345B",
+                color: "#FFFFFF",
+                border: "none",
+                borderRadius: "10px",
+                padding: "10px 16px",
+                fontSize: "14px",
+                fontWeight: "700",
+                cursor: "pointer",
+                opacity:
+                  sanaState === "thinking" ||
+                  (!typedMessage.trim() && !activeImage && !activeReport)
+                    ? 0.5
+                    : 1
+              }}
             >
-              Send ➤
+              Send
             </button>
           </form>
         </footer>

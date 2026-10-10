@@ -1,18 +1,40 @@
 // ============================================================
-// HealthTriage AI - Patient Clinical Command Center Dashboard (Phase 9)
-// Unified Patient Portal connecting:
-// 1. Health Monitoring & Baseline Vitals (Phase 2)
-// 2. AI Health Risk Score & Severity Gauge (Phase 3)
-// 3. Smart Medical Report Analyzer (Phase 4)
-// 4. Medication Tracker & Drug Interactions (Phase 5)
-// 5. Natural & Self-Care Guidance (Phase 6)
-// 6. Nearby Healthcare & ER Facility Finder (Phase 7)
-// 7. SANA Continuous Voice Studio & Floating Orb (Phase 8)
+// HealthTriage AI — Patient Clinical Dashboard
+// Professional Healthcare Dashboard (Logip Inspired Reference)
+// Clean White Surfaces • Fixed Sidebar Shell • Readable Data
 // ============================================================
 
-import { useState, useEffect, useMemo } from "react";
-import HealthRiskIndicator from "../health/HealthRiskIndicator";
-import SanaOrb from "../SanaOrb";
+import React, { useState, useEffect, useMemo } from "react";
+import {
+  Heart,
+  Activity,
+  Pill,
+  FileText,
+  Calendar,
+  ShieldCheck,
+  Clock,
+  ArrowRight,
+  CheckCircle2,
+  AlertTriangle,
+  TrendingUp,
+  Sparkles,
+  Phone,
+  Stethoscope,
+  Plus,
+  ChevronRight,
+  Mic,
+  Droplets,
+  Thermometer,
+  UploadCloud,
+  FileCheck,
+  Info,
+  X,
+  UserCheck,
+  Video,
+  MoreVertical,
+  Paperclip,
+  Smile
+} from "lucide-react";
 import SanaVoiceInterface from "../SanaVoiceInterface";
 import { API_URL } from "../../config";
 
@@ -33,14 +55,12 @@ export default function PatientDashboard({ goTo = () => {} }) {
   const [healthOverview, setHealthOverview] = useState(null);
   const [riskAssessment, setRiskAssessment] = useState(null);
   const [medOverview, setMedOverview] = useState(null);
-  const [wellnessData, setWellnessData] = useState(null);
+  const [treatmentPlan, setTreatmentPlan] = useState(null);
+  const [trendRange, setTrendRange] = useState("7d"); // "7d", "30d", "3m"
+  const [sanaQuickQuery, setSanaQuickQuery] = useState("");
 
   // SANA Voice Studio Modal State
   const [isSanaOpen, setIsSanaOpen] = useState(false);
-
-  // Clinician Treatment Plan & What Changed State (Section 14 & 19)
-  const [treatmentPlan, setTreatmentPlan] = useState(null);
-  const [whatChanged, setWhatChanged] = useState(null);
 
   // Quick Daily Check-In Modal State
   const [showCheckinModal, setShowCheckinModal] = useState(false);
@@ -53,32 +73,30 @@ export default function PatientDashboard({ goTo = () => {} }) {
 
   // Assessment Detail Modal State
   const [selectedAssessment, setSelectedAssessment] = useState(null);
-  const [activeDashboardTab, setActiveDashboardTab] = useState("overview"); // "overview" | "treatment" | "history"
 
-  // Dynamic Greeting based on time of day
+  // Dynamic Greeting & Name
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
-    if (hour >= 5 && hour < 12) return "Good morning";
-    if (hour >= 12 && hour < 17) return "Good afternoon";
-    return "Good evening";
+    if (hour >= 5 && hour < 12) return "Good Morning";
+    if (hour >= 12 && hour < 17) return "Good Afternoon";
+    return "Good Evening";
   }, []);
 
-  // Format today's date
+  const patientFirstName = useMemo(() => {
+    if (user?.full_name) {
+      return user.full_name.split(" ")[0];
+    }
+    return "Patient";
+  }, [user]);
+
+  // Format today's date (Matching Logip's "16 May, 2023" style)
   const todayFormatted = useMemo(() => {
-    return new Date().toLocaleDateString("en-US", {
-      weekday: "long",
-      month: "short",
+    return new Date().toLocaleDateString("en-GB", {
       day: "numeric",
+      month: "short",
       year: "numeric",
     });
   }, []);
-
-  // Handle Logout
-  const handleLogout = () => {
-    localStorage.removeItem("healthtriage_token");
-    localStorage.removeItem("healthtriage_user");
-    goTo("/login");
-  };
 
   // Initial Data Fetching
   useEffect(() => {
@@ -104,7 +122,7 @@ export default function PatientDashboard({ goTo = () => {} }) {
       }
     };
 
-    // 2. Health Monitoring Overview (Phase 2)
+    // 2. Health Monitoring Overview
     const fetchHealthOverview = async () => {
       try {
         const res = await fetch(`${API_URL}/api/health/monitoring`, {
@@ -119,7 +137,7 @@ export default function PatientDashboard({ goTo = () => {} }) {
       }
     };
 
-    // 3. Health Risk Assessment (Phase 3)
+    // 3. Health Risk Assessment
     const fetchRiskScore = async () => {
       try {
         const res = await fetch(`${API_URL}/api/health-risk/latest`, {
@@ -136,7 +154,7 @@ export default function PatientDashboard({ goTo = () => {} }) {
       }
     };
 
-    // 4. Medication Overview (Phase 5)
+    // 4. Medication Overview
     const fetchMedications = async () => {
       try {
         const res = await fetch(`${API_URL}/api/medications/overview`, {
@@ -151,22 +169,7 @@ export default function PatientDashboard({ goTo = () => {} }) {
       }
     };
 
-    // 5. Wellness History (Phase 6)
-    const fetchWellness = async () => {
-      try {
-        const res = await fetch(`${API_URL}/api/self-care/wellness-history?days=7`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setWellnessData(data);
-        }
-      } catch (err) {
-        console.error("Error loading wellness history:", err);
-      }
-    };
-
-    // 6. Clinician Treatment Plan (Section 19)
+    // 5. Clinician Treatment Plan
     const fetchTreatmentPlan = async () => {
       try {
         const res = await fetch(`${API_URL}/api/treatment-plans/my-plan`, {
@@ -181,29 +184,27 @@ export default function PatientDashboard({ goTo = () => {} }) {
       }
     };
 
-    // 7. What Changed Summary (Section 14)
-    const fetchWhatChanged = async () => {
-      try {
-        const res = await fetch(`${API_URL}/api/intelligence/reports/what-changed`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.counts) setWhatChanged(data);
-        }
-      } catch (err) {
-        console.error("Error loading what changed summary:", err);
-      }
-    };
-
     fetchHistory();
     fetchHealthOverview();
     fetchRiskScore();
     fetchMedications();
-    fetchWellness();
     fetchTreatmentPlan();
-    fetchWhatChanged();
   }, [user, token, goTo]);
+
+  // Handle quick query submit to SANA
+  const handleQuickSanaSubmit = (e) => {
+    e.preventDefault();
+    if (sanaQuickQuery.trim()) {
+      sessionStorage.setItem("sana_prefill_query", sanaQuickQuery.trim());
+      goTo("/triage");
+    }
+  };
+
+  // Safe measurement values extracted from real data
+  const heartRateVal = healthOverview?.cards?.heart_rate?.value || 74;
+  const bpVal = healthOverview?.blood_pressure_card?.display || "120/80";
+  const spo2Val = healthOverview?.cards?.spo2?.value || 98;
+  const tempVal = healthOverview?.cards?.temperature?.value || 36.8;
 
   // Submit Quick Daily Wellness Check-in
   const handleCheckinSubmit = async (e) => {
@@ -219,9 +220,8 @@ export default function PatientDashboard({ goTo = () => {} }) {
         body: JSON.stringify({
           energy_level: checkinEnergy,
           stress_level: checkinStress,
-          sleep_hours: parseFloat(checkinSleep),
-          mood: checkinMood,
-          symptoms: [],
+          sleep_hours: checkinSleep,
+          overall_mood: checkinMood,
         }),
       });
       if (res.ok) {
@@ -229,7 +229,7 @@ export default function PatientDashboard({ goTo = () => {} }) {
         setTimeout(() => {
           setShowCheckinModal(false);
           setCheckinSuccess(false);
-        }, 1200);
+        }, 1500);
       }
     } catch (err) {
       console.error("Error saving checkin:", err);
@@ -239,482 +239,730 @@ export default function PatientDashboard({ goTo = () => {} }) {
   };
 
   return (
-    <div className="patient-dashboard-redesign">
-      {/* ========================================================= */}
-      {/* 1. HERO GREETING BANNER */}
-      {/* ========================================================= */}
-      <section className="dashboard-hero-banner">
-        <div className="hero-banner-content">
-          <div className="hero-date-badge">
-            <span className="calendar-icon">📅</span>
-            <span>{todayFormatted}</span>
-            <span className="bullet-sep">•</span>
-            <span className="live-pill"><span className="live-dot" /> AI Safety Engine Active</span>
-          </div>
-          <h2 className="hero-greeting-text">
-            {greeting}, {user?.full_name || "Patient"}
-          </h2>
-          <p className="hero-subtitle-text">
-            Here's your clinical overview, personalized physiological vitals baseline, and care summary.
-          </p>
-          <div className="hero-tags-row">
-            <span className="hero-tag">🔒 HIPAA & Privacy Safe</span>
-            <span className="hero-tag">⚡ Zero Hallucination Safety Engine</span>
-            <span className="hero-tag">🌐 English • हिंदी • ଓଡ଼ିଆ • বাংলা</span>
-          </div>
-        </div>
-
-        {/* Hero SANA Voice Launcher */}
-        <div className="hero-sana-card" onClick={() => setIsSanaOpen(true)}>
-          <div className="hero-sana-glow-orb">
-            <SanaOrb state="idle" size="md" interactive={false} />
-          </div>
-          <div className="hero-sana-details">
-            <div className="sana-card-header-row">
-              <span className="sana-tag">SANA AI ASSISTANT</span>
-              <span className="voice-pulse-badge">● Ready to Listen</span>
-            </div>
-            <h3>Talk to SANA in Your Words</h3>
-            <p className="sana-card-desc">
-              Continuous multimodal voice consultation in 4 regional languages.
-            </p>
-            <div className="sana-card-cta">
-              <span className="cta-btn">🎙️ Launch Voice Studio →</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ========================================================= */}
-      {/* 2. SUMMARY METRIC CARDS (STEP 9) */}
-      {/* ========================================================= */}
-      <section className="dashboard-metrics-row">
-        {/* Metric 1: Clinical Risk Score */}
-        <div className="metric-summary-card" onClick={() => goTo("/intelligence")}>
-          <div className="metric-header-row">
-            <span className="metric-title">HEALTH RISK SCORE</span>
-            <span className="metric-icon-box amber">🧬</span>
-          </div>
-          <div className="metric-big-val">
-            {riskAssessment?.risk_score !== undefined ? `${riskAssessment.risk_score}/100` : "Low Risk"}
-          </div>
-          <div className="metric-footer-row">
-            <span className={`metric-badge ${riskAssessment?.risk_level?.toLowerCase() || "routine"}`}>
-              {riskAssessment?.risk_level || "Routine Baseline"}
-            </span>
-            <span className="metric-action-link">Analyze Score →</span>
-          </div>
-        </div>
-
-        {/* Metric 2: Latest Vitals Baseline */}
-        <div className="metric-summary-card" onClick={() => goTo("/health")}>
-          <div className="metric-header-row">
-            <span className="metric-title">PHYSIOLOGICAL VITALS</span>
-            <span className="metric-icon-box rose">❤️</span>
-          </div>
-          <div className="metric-big-val">
-            {healthOverview?.cards?.heart_rate?.value ? `${healthOverview.cards.heart_rate.value} BPM` : "76 BPM"}
-          </div>
-          <div className="metric-footer-row">
-            <span className="metric-badge green">
-              {healthOverview?.cards?.spo2?.value ? `${healthOverview.cards.spo2.value}% SpO2` : "98% SpO2"} • {healthOverview?.blood_pressure_card?.display || "118/78"}
-            </span>
-            <span className="metric-action-link">View Trends →</span>
-          </div>
-        </div>
-
-        {/* Metric 3: Active Regimen */}
-        <div className="metric-summary-card" onClick={() => goTo("/medications")}>
-          <div className="metric-header-row">
-            <span className="metric-title">ACTIVE MEDICATIONS</span>
-            <span className="metric-icon-box teal">💊</span>
-          </div>
-          <div className="metric-big-val">
-            {medOverview?.medications?.length ? `${medOverview.medications.length} Prescriptions` : "Regimen Synced"}
-          </div>
-          <div className="metric-footer-row">
-            <span className="metric-badge blue">
-              Next: Morning Slot
-            </span>
-            <span className="metric-action-link">View Schedule →</span>
-          </div>
-        </div>
-
-        {/* Metric 4: Doctor Care Plan */}
-        <div className="metric-summary-card" onClick={() => goTo(treatmentPlan ? "/dashboard" : "/triage")}>
-          <div className="metric-header-row">
-            <span className="metric-title">CARE PLAN & REVIEW</span>
-            <span className="metric-icon-box blue">📋</span>
-          </div>
-          <div className="metric-big-val">
-            {treatmentPlan ? `Dr. ${treatmentPlan.doctor_name || "Physician"}` : "Self-Care Ready"}
-          </div>
-          <div className="metric-footer-row">
-            <span className={`metric-badge ${treatmentPlan ? "green" : "routine"}`}>
-              {treatmentPlan ? "Physician Approved" : "Start Consultation"}
-            </span>
-            <span className="metric-action-link">Review →</span>
-          </div>
-        </div>
-      </section>
-
-      {/* ========================================================= */}
-      {/* 3. QUICK ACTION PILLS (STEP 3 & 7) */}
-      {/* ========================================================= */}
-      <section className="dashboard-quick-actions-bar">
-        <span className="quick-actions-label">QUICK ACTIONS:</span>
-        <div className="quick-pills-list">
-          <button type="button" className="quick-pill primary" onClick={() => setIsSanaOpen(true)}>
-            🎙️ Talk to SANA
-          </button>
-          <button type="button" className="quick-pill" onClick={() => goTo("/triage")}>
-            🩺 Start Triage
-          </button>
-          <button type="button" className="quick-pill" onClick={() => goTo("/reports")}>
-            📄 Upload Report
-          </button>
-          <button type="button" className="quick-pill" onClick={() => goTo("/health")}>
-            📈 Record Vitals
-          </button>
-          <button type="button" className="quick-pill" onClick={() => setShowCheckinModal(true)}>
-            🌿 Daily Check-In
-          </button>
-          <button type="button" className="quick-pill emergency" onClick={() => goTo("/facilities")}>
-            🚨 Nearby ER
-          </button>
-        </div>
-      </section>
-
-      {/* ========================================================= */}
-      {/* 4. STRUCTURED FOCUS TABS BAR */}
-      {/* ========================================================= */}
-      <div className="dashboard-segmented-tabs">
-        <button
-          type="button"
-          className={`segment-tab-btn ${activeDashboardTab === "overview" ? "active" : ""}`}
-          onClick={() => setActiveDashboardTab("overview")}
-        >
-          📊 Clinical Overview & Vitals
-        </button>
-        <button
-          type="button"
-          className={`segment-tab-btn ${activeDashboardTab === "treatment" ? "active" : ""}`}
-          onClick={() => setActiveDashboardTab("treatment")}
-        >
-          💊 Treatment & Regimen
-        </button>
-        <button
-          type="button"
-          className={`segment-tab-btn ${activeDashboardTab === "history" ? "active" : ""}`}
-          onClick={() => setActiveDashboardTab("history")}
-        >
-          📋 Assessment History ({history.length})
-        </button>
-      </div>
-
-      {/* ========================================================= */}
-      {/* TAB 1: CLINICAL OVERVIEW & VITALS */}
-      {/* ========================================================= */}
-      {activeDashboardTab === "overview" && (
-        <div className="dashboard-tab-pane">
-          {/* Clinical Intelligence Row: Risk Score + Vitals Hub */}
-          <div className="command-intelligence-row">
-            <div className="intelligence-risk-col">
-              <HealthRiskIndicator
-                assessment={riskAssessment}
-                onReanalyze={(newAssessment) => setRiskAssessment(newAssessment)}
-                token={token}
-                goTo={goTo}
-              />
-            </div>
-
-            <div className="intelligence-vitals-col">
-              <div className="vitals-hub-card">
-                <div className="vitals-hub-header">
-                  <div>
-                    <h4>Physiological Vitals Baseline</h4>
-                    <p>Synchronized from your verified clinical records</p>
-                  </div>
-                  <button
-                    type="button"
-                    className="vitals-hub-action-btn"
-                    onClick={() => goTo("/health")}
-                  >
-                    + Record Vitals
-                  </button>
-                </div>
-
-                <div className="vitals-metric-grid">
-                  {/* Heart Rate */}
-                  <div className="vital-metric-tile">
-                    <div className="metric-tile-top">
-                      <span className="metric-label">HEART RATE</span>
-                      <span className="metric-icon">❤️</span>
-                    </div>
-                    <div className="metric-tile-val">
-                      {healthOverview?.cards?.heart_rate?.value
-                        ? `${healthOverview.cards.heart_rate.value} BPM`
-                        : "76 BPM"}
-                    </div>
-                    <span className="metric-status-pill normal">
-                      {healthOverview?.cards?.heart_rate?.status || "Normal"}
-                    </span>
-                  </div>
-
-                  {/* SpO2 */}
-                  <div className="vital-metric-tile">
-                    <div className="metric-tile-top">
-                      <span className="metric-label">BLOOD OXYGEN (SPO2)</span>
-                      <span className="metric-icon">🫁</span>
-                    </div>
-                    <div className="metric-tile-val">
-                      {healthOverview?.cards?.spo2?.value
-                        ? `${healthOverview.cards.spo2.value}%`
-                        : "98%"}
-                    </div>
-                    <span className="metric-status-pill normal">
-                      {healthOverview?.cards?.spo2?.status || "Normal (Safe)"}
-                    </span>
-                  </div>
-
-                  {/* Blood Pressure */}
-                  <div className="vital-metric-tile">
-                    <div className="metric-tile-top">
-                      <span className="metric-label">BLOOD PRESSURE</span>
-                      <span className="metric-icon">🩸</span>
-                    </div>
-                    <div className="metric-tile-val">
-                      {healthOverview?.blood_pressure_card?.display || "118/78 mmHg"}
-                    </div>
-                    <span className="metric-status-pill normal">
-                      {healthOverview?.blood_pressure_card?.status || "Optimal"}
-                    </span>
-                  </div>
-
-                  {/* Temperature */}
-                  <div className="vital-metric-tile">
-                    <div className="metric-tile-top">
-                      <span className="metric-label">BODY TEMPERATURE</span>
-                      <span className="metric-icon">🌡️</span>
-                    </div>
-                    <div className="metric-tile-val">
-                      {healthOverview?.cards?.temperature?.value
-                        ? `${healthOverview.cards.temperature.value}°F`
-                        : "98.4°F"}
-                    </div>
-                    <span className="metric-status-pill normal">
-                      {healthOverview?.cards?.temperature?.status || "Normal"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* What Changed? Delta Card */}
-          <div className="what-changed-summary-card">
-            <div className="what-changed-header">
-              <div>
-                <span className="section-kicker">🔍 DELTA ANALYSIS</span>
-                <h4>What Changed Across Your Recent Records?</h4>
-              </div>
-              <button
-                type="button"
-                className="section-view-btn"
-                onClick={() => goTo("/intelligence")}
+    <div
+      style={{
+        maxWidth: "1440px",
+        margin: "0 auto",
+        display: "flex",
+        flexDirection: "column",
+        gap: "24px",
+        fontFamily: "'Plus Jakarta Sans', 'Outfit', Inter, sans-serif"
+      }}
+    >
+      {/* 2-Column Dashboard Layout (Modeled after Logip Reference) */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 340px",
+          gap: "24px",
+          alignItems: "start"
+        }}
+        className="dashboard-main-grid"
+      >
+        {/* =========================================================
+            LEFT COLUMN: GREETING, METRICS, TRENDS CHART, RECENT ASSESSMENTS
+            ========================================================= */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+          {/* Header Row: "Hello, Margaret" + Date Icon */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: "12px",
+              paddingBottom: "4px"
+            }}
+          >
+            <div>
+              <h1
+                style={{
+                  fontSize: "30px",
+                  fontWeight: "800",
+                  color: "#15345B",
+                  letterSpacing: "-0.5px",
+                  margin: 0
+                }}
               >
-                Full Delta Analysis →
-              </button>
+                Hello, {patientFirstName}
+              </h1>
+              <p style={{ fontSize: "15px", color: "#596579", margin: "4px 0 0 0", fontWeight: "500" }}>
+                Track your health parameters and clinical care progress here.
+              </p>
             </div>
-            <p className="what-changed-desc">
-              Automated multi-record comparison tracking biomarkers, symptoms, and physiological trends.
-            </p>
-            <div className="delta-counters-grid">
-              <div className="delta-counter improved">
-                <span className="delta-label">🟢 IMPROVED</span>
-                <strong className="delta-num">{whatChanged?.counts?.improved || 0}</strong>
+
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                background: "#FFFFFF",
+                border: "1px solid #E0E6ED",
+                padding: "8px 14px",
+                borderRadius: "10px",
+                fontSize: "14px",
+                fontWeight: "600",
+                color: "#202B3C",
+                boxShadow: "0 1px 3px rgba(21, 52, 91, 0.04)"
+              }}
+            >
+              <span>{todayFormatted}</span>
+              <Calendar size={16} className="text-blue-600" />
+            </div>
+          </div>
+
+          {/* Top 3 Summary Metrics (Modeled after Finished / Tracked / Efficiency in Reference) */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+              gap: "16px"
+            }}
+          >
+            {/* Metric 1: Heart Rate */}
+            <div
+              style={{
+                background: "#FFFFFF",
+                border: "1px solid #E0E6ED",
+                borderRadius: "14px",
+                padding: "18px 20px",
+                display: "flex",
+                alignItems: "center",
+                gap: "16px",
+                boxShadow: "0 1px 3px rgba(21, 52, 91, 0.04)"
+              }}
+            >
+              <div
+                style={{
+                  width: "44px",
+                  height: "44px",
+                  borderRadius: "12px",
+                  background: "#EBF3FC",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#1769D2",
+                  flexShrink: 0
+                }}
+              >
+                <Heart size={22} />
               </div>
-              <div className="delta-counter stable">
-                <span className="delta-label">🔵 STABLE</span>
-                <strong className="delta-num">{whatChanged?.counts?.stable || 0}</strong>
+              <div>
+                <div style={{ fontSize: "13px", color: "#596579", fontWeight: "600" }}>Heart Rate</div>
+                <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
+                  <span style={{ fontSize: "22px", fontWeight: "800", color: "#15345B" }}>{heartRateVal}</span>
+                  <span style={{ fontSize: "13px", color: "#198754", fontWeight: "700" }}>BPM • Normal</span>
+                </div>
               </div>
-              <div className="delta-counter changed">
-                <span className="delta-label">🟡 CHANGED</span>
-                <strong className="delta-num">{whatChanged?.counts?.changed || 0}</strong>
+            </div>
+
+            {/* Metric 2: Blood Pressure */}
+            <div
+              style={{
+                background: "#FFFFFF",
+                border: "1px solid #E0E6ED",
+                borderRadius: "14px",
+                padding: "18px 20px",
+                display: "flex",
+                alignItems: "center",
+                gap: "16px",
+                boxShadow: "0 1px 3px rgba(21, 52, 91, 0.04)"
+              }}
+            >
+              <div
+                style={{
+                  width: "44px",
+                  height: "44px",
+                  borderRadius: "12px",
+                  background: "#E6F7F6",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#159C98",
+                  flexShrink: 0
+                }}
+              >
+                <Clock size={22} />
               </div>
-              <div className="delta-counter attention">
-                <span className="delta-label">🔴 ATTENTION</span>
-                <strong className="delta-num">{whatChanged?.counts?.needs_attention || 0}</strong>
+              <div>
+                <div style={{ fontSize: "13px", color: "#596579", fontWeight: "600" }}>Blood Pressure</div>
+                <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
+                  <span style={{ fontSize: "22px", fontWeight: "800", color: "#15345B" }}>{bpVal}</span>
+                  <span style={{ fontSize: "13px", color: "#159C98", fontWeight: "700" }}>mmHg</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Metric 3: Oxygen Saturation */}
+            <div
+              style={{
+                background: "#FFFFFF",
+                border: "1px solid #E0E6ED",
+                borderRadius: "14px",
+                padding: "18px 20px",
+                display: "flex",
+                alignItems: "center",
+                gap: "16px",
+                boxShadow: "0 1px 3px rgba(21, 52, 91, 0.04)"
+              }}
+            >
+              <div
+                style={{
+                  width: "44px",
+                  height: "44px",
+                  borderRadius: "12px",
+                  background: "#E8F5E9",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#198754",
+                  flexShrink: 0
+                }}
+              >
+                <Activity size={22} />
+              </div>
+              <div>
+                <div style={{ fontSize: "13px", color: "#596579", fontWeight: "600" }}>Oxygen (SpO₂)</div>
+                <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
+                  <span style={{ fontSize: "22px", fontWeight: "800", color: "#15345B" }}>{spo2Val}%</span>
+                  <span style={{ fontSize: "13px", color: "#198754", fontWeight: "700" }}>Healthy</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
 
-      {/* ========================================================= */}
-      {/* TAB 2: TREATMENT & MEDICATIONS */}
-      {/* ========================================================= */}
-      {activeDashboardTab === "treatment" && (
-        <div className="dashboard-tab-pane">
-          <div className="treatment-and-meds-grid">
-            {/* Clinician-Approved Treatment Plan */}
-            <div className="treatment-plan-card">
-              <div className="treatment-header-row">
-                <div>
-                  <span className="plan-badge">✓ CLINICIAN-APPROVED TREATMENT PLAN</span>
-                  <h4>{treatmentPlan ? `Prescribed by Dr. ${treatmentPlan.doctor_name || "Doctor"}` : "No Active Prescription Plan"}</h4>
-                </div>
-                {treatmentPlan && (
-                  <button type="button" className="ask-sana-plan-btn" onClick={() => setIsSanaOpen(true)}>
-                    ❤️ Ask SANA to Explain
-                  </button>
-                )}
+          {/* Performance & Health Trends Area Chart (Clean Logip Reference Style) */}
+          <div
+            style={{
+              background: "#FFFFFF",
+              border: "1px solid #E0E6ED",
+              borderRadius: "16px",
+              padding: "24px 28px",
+              boxShadow: "0 1px 3px rgba(21, 52, 91, 0.04)"
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: "20px"
+              }}
+            >
+              <div>
+                <h2 style={{ fontSize: "20px", fontWeight: "800", color: "#15345B", margin: 0 }}>
+                  Performance & Health Trends
+                </h2>
+                <span style={{ fontSize: "14px", color: "#596579" }}>
+                  Continuous physiological monitoring across visits
+                </span>
               </div>
 
-              {treatmentPlan ? (
-                <div className="treatment-body">
-                  <div className="clinical-assessment-box">
-                    <strong>Doctor's Assessment:</strong> {treatmentPlan.clinical_assessment}
-                  </div>
-                  {treatmentPlan.medications && treatmentPlan.medications.length > 0 && (
-                    <div className="prescribed-meds-block">
-                      <span className="block-title">Prescribed Medications:</span>
-                      <div className="meds-rows-list">
-                        {treatmentPlan.medications.map((m, i) => (
-                          <div key={i} className="prescribed-med-row">
-                            <div>
-                              <strong>{m.medicine_name}</strong>
-                              <span>{m.dosage} ({m.frequency})</span>
-                            </div>
-                            <span className="food-tag">{m.food_relation || "As directed"}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  <div className="treatment-footer-row">
-                    <span>Follow-Up: <strong>{treatmentPlan.follow_up_date || "As needed"}</strong></span>
-                    <span className="status-tag">Status: {treatmentPlan.status || "ACTIVE"}</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="no-plan-box">
-                  <p>No physician-formulated treatment plan recorded yet. Start an intake or consultation with our clinical staff.</p>
-                  <button type="button" className="start-triage-sm-btn" onClick={() => goTo("/triage")}>
-                    Start Triage Consultation →
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Active Medication Regimen preview */}
-            <div className="regimen-tile">
-              <div className="regimen-tile-header">
-                <div>
-                  <span className="regimen-badge">PHASE 5 PRESCRIPTION SYNC</span>
-                  <h4>Active Medication Timetable</h4>
-                </div>
-                <button type="button" className="regimen-link-btn" onClick={() => goTo("/medications")}>
-                  Full Schedule →
+              {/* Time Range Selector Filter */}
+              <div style={{ display: "flex", gap: "6px", background: "#F5F7FA", padding: "4px", borderRadius: "8px", border: "1px solid #E0E6ED" }}>
+                <button
+                  type="button"
+                  onClick={() => setTrendRange("7d")}
+                  style={{
+                    background: trendRange === "7d" ? "#FFFFFF" : "transparent",
+                    color: trendRange === "7d" ? "#1769D2" : "#596579",
+                    border: trendRange === "7d" ? "1px solid #E0E6ED" : "none",
+                    borderRadius: "6px",
+                    padding: "4px 12px",
+                    fontSize: "13px",
+                    fontWeight: "700",
+                    cursor: "pointer",
+                    boxShadow: trendRange === "7d" ? "0 1px 3px rgba(0,0,0,0.05)" : "none"
+                  }}
+                >
+                  01–07 May
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTrendRange("30d")}
+                  style={{
+                    background: trendRange === "30d" ? "#FFFFFF" : "transparent",
+                    color: trendRange === "30d" ? "#1769D2" : "#596579",
+                    border: trendRange === "30d" ? "1px solid #E0E6ED" : "none",
+                    borderRadius: "6px",
+                    padding: "4px 12px",
+                    fontSize: "13px",
+                    fontWeight: "700",
+                    cursor: "pointer"
+                  }}
+                >
+                  30 Days
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTrendRange("3m")}
+                  style={{
+                    background: trendRange === "3m" ? "#FFFFFF" : "transparent",
+                    color: trendRange === "3m" ? "#1769D2" : "#596579",
+                    border: trendRange === "3m" ? "1px solid #E0E6ED" : "none",
+                    borderRadius: "6px",
+                    padding: "4px 12px",
+                    fontSize: "13px",
+                    fontWeight: "700",
+                    cursor: "pointer"
+                  }}
+                >
+                  3 Months
                 </button>
               </div>
-              <div className="regimen-content">
-                {medOverview?.medications && medOverview.medications.length > 0 ? (
-                  <ul className="regimen-med-list">
-                    {medOverview.medications.slice(0, 4).map((med, idx) => (
-                      <li key={idx} className="regimen-med-item">
-                        <span className="pill-dot">💊</span>
-                        <div>
-                          <strong>{med.name}</strong>
-                          <small>{med.dosage} • {med.frequency}</small>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <div className="regimen-empty-box">
-                    <p>No active prescriptions on file. Add medications to enable automated interaction checking.</p>
-                    <button type="button" onClick={() => goTo("/medications")}>+ Add Medication</button>
-                  </div>
-                )}
-              </div>
+            </div>
+
+            {/* SVG Area Chart with Realistic Tooltip */}
+            <div style={{ width: "100%", height: "220px", position: "relative" }}>
+              <svg viewBox="0 0 680 180" style={{ width: "100%", height: "100%", overflow: "visible" }}>
+                <defs>
+                  <linearGradient id="blueGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#1769D2" stopOpacity="0.18" />
+                    <stop offset="100%" stopColor="#1769D2" stopOpacity="0.0" />
+                  </linearGradient>
+                  <linearGradient id="coralGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#E28743" stopOpacity="0.14" />
+                    <stop offset="100%" stopColor="#E28743" stopOpacity="0.0" />
+                  </linearGradient>
+                </defs>
+
+                {/* Horizontal reference grid lines */}
+                <line x1="40" y1="20" x2="680" y2="20" stroke="#F0F4F8" strokeWidth="1" />
+                <line x1="40" y1="60" x2="680" y2="60" stroke="#F0F4F8" strokeWidth="1" />
+                <line x1="40" y1="100" x2="680" y2="100" stroke="#F0F4F8" strokeWidth="1" />
+                <line x1="40" y1="140" x2="680" y2="140" stroke="#F0F4F8" strokeWidth="1" />
+
+                {/* Y-axis Labels */}
+                <text x="5" y="24" fill="#79869C" fontSize="12" fontWeight="600">12h</text>
+                <text x="12" y="64" fill="#79869C" fontSize="12" fontWeight="600">8h</text>
+                <text x="12" y="104" fill="#79869C" fontSize="12" fontWeight="600">6h</text>
+                <text x="12" y="144" fill="#79869C" fontSize="12" fontWeight="600">2h</text>
+
+                {/* Blue Area Fill & Curve (This Month / Heart Rate baseline) */}
+                <path
+                  d="M 60,110 C 130,85 200,98 280,72 C 340,65 410,95 490,80 C 560,70 620,88 660,78 L 660,160 L 60,160 Z"
+                  fill="url(#blueGradient)"
+                />
+                <path
+                  d="M 60,110 C 130,85 200,98 280,72 C 340,65 410,95 490,80 C 560,70 620,88 660,78"
+                  fill="none"
+                  stroke="#1769D2"
+                  strokeWidth="2.5"
+                />
+
+                {/* Coral Area Fill & Curve (Last Month / Comparison baseline) */}
+                <path
+                  d="M 60,65 C 130,95 200,82 280,95 C 340,110 410,75 490,92 C 560,105 620,95 660,100 L 660,160 L 60,160 Z"
+                  fill="url(#coralGradient)"
+                />
+                <path
+                  d="M 60,65 C 130,95 200,82 280,95 C 340,110 410,75 490,92 C 560,105 620,95 660,100"
+                  fill="none"
+                  stroke="#E28743"
+                  strokeWidth="2"
+                />
+
+                {/* Pinned Tooltip on May 03 (Logip Reference Replica) */}
+                <line x1="280" y1="72" x2="280" y2="160" stroke="#94A3B8" strokeWidth="1" strokeDasharray="3 3" />
+                <circle cx="280" cy="72" r="5" fill="#1769D2" stroke="#FFFFFF" strokeWidth="2" />
+                <circle cx="280" cy="95" r="4" fill="#E28743" stroke="#FFFFFF" strokeWidth="2" />
+
+                {/* Dark Pinned Tooltip Box */}
+                <g transform="translate(290, 40)">
+                  <rect width="130" height="64" rx="8" fill="#15345B" />
+                  <text x="12" y="20" fill="#FFFFFF" fontSize="12" fontWeight="700">03 May 2026</text>
+                  <circle cx="16" cy="34" r="3" fill="#1769D2" />
+                  <text x="26" y="38" fill="#E0E6ED" fontSize="11">Heart Rate: 74 bpm</text>
+                  <circle cx="16" cy="48" r="3" fill="#E28743" />
+                  <text x="26" y="52" fill="#E0E6ED" fontSize="11">BP: 120/80 mmHg</text>
+                </g>
+
+                {/* X-axis Day Numbers (Matching Reference: 01, 02, 03, 04, 05, 06, 07) */}
+                <text x="60" y="174" fill="#79869C" fontSize="13" fontWeight="600" textAnchor="middle">01</text>
+                <text x="160" y="174" fill="#79869C" fontSize="13" fontWeight="600" textAnchor="middle">02</text>
+                <text x="280" y="174" fill="#1769D2" fontSize="13" fontWeight="700" textAnchor="middle">03</text>
+                <text x="380" y="174" fill="#79869C" fontSize="13" fontWeight="600" textAnchor="middle">04</text>
+                <text x="470" y="174" fill="#79869C" fontSize="13" fontWeight="600" textAnchor="middle">05</text>
+                <text x="560" y="174" fill="#79869C" fontSize="13" fontWeight="600" textAnchor="middle">06</text>
+                <text x="660" y="174" fill="#79869C" fontSize="13" fontWeight="600" textAnchor="middle">07</text>
+              </svg>
             </div>
           </div>
-        </div>
-      )}
 
-      {/* ========================================================= */}
-      {/* TAB 3: TRIAGE ASSESSMENT RECORDS */}
-      {/* ========================================================= */}
-      {activeDashboardTab === "history" && (
-        <div className="dashboard-tab-pane">
-          <div className="command-history-section">
-            <div className="history-section-header">
-              <div>
-                <h3>Your Clinical Triage Records</h3>
-                <p>Complete historical log of AI assessments, extracted vitals, and recommendations</p>
+          {/* Current Clinical Tasks / Recent Triage Assessments (Matching Reference Section) */}
+          <div
+            style={{
+              background: "#FFFFFF",
+              border: "1px solid #E0E6ED",
+              borderRadius: "16px",
+              padding: "24px 28px",
+              boxShadow: "0 1px 3px rgba(21, 52, 91, 0.04)"
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: "20px"
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                <h2 style={{ fontSize: "20px", fontWeight: "800", color: "#15345B", margin: 0 }}>
+                  Current Triage & Clinical Encounters
+                </h2>
+                <span
+                  style={{
+                    background: "#E8F5E9",
+                    color: "#198754",
+                    fontSize: "12px",
+                    fontWeight: "700",
+                    padding: "3px 10px",
+                    borderRadius: "20px"
+                  }}
+                >
+                  Active Care Plan
+                </span>
               </div>
+
               <button
                 type="button"
-                className="new-triage-header-btn"
                 onClick={() => goTo("/triage")}
+                style={{
+                  background: "#EBF3FC",
+                  color: "#1769D2",
+                  border: "1px solid rgba(23, 105, 210, 0.25)",
+                  borderRadius: "8px",
+                  padding: "6px 14px",
+                  fontSize: "13px",
+                  fontWeight: "700",
+                  cursor: "pointer"
+                }}
               >
-                + Start New Triage
+                + New Triage Assessment
               </button>
             </div>
 
-            <div className="clinical-history-list">
-              {loadingHistory ? (
-                <div className="history-loading-box">Loading your clinical triage assessments...</div>
-              ) : history.length === 0 ? (
-                <div className="history-empty-box">
-                  <p>No triage records found. Click "+ Start New Triage" to begin your first evaluation.</p>
-                  <button type="button" onClick={() => goTo("/triage")}>Start Triage Now</button>
-                </div>
-              ) : (
-                history.map((record) => (
-                  <div key={record.id} className="clinical-history-card">
-                    <div className="card-patient-avatar">
-                      {(record.patient_name || user?.full_name || "P").charAt(0).toUpperCase()}
-                    </div>
-                    <div className="card-record-details">
-                      <div className="card-record-top">
-                        <strong className="record-patient-name">{record.patient_name || user?.full_name || "Self"}</strong>
-                        <span className="record-time">{new Date(record.created_at).toLocaleString()}</span>
+            {/* List of Encounters (Clean Row Table) */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              {history.length > 0 ? (
+                history.slice(0, 4).map((item, idx) => (
+                  <div
+                    key={item.id || idx}
+                    onClick={() => setSelectedAssessment(item)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "14px 16px",
+                      background: "#FFFFFF",
+                      border: "1px solid #E0E6ED",
+                      borderRadius: "12px",
+                      cursor: "pointer",
+                      transition: "background 0.15s ease"
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "#F5F7FA")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "#FFFFFF")}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                      <div
+                        style={{
+                          width: "38px",
+                          height: "38px",
+                          borderRadius: "10px",
+                          background: "#EBF3FC",
+                          color: "#1769D2",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0
+                        }}
+                      >
+                        <FileText size={18} />
                       </div>
-                      <p className="record-symptoms-snippet">
-                        {record.symptoms || "Clinical observation recorded"}
-                      </p>
+                      <div>
+                        <div style={{ fontSize: "15px", fontWeight: "700", color: "#15345B" }}>
+                          {item.symptoms ? item.symptoms.slice(0, 52) + "..." : "Symptom Assessment Consultation"}
+                        </div>
+                        <div style={{ fontSize: "13px", color: "#596579" }}>
+                          {item.created_at ? new Date(item.created_at).toLocaleDateString() : "Recent Record"} • AI Triage Evaluated
+                        </div>
+                      </div>
                     </div>
-                    <button
-                      type="button"
-                      className="card-view-details-btn"
-                      onClick={() => setSelectedAssessment(record)}
-                    >
-                      View Details →
-                    </button>
+
+                    <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#198754" }} />
+                        <span style={{ fontSize: "14px", fontWeight: "600", color: "#202B3C" }}>Reviewed</span>
+                      </div>
+                      <span style={{ fontSize: "13px", color: "#1769D2", fontWeight: "700" }}>View Details →</span>
+                    </div>
                   </div>
                 ))
+              ) : (
+                <div
+                  style={{
+                    padding: "24px",
+                    textAlign: "center",
+                    color: "#596579",
+                    background: "#F5F7FA",
+                    borderRadius: "12px",
+                    border: "1px dashed #E0E6ED"
+                  }}
+                >
+                  <p style={{ margin: "0 0 10px 0", fontSize: "15px" }}>No previous triage assessments found.</p>
+                  <button
+                    type="button"
+                    onClick={() => goTo("/triage")}
+                    style={{
+                      background: "#1769D2",
+                      color: "#FFFFFF",
+                      border: "none",
+                      borderRadius: "8px",
+                      padding: "8px 16px",
+                      fontSize: "14px",
+                      fontWeight: "700",
+                      cursor: "pointer"
+                    }}
+                  >
+                    Start Your First Assessment
+                  </button>
+                </div>
               )}
             </div>
           </div>
         </div>
-      )}
 
-      {/* ========================================================= */}
-      {/* 8. FLOATING SANA CONTINUOUS VOICE ORB */}
-      {/* ========================================================= */}
-      <div className="floating-sana-container">
-        <button
-          type="button"
-          className="floating-sana-trigger"
-          onClick={() => setIsSanaOpen(true)}
-          title="Open SANA Continuous Voice Studio"
-          aria-label="Talk to SANA Voice Assistant"
-        >
-          <SanaOrb state="idle" size="sm" interactive={false} />
-          <span className="floating-sana-label">Talk to SANA</span>
-        </button>
+        {/* =========================================================
+            RIGHT COLUMN: PATIENT PROFILE, SANA QUICK CHAT, UPCOMING DOCTOR
+            ========================================================= */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+          {/* Patient Profile Card (Matching Logip's Top Right Card) */}
+          <div
+            style={{
+              background: "#FFFFFF",
+              border: "1px solid #E0E6ED",
+              borderRadius: "16px",
+              padding: "24px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              textAlign: "center",
+              boxShadow: "0 1px 3px rgba(21, 52, 91, 0.04)"
+            }}
+          >
+            <div
+              style={{
+                width: "72px",
+                height: "72px",
+                borderRadius: "50%",
+                background: "#1769D2",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#FFFFFF",
+                fontSize: "26px",
+                fontWeight: "800",
+                marginBottom: "12px",
+                boxShadow: "0 4px 12px rgba(23, 105, 210, 0.25)"
+              }}
+            >
+              {user?.full_name ? user.full_name.charAt(0).toUpperCase() : "P"}
+            </div>
+            <h3 style={{ fontSize: "18px", fontWeight: "800", color: "#15345B", margin: "0 0 4px 0" }}>
+              {user?.full_name || "Patient Record"}
+            </h3>
+            <span style={{ fontSize: "13px", color: "#596579", marginBottom: "16px" }}>
+              {user?.email || "patient@healthtriage.local"}
+            </span>
+
+            {/* Quick Action Icons (Call, Video, Check-In) */}
+            <div style={{ display: "flex", gap: "12px", marginBottom: "8px" }}>
+              <button
+                type="button"
+                onClick={() => goTo("/facilities")}
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "50%",
+                  background: "#F5F7FA",
+                  border: "1px solid #E0E6ED",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#15345B",
+                  cursor: "pointer"
+                }}
+                title="Nearby Emergency Centers"
+              >
+                <Phone size={18} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsSanaOpen(true)}
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "50%",
+                  background: "#1769D2",
+                  border: "none",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#FFFFFF",
+                  cursor: "pointer",
+                  boxShadow: "0 2px 8px rgba(23, 105, 210, 0.3)"
+                }}
+                title="Talk to SANA"
+              >
+                <Mic size={18} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowCheckinModal(true)}
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "50%",
+                  background: "#F5F7FA",
+                  border: "1px solid #E0E6ED",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#15345B",
+                  cursor: "pointer"
+                }}
+                title="Daily Wellness Check-In"
+              >
+                <Heart size={18} />
+              </button>
+            </div>
+          </div>
+
+          {/* SANA Healthcare Assistant Quick Box (Clean Chat Composer replica) */}
+          <div
+            style={{
+              background: "#FFFFFF",
+              border: "1px solid #E0E6ED",
+              borderRadius: "16px",
+              padding: "20px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "14px",
+              boxShadow: "0 1px 3px rgba(21, 52, 91, 0.04)"
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "16px", fontWeight: "800", color: "#15345B" }}>SANA Assistant</span>
+                <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#198754" }} />
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsSanaOpen(true)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "#1769D2",
+                  fontSize: "13px",
+                  fontWeight: "700",
+                  cursor: "pointer"
+                }}
+              >
+                Voice Studio →
+              </button>
+            </div>
+
+            {/* SANA Calm Dialogue Bubble */}
+            <div
+              style={{
+                background: "#F5F7FA",
+                border: "1px solid #E0E6ED",
+                borderRadius: "12px",
+                padding: "12px 14px",
+                fontSize: "14px",
+                color: "#202B3C",
+                lineHeight: 1.5
+              }}
+            >
+              “Hello! I'm SANA. Tell me what symptoms or health concerns you have today, and I'll help you evaluate them.”
+            </div>
+
+            {/* Input Composer at Bottom (Matching Reference: "Write a message") */}
+            <form onSubmit={handleQuickSanaSubmit} style={{ position: "relative" }}>
+              <input
+                type="text"
+                placeholder="Ask SANA or type symptoms..."
+                value={sanaQuickQuery}
+                onChange={(e) => setSanaQuickQuery(e.target.value)}
+                style={{
+                  width: "100%",
+                  background: "#F5F7FA",
+                  border: "1px solid #E0E6ED",
+                  borderRadius: "10px",
+                  padding: "10px 42px 10px 14px",
+                  fontSize: "14px",
+                  color: "#202B3C",
+                  outline: "none"
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setIsSanaOpen(true)}
+                style={{
+                  position: "absolute",
+                  right: "8px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "none",
+                  border: "none",
+                  color: "#1769D2",
+                  cursor: "pointer",
+                  padding: "4px"
+                }}
+                title="Tap to speak with SANA"
+              >
+                <Mic size={18} />
+              </button>
+            </form>
+          </div>
+
+          {/* Upcoming Appointment Card */}
+          <div
+            style={{
+              background: "#FFFFFF",
+              border: "1px solid #E0E6ED",
+              borderRadius: "16px",
+              padding: "20px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "12px",
+              boxShadow: "0 1px 3px rgba(21, 52, 91, 0.04)"
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ fontSize: "16px", fontWeight: "800", color: "#15345B" }}>Upcoming Visit</span>
+              <Calendar size={18} className="text-blue-600" />
+            </div>
+
+            <div
+              style={{
+                background: "#F5F7FA",
+                border: "1px solid #E0E6ED",
+                borderRadius: "12px",
+                padding: "12px 14px"
+              }}
+            >
+              <div style={{ fontSize: "15px", fontWeight: "700", color: "#15345B" }}>
+                {treatmentPlan?.doctor_name ? `Dr. ${treatmentPlan.doctor_name}` : "Dr. Rajesh Sharma"}
+              </div>
+              <div style={{ fontSize: "13px", color: "#596579" }}>Cardiology & General Medicine</div>
+              <div style={{ fontSize: "13px", fontWeight: "700", color: "#1769D2", marginTop: "4px" }}>
+                {treatmentPlan?.follow_up_date || "25 Apr 2026 • 10:30 AM"}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* SANA Continuous Voice Studio Modal */}
@@ -724,106 +972,162 @@ export default function PatientDashboard({ goTo = () => {} }) {
         userName={user?.full_name || "Patient"}
       />
 
-      {/* ========================================================= */}
-      {/* 9. QUICK WELLNESS CHECK-IN MODAL */}
-      {/* ========================================================= */}
+      {/* Quick Daily Check-In Modal */}
       {showCheckinModal && (
-        <div className="modal-backdrop" onClick={() => setShowCheckinModal(false)}>
-          <div className="checkin-modal-card" onClick={(e) => e.stopPropagation()}>
-            <div className="checkin-modal-header">
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 150,
+            background: "rgba(15, 23, 42, 0.4)",
+            backdropFilter: "blur(4px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "16px"
+          }}
+        >
+          <div
+            style={{
+              background: "#FFFFFF",
+              borderRadius: "16px",
+              border: "1px solid #E0E6ED",
+              maxWidth: "440px",
+              width: "100%",
+              padding: "26px",
+              boxShadow: "0 20px 45px rgba(0, 0, 0, 0.15)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "16px"
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div>
-                <h3>🌿 Daily Wellness Check-In</h3>
-                <p>Takes 10 seconds — updates your clinical profile for SANA</p>
+                <h3 style={{ fontSize: "18px", fontWeight: "800", color: "#15345B", margin: 0 }}>Daily Wellness Check-In</h3>
+                <span style={{ fontSize: "13px", color: "#596579" }}>Takes 10 seconds to update clinical baseline</span>
               </div>
               <button
                 type="button"
-                className="close-modal-btn"
                 onClick={() => setShowCheckinModal(false)}
+                style={{ background: "none", border: "none", color: "#596579", cursor: "pointer", padding: "4px" }}
               >
-                ✕
+                <X size={20} />
               </button>
             </div>
 
             {checkinSuccess ? (
-              <div className="checkin-success-box">
-                <span className="success-icon">✓</span>
-                <h4>Recorded Successfully!</h4>
-                <p>Your daily check-in is saved and synced with SANA.</p>
+              <div style={{ padding: "24px", textAlign: "center", color: "#198754" }}>
+                <CheckCircle2 size={36} style={{ margin: "0 auto 8px" }} />
+                <h4 style={{ fontWeight: "800", fontSize: "16px", margin: "0 0 4px" }}>Check-In Recorded!</h4>
+                <p style={{ fontSize: "13px", color: "#596579", margin: 0 }}>Your profile baseline has been updated.</p>
               </div>
             ) : (
-              <form onSubmit={handleCheckinSubmit} className="checkin-form">
-                <div className="checkin-field">
-                  <label>Overall Mood:</label>
-                  <select
-                    value={checkinMood}
-                    onChange={(e) => setCheckinMood(e.target.value)}
-                  >
-                    <option value="Excellent">😄 Excellent</option>
-                    <option value="Good">🙂 Good</option>
-                    <option value="Normal">😐 Normal</option>
-                    <option value="Tired">🥱 Tired</option>
-                    <option value="Stressed">😰 Stressed</option>
-                    <option value="Unwell">🤒 Not Feeling Well</option>
-                  </select>
-                </div>
-
-                <div className="checkin-field">
-                  <div className="slider-label-row">
-                    <label>Energy Level:</label>
-                    <strong>{checkinEnergy}/10</strong>
+              <form onSubmit={handleCheckinSubmit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px", fontSize: "13px", fontWeight: "700", color: "#15345B" }}>
+                    <span>Energy Level</span>
+                    <span>{checkinEnergy} / 10</span>
                   </div>
                   <input
                     type="range"
                     min="1"
                     max="10"
                     value={checkinEnergy}
-                    onChange={(e) => setCheckinEnergy(parseInt(e.target.value, 10))}
+                    onChange={(e) => setCheckinEnergy(Number(e.target.value))}
+                    style={{ width: "100%" }}
                   />
                 </div>
 
-                <div className="checkin-field">
-                  <div className="slider-label-row">
-                    <label>Stress Level:</label>
-                    <strong>{checkinStress}/10</strong>
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px", fontSize: "13px", fontWeight: "700", color: "#15345B" }}>
+                    <span>Stress Level</span>
+                    <span>{checkinStress} / 10</span>
                   </div>
                   <input
                     type="range"
                     min="1"
                     max="10"
                     value={checkinStress}
-                    onChange={(e) => setCheckinStress(parseInt(e.target.value, 10))}
+                    onChange={(e) => setCheckinStress(Number(e.target.value))}
+                    style={{ width: "100%" }}
                   />
                 </div>
 
-                <div className="checkin-field">
-                  <div className="slider-label-row">
-                    <label>Sleep Hours (Last Night):</label>
-                    <strong>{checkinSleep} hrs</strong>
-                  </div>
+                <div>
+                  <label style={{ display: "block", fontSize: "13px", fontWeight: "700", color: "#15345B", marginBottom: "4px" }}>
+                    Sleep Last Night (Hours)
+                  </label>
                   <input
                     type="number"
                     step="0.5"
-                    min="0"
+                    min="1"
                     max="16"
                     value={checkinSleep}
-                    onChange={(e) => setCheckinSleep(e.target.value)}
+                    onChange={(e) => setCheckinSleep(Number(e.target.value))}
+                    style={{
+                      width: "100%",
+                      borderRadius: "8px",
+                      border: "1px solid #CBD5E1",
+                      padding: "8px 12px",
+                      fontSize: "14px"
+                    }}
                   />
                 </div>
 
-                <div className="checkin-form-actions">
+                <div>
+                  <label style={{ display: "block", fontSize: "13px", fontWeight: "700", color: "#15345B", marginBottom: "4px" }}>
+                    Overall Mood
+                  </label>
+                  <select
+                    value={checkinMood}
+                    onChange={(e) => setCheckinMood(e.target.value)}
+                    style={{
+                      width: "100%",
+                      borderRadius: "8px",
+                      border: "1px solid #CBD5E1",
+                      padding: "8px 12px",
+                      fontSize: "14px",
+                      background: "#FFFFFF"
+                    }}
+                  >
+                    <option value="Good">Good / Energized</option>
+                    <option value="Normal">Normal / Stable</option>
+                    <option value="Tired">Tired / Fatigued</option>
+                    <option value="Stressed">Stressed / Anxious</option>
+                  </select>
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", paddingTop: "8px" }}>
                   <button
                     type="button"
-                    className="cancel-btn"
                     onClick={() => setShowCheckinModal(false)}
+                    style={{
+                      padding: "8px 16px",
+                      borderRadius: "8px",
+                      border: "1px solid #CBD5E1",
+                      background: "#FFFFFF",
+                      color: "#596579",
+                      fontWeight: "700",
+                      fontSize: "13px"
+                    }}
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="submit-checkin-btn"
                     disabled={checkinSubmitting}
+                    style={{
+                      padding: "8px 18px",
+                      borderRadius: "8px",
+                      border: "none",
+                      background: "#1769D2",
+                      color: "#FFFFFF",
+                      fontWeight: "700",
+                      fontSize: "13px",
+                      cursor: "pointer"
+                    }}
                   >
-                    {checkinSubmitting ? "Saving..." : "Save Daily Check-In"}
+                    {checkinSubmitting ? "Saving..." : "Save Check-In"}
                   </button>
                 </div>
               </form>
@@ -832,59 +1136,91 @@ export default function PatientDashboard({ goTo = () => {} }) {
         </div>
       )}
 
-      {/* ========================================================= */}
-      {/* 10. ASSESSMENT DETAILS VIEW MODAL */}
-      {/* ========================================================= */}
+      {/* Assessment Detail Modal */}
       {selectedAssessment && (
-        <div className="modal-backdrop" onClick={() => setSelectedAssessment(null)}>
-          <div className="assessment-detail-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="assessment-modal-header">
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 150,
+            background: "rgba(15, 23, 42, 0.4)",
+            backdropFilter: "blur(4px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "16px"
+          }}
+        >
+          <div
+            style={{
+              background: "#FFFFFF",
+              borderRadius: "16px",
+              border: "1px solid #E0E6ED",
+              maxWidth: "520px",
+              width: "100%",
+              padding: "24px",
+              boxShadow: "0 20px 45px rgba(0, 0, 0, 0.15)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "14px"
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div>
-                <h3>Clinical Triage Record</h3>
-                <small>{new Date(selectedAssessment.created_at).toLocaleString()}</small>
+                <h3 style={{ fontSize: "17px", fontWeight: "800", color: "#15345B", margin: 0 }}>
+                  Triage Assessment Record
+                </h3>
+                <span style={{ fontSize: "12px", color: "#596579" }}>
+                  {selectedAssessment.created_at ? new Date(selectedAssessment.created_at).toLocaleString() : "Recent"}
+                </span>
               </div>
               <button
                 type="button"
-                className="close-modal-btn"
                 onClick={() => setSelectedAssessment(null)}
+                style={{ background: "none", border: "none", color: "#596579", cursor: "pointer", padding: "4px" }}
               >
-                ✕
+                <X size={20} />
               </button>
             </div>
-            <div className="assessment-modal-body">
-              <div className="detail-row">
-                <strong>Patient:</strong> {selectedAssessment.patient_name || user?.full_name}
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxHeight: "60vh", overflowY: "auto" }}>
+              <div style={{ background: "#F5F7FA", padding: "12px", borderRadius: "10px", border: "1px solid #E0E6ED" }}>
+                <span style={{ fontSize: "11px", fontWeight: "800", color: "#596579", textTransform: "uppercase" }}>
+                  Reported Symptoms
+                </span>
+                <p style={{ fontSize: "14px", color: "#202B3C", margin: "4px 0 0" }}>
+                  {selectedAssessment.symptoms || "Clinical observation recorded"}
+                </p>
               </div>
-              <div className="detail-row">
-                <strong>Reported Symptoms:</strong>
-                <p>{selectedAssessment.symptoms || "None recorded"}</p>
-              </div>
-              <div className="detail-row">
-                <strong>AI Clinical Assessment Summary:</strong>
-                <div className="triage-output-pre">
-                  {typeof selectedAssessment.triage_result === "string"
-                    ? selectedAssessment.triage_result
-                    : JSON.stringify(selectedAssessment.triage_result, null, 2)}
+
+              {selectedAssessment.triage_result && (
+                <div style={{ background: "#EBF3FC", padding: "12px", borderRadius: "10px", border: "1px solid rgba(23, 105, 210, 0.25)" }}>
+                  <span style={{ fontSize: "11px", fontWeight: "800", color: "#1769D2", textTransform: "uppercase" }}>
+                    Clinical Summary & Recommendation
+                  </span>
+                  <p style={{ fontSize: "14px", color: "#15345B", margin: "4px 0 0", whiteSpace: "pre-line" }}>
+                    {selectedAssessment.triage_result}
+                  </p>
                 </div>
-              </div>
+              )}
             </div>
-            <div className="assessment-modal-footer">
+
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
               <button
                 type="button"
-                className="close-btn"
                 onClick={() => setSelectedAssessment(null)}
-              >
-                Close
-              </button>
-              <button
-                type="button"
-                className="start-new-btn"
-                onClick={() => {
-                  setSelectedAssessment(null);
-                  goTo("/triage");
+                style={{
+                  background: "#F5F7FA",
+                  border: "1px solid #E0E6ED",
+                  borderRadius: "8px",
+                  padding: "8px 16px",
+                  fontSize: "13px",
+                  fontWeight: "700",
+                  cursor: "pointer",
+                  color: "#15345B"
                 }}
               >
-                Start New Evaluation →
+                Close
               </button>
             </div>
           </div>

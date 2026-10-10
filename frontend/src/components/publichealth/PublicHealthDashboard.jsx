@@ -1,11 +1,25 @@
 // ============================================================
-// HealthTriage AI - Government & Public Health Dashboard (Sections 32, 33, 34)
+// HealthTriage AI - Government & Public Health Dashboard
 // 100% De-identified regional surveillance, symptom anomaly detection,
 // healthcare demand, resource planning indicators, and district trends.
 // ============================================================
 
 import { useState, useEffect } from "react";
+import {
+  Activity,
+  AlertTriangle,
+  ShieldCheck,
+  Building2,
+  RefreshCw,
+  TrendingUp,
+  MapPin,
+  Ambulance,
+  HeartPulse,
+  Users,
+  Package,
+} from "lucide-react";
 import { API_URL } from "../../config";
+import EmptyState from "../common/EmptyState";
 
 export default function PublicHealthDashboard({ goTo = () => {} }) {
   const token = localStorage.getItem("healthtriage_token");
@@ -46,50 +60,37 @@ export default function PublicHealthDashboard({ goTo = () => {} }) {
   }, [days, district]);
 
   return (
-    <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "24px" }}>
+    <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
       {/* Top Banner */}
-      <div
-        style={{
-          background: "linear-gradient(135deg, #064e3b 0%, #047857 100%)",
-          color: "#ffffff",
-          padding: "26px 32px",
-          borderRadius: "16px",
-          marginBottom: "24px",
-          boxShadow: "0 10px 25px -5px rgba(4, 120, 87, 0.3)",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: "16px",
-        }}
-      >
-        <div>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(255,255,255,0.18)", padding: "4px 12px", borderRadius: "20px", fontSize: "12px", fontWeight: "600", marginBottom: "8px", letterSpacing: "0.5px" }}>
-            <span>🏛️</span> NATIONAL & STATE HEALTH SURVEILLANCE
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-700 shrink-0">
+            <Activity className="w-6 h-6" />
           </div>
-          <h1 style={{ margin: "0 0 6px 0", fontSize: "24px", fontWeight: "700" }}>
-            Public Health & Epidemiological Intelligence Dashboard
-          </h1>
-          <p style={{ margin: 0, opacity: 0.9, fontSize: "13.5px", maxWidth: "700px" }}>
-            Aggregated, 100% de-identified health surveillance across Primary Health Centres and Government Hospitals. Monitored for symptom clustering and resource planning.
-          </p>
+          <div>
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                Epidemiological Surveillance
+              </span>
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-50 text-sky-700 border border-sky-200">
+                Decision Support Only
+              </span>
+            </div>
+            <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900">
+              Public Health & Epidemiological Intelligence
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500">
+              Aggregated, 100% de-identified health surveillance across Primary Health Centres and Government Hospitals.
+            </p>
+          </div>
         </div>
 
         {/* Filter Controls */}
-        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+        <div className="flex items-center gap-2 flex-wrap">
           <select
             value={days}
             onChange={(e) => setDays(Number(e.target.value))}
-            style={{
-              padding: "10px 14px",
-              borderRadius: "10px",
-              background: "#065f46",
-              color: "#ffffff",
-              border: "1px solid #047857",
-              fontSize: "13px",
-              fontWeight: "600",
-              outline: "none",
-            }}
+            className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:border-emerald-500"
           >
             <option value={7}>Last 7 Days</option>
             <option value={14}>Last 14 Days</option>
@@ -98,103 +99,62 @@ export default function PublicHealthDashboard({ goTo = () => {} }) {
           </select>
           <button
             onClick={fetchSurveillance}
-            style={{
-              background: "#ffffff",
-              color: "#065f46",
-              border: "none",
-              borderRadius: "10px",
-              padding: "10px 16px",
-              fontSize: "13px",
-              fontWeight: "700",
-              cursor: "pointer",
-            }}
+            className="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm"
           >
-            ↻ Refresh Data
+            <RefreshCw className="w-3.5 h-3.5" /> Refresh Data
           </button>
         </div>
       </div>
 
       {/* Privacy Guarantee Alert */}
-      <div
-        style={{
-          background: "#ecfdf5",
-          border: "1px solid #a7f3d0",
-          borderRadius: "12px",
-          padding: "14px 20px",
-          display: "flex",
-          alignItems: "center",
-          gap: "12px",
-          marginBottom: "24px",
-          fontSize: "13px",
-          color: "#065f46",
-        }}
-      >
-        <span style={{ fontSize: "20px" }}>🔒</span>
+      <div className="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-3">
+        <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
         <div>
-          <strong>Privacy-Preserving Architecture:</strong> Zero Personally Identifiable Information (PII) or patient transcripts are exposed in this portal. All metrics are aggregated counts and statistical clusters to assist public health resource allocation.
+          <strong className="text-emerald-900">Privacy-Preserving Architecture:</strong> Zero Personally Identifiable Information (PII) or patient transcripts are exposed in this portal. All metrics are aggregated counts and statistical clusters to assist public health resource allocation.
         </div>
       </div>
 
       {error && (
-        <div style={{ background: "#fee2e2", borderLeft: "4px solid #ef4444", padding: "14px 18px", borderRadius: "8px", color: "#991b1b", marginBottom: "20px", fontSize: "14px" }}>
+        <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
           {error}
         </div>
       )}
 
       {loading && !data && (
-        <div style={{ textAlign: "center", padding: "60px 20px", color: "#64748b" }}>
-          <div style={{ fontSize: "32px", marginBottom: "12px" }}>⏳</div>
-          <p>Compiling regional epidemiological trends and surveillance data...</p>
+        <div className="py-16 text-center text-slate-500 text-sm">
+          <div className="w-8 h-8 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+          Compiling regional epidemiological trends and surveillance data...
         </div>
       )}
 
       {data && (
-        <div>
-          {/* Anomaly / Early Warning Indicators (Section 33) */}
+        <div className="space-y-6">
+          {/* Anomaly / Early Warning Indicators */}
           {data.anomalies && data.anomalies.length > 0 && (
-            <div style={{ marginBottom: "24px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-                <span style={{ fontSize: "18px" }}>🚨</span>
-                <h2 style={{ margin: 0, fontSize: "16px", color: "#0f172a", fontWeight: "700" }}>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-600" />
+                <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
                   Active Early-Warning Anomaly Alerts (Decision Support Only)
                 </h2>
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              <div className="space-y-2">
                 {data.anomalies.map((anom, idx) => (
                   <div
                     key={idx}
-                    style={{
-                      background: anom.severity === "HIGH" ? "#fef2f2" : "#fffbeb",
-                      border: anom.severity === "HIGH" ? "1px solid #fecaca" : "1px solid #fde68a",
-                      borderLeft: anom.severity === "HIGH" ? "5px solid #ef4444" : "5px solid #f59e0b",
-                      borderRadius: "10px",
-                      padding: "16px 20px",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      flexWrap: "wrap",
-                      gap: "12px",
-                    }}
+                    className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                      anom.severity === "HIGH"
+                        ? "bg-rose-50/50 border-rose-200 text-rose-900"
+                        : "bg-amber-50/50 border-amber-200 text-amber-900"
+                    }`}
                   >
                     <div>
-                      <strong style={{ color: anom.severity === "HIGH" ? "#b91c1c" : "#b45309", fontSize: "14px" }}>
-                        {anom.title}
-                      </strong>
-                      <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "#475569" }}>
-                        {anom.description}
-                      </p>
+                      <strong className="text-sm font-bold block">{anom.title}</strong>
+                      <p className="text-xs text-slate-600 mt-0.5">{anom.description}</p>
                     </div>
-                    <span
-                      style={{
-                        background: anom.severity === "HIGH" ? "#fee2e2" : "#fef3c7",
-                        color: anom.severity === "HIGH" ? "#dc2626" : "#d97706",
-                        padding: "4px 12px",
-                        borderRadius: "20px",
-                        fontSize: "12px",
-                        fontWeight: "700",
-                      }}
-                    >
-                      {anom.action_recommended || "Public Health Review Recommended"}
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-white border border-slate-200 shadow-xs self-start sm:self-auto shrink-0">
+                      Unusual activity detected — requires public-health review.
                     </span>
                   </div>
                 ))}
@@ -203,91 +163,102 @@ export default function PublicHealthDashboard({ goTo = () => {} }) {
           )}
 
           {/* Regional Summary Metrics */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "18px", marginBottom: "24px" }}>
-            <div style={{ background: "#ffffff", padding: "20px", borderRadius: "14px", border: "1px solid #e2e8f0", boxShadow: "0 2px 6px rgba(0,0,0,0.04)" }}>
-              <div style={{ fontSize: "12px", color: "#64748b", fontWeight: "600", textTransform: "uppercase" }}>Monitored Triage Intake</div>
-              <div style={{ fontSize: "28px", fontWeight: "700", color: "#0f172a", marginTop: "6px" }}>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-sm">
+              <span className="text-xs font-bold text-slate-500 uppercase">Monitored Triage Intake</span>
+              <div className="text-2xl font-black text-slate-900 mt-1">
                 {data.surveillance?.total_cases || 0}
               </div>
-              <div style={{ fontSize: "12px", color: "#059669", marginTop: "4px" }}>Active reporting window</div>
+              <div className="text-[11px] text-emerald-600 font-medium mt-0.5">Active reporting window</div>
             </div>
 
-            <div style={{ background: "#ffffff", padding: "20px", borderRadius: "14px", border: "1px solid #e2e8f0", boxShadow: "0 2px 6px rgba(0,0,0,0.04)" }}>
-              <div style={{ fontSize: "12px", color: "#dc2626", fontWeight: "600", textTransform: "uppercase" }}>Emergency Proportion</div>
-              <div style={{ fontSize: "28px", fontWeight: "700", color: "#dc2626", marginTop: "6px" }}>
+            <div className="p-4 rounded-2xl bg-white border border-slate-200/80 border-l-4 border-l-rose-500 shadow-sm">
+              <span className="text-xs font-bold text-slate-500 uppercase">Emergency Proportion</span>
+              <div className="text-2xl font-black text-rose-600 mt-1">
                 {data.surveillance?.emergency_rate ? `${data.surveillance.emergency_rate}%` : "0%"}
               </div>
-              <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>Requiring immediate beds</div>
+              <div className="text-[11px] text-slate-400 font-medium mt-0.5">Immediate care ratio</div>
             </div>
 
-            <div style={{ background: "#ffffff", padding: "20px", borderRadius: "14px", border: "1px solid #e2e8f0", boxShadow: "0 2px 6px rgba(0,0,0,0.04)" }}>
-              <div style={{ fontSize: "12px", color: "#2563eb", fontWeight: "600", textTransform: "uppercase" }}>Higher-Center Referrals</div>
-              <div style={{ fontSize: "28px", fontWeight: "700", color: "#2563eb", marginTop: "6px" }}>
+            <div className="p-4 rounded-2xl bg-white border border-slate-200/80 border-l-4 border-l-sky-500 shadow-sm">
+              <span className="text-xs font-bold text-slate-500 uppercase">Higher-Center Referrals</span>
+              <div className="text-2xl font-black text-sky-600 mt-1">
                 {data.surveillance?.referral_count || 0}
               </div>
-              <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>PHC to District Transfers</div>
+              <div className="text-[11px] text-slate-400 font-medium mt-0.5">PHC to District Transfers</div>
             </div>
 
-            <div style={{ background: "#ffffff", padding: "20px", borderRadius: "14px", border: "1px solid #e2e8f0", boxShadow: "0 2px 6px rgba(0,0,0,0.04)" }}>
-              <div style={{ fontSize: "12px", color: "#059669", fontWeight: "600", textTransform: "uppercase" }}>Reporting Facilities</div>
-              <div style={{ fontSize: "28px", fontWeight: "700", color: "#059669", marginTop: "6px" }}>
+            <div className="p-4 rounded-2xl bg-white border border-slate-200/80 border-l-4 border-l-emerald-500 shadow-sm">
+              <span className="text-xs font-bold text-slate-500 uppercase">Reporting Facilities</span>
+              <div className="text-2xl font-black text-emerald-600 mt-1">
                 {data.surveillance?.facility_count || 6}
               </div>
-              <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>PHCs & District Hospitals</div>
+              <div className="text-[11px] text-slate-400 font-medium mt-0.5">PHCs & District Hospitals</div>
             </div>
           </div>
 
-          {/* Aggregated Symptom Breakdown & Resource Planning (Section 34) */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginBottom: "24px" }}>
+          {/* Aggregated Symptom Breakdown & Resource Planning */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Symptom Cluster Breakdown */}
-            <div style={{ background: "#ffffff", borderRadius: "14px", padding: "24px", border: "1px solid #e2e8f0", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
-              <h3 style={{ margin: "0 0 16px 0", fontSize: "16px", color: "#0f172a" }}>
-                📊 Aggregated Symptom Clusters
+            <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+              <h3 className="text-base font-bold text-slate-900">
+                Aggregated Symptom Clusters
               </h3>
-              <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              <div className="space-y-3.5 text-xs">
                 {[
-                  { label: "Respiratory (Cough, Breathlessness)", count: data.clusters?.respiratory || 0, color: "#3b82f6" },
-                  { label: "Febrile Illness / Fever", count: data.clusters?.fever || 0, color: "#f59e0b" },
-                  { label: "Gastrointestinal (Nausea, Diarrhea)", count: data.clusters?.gastrointestinal || 0, color: "#10b981" },
-                  { label: "Cardiovascular / Chest Signs", count: data.clusters?.cardiovascular || 0, color: "#ef4444" },
-                  { label: "Trauma / Occupational Injury", count: data.clusters?.trauma || 0, color: "#8b5cf6" },
+                  { label: "Respiratory (Cough, Breathlessness)", count: data.clusters?.respiratory || 0, color: "bg-sky-500" },
+                  { label: "Febrile Illness / Fever", count: data.clusters?.fever || 0, color: "bg-amber-500" },
+                  { label: "Gastrointestinal (Nausea, Diarrhea)", count: data.clusters?.gastrointestinal || 0, color: "bg-emerald-500" },
+                  { label: "Cardiovascular / Chest Signs", count: data.clusters?.cardiovascular || 0, color: "bg-rose-500" },
+                  { label: "Trauma / Occupational Injury", count: data.clusters?.trauma || 0, color: "bg-purple-500" },
                 ].map((item, i) => (
                   <div key={i}>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13.5px", marginBottom: "6px" }}>
-                      <span style={{ color: "#334155", fontWeight: "600" }}>{item.label}</span>
-                      <strong>{item.count} cases</strong>
+                    <div className="flex justify-between font-semibold mb-1">
+                      <span className="text-slate-700">{item.label}</span>
+                      <strong className="text-slate-900">{item.count} cases</strong>
                     </div>
-                    <div style={{ background: "#f1f5f9", height: "8px", borderRadius: "4px", overflow: "hidden" }}>
-                      <div style={{ background: item.color, height: "100%", width: `${Math.min(100, item.count * 12)}%` }}></div>
+                    <div className="bg-slate-100 h-2 rounded-full overflow-hidden">
+                      <div
+                        className={`${item.color} h-full rounded-full transition-all`}
+                        style={{ width: `${Math.min(100, item.count * 12)}%` }}
+                      ></div>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Government Resource Intelligence (Section 34) */}
-            <div style={{ background: "#ffffff", borderRadius: "14px", padding: "24px", border: "1px solid #e2e8f0", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
-              <h3 style={{ margin: "0 0 16px 0", fontSize: "16px", color: "#0f172a" }}>
-                💡 Decision-Support Resource Intelligence
+            {/* Government Resource Intelligence */}
+            <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+              <h3 className="text-base font-bold text-slate-900">
+                Decision-Support Resource Intelligence
               </h3>
-              <div style={{ display: "flex", flexDirection: "column", gap: "12px", fontSize: "13.5px" }}>
-                <div style={{ padding: "12px 14px", borderRadius: "10px", background: "#f8fafc", border: "1px solid #e2e8f0" }}>
-                  <strong style={{ color: "#0f172a", display: "block", marginBottom: "2px" }}>Ambulance & Emergency Transit</strong>
-                  <span style={{ color: "#64748b" }}>
+              <div className="space-y-3 text-xs">
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 space-y-1">
+                  <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                    <Ambulance className="w-3.5 h-3.5 text-rose-600" /> Ambulance & Emergency Transit
+                  </div>
+                  <p className="text-slate-600 leading-relaxed">
                     {data.resource_indicators?.ambulance_pressure || "Normal demand across district sectors (108 fleet adequate)."}
-                  </span>
+                  </p>
                 </div>
-                <div style={{ padding: "12px 14px", borderRadius: "10px", background: "#f8fafc", border: "1px solid #e2e8f0" }}>
-                  <strong style={{ color: "#0f172a", display: "block", marginBottom: "2px" }}>Primary Care Nursing Staffing</strong>
-                  <span style={{ color: "#64748b" }}>
+
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 space-y-1">
+                  <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5 text-sky-600" /> Primary Care Nursing Staffing
+                  </div>
+                  <p className="text-slate-600 leading-relaxed">
                     {data.resource_indicators?.nurse_staffing || "PHC queue times within 15-minute standard threshold."}
-                  </span>
+                  </p>
                 </div>
-                <div style={{ padding: "12px 14px", borderRadius: "10px", background: "#f8fafc", border: "1px solid #e2e8f0" }}>
-                  <strong style={{ color: "#0f172a", display: "block", marginBottom: "2px" }}>Essential Drug & Supply Buffer</strong>
-                  <span style={{ color: "#64748b" }}>
+
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 space-y-1">
+                  <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                    <Package className="w-3.5 h-3.5 text-emerald-600" /> Essential Drug & Supply Buffer
+                  </div>
+                  <p className="text-slate-600 leading-relaxed">
                     {data.resource_indicators?.medication_buffer || "ORS, paracetamol, and nebulizer kits stocked across registered PHC inventory."}
-                  </span>
+                  </p>
                 </div>
               </div>
             </div>

@@ -132,6 +132,14 @@ export default function TopHeader({
           <Menu size={22} />
         </button>
 
+        <div className="mobile-header-logo-container" style={{ display: "none" }}>
+          <img
+            src="/logo.png"
+            alt="HealthTriage AI"
+            style={{ width: "32px", height: "32px", objectFit: "contain", borderRadius: "8px" }}
+          />
+        </div>
+
         <div className="header-breadcrumb-block">
           <div className="breadcrumb-path">
             <span className="crumb-root">Portal</span>
@@ -141,7 +149,7 @@ export default function TopHeader({
           <div className="breadcrumb-title-row">
             <h1 className="header-page-title">{pageInfo.title}</h1>
             <span className="header-status-pill">
-              <span className="status-live-dot" /> AI Safety Engine Active
+              <span className="status-live-dot" /> AI Safety Active
             </span>
           </div>
         </div>
@@ -153,10 +161,10 @@ export default function TopHeader({
           type="button"
           className="header-search-trigger"
           onClick={onOpenSearch}
-          title="Search patients, reports, or ask SANA (Ctrl+K)"
+          title="Search patients, reports, medications or ask SANA (Ctrl+K)"
         >
           <Search size={16} className="search-trigger-icon" />
-          <span className="search-placeholder">Search patients, reports, or ask SANA...</span>
+          <span className="search-placeholder">Search patients, reports, medications or ask SANA...</span>
           <kbd className="search-kbd">Ctrl K</kbd>
         </button>
       </div>

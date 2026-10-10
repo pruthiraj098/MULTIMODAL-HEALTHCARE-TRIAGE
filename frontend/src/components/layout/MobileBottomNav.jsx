@@ -100,9 +100,16 @@ export default function MobileBottomNav({
           <div className="mobile-sheet-container" onClick={(e) => e.stopPropagation()}>
             <div className="sheet-drag-handle" />
             <div className="sheet-header">
-              <div className="sheet-user-info">
-                <strong>{user?.full_name || "Patient"}</strong>
-                <span>Role: {user?.role || "PATIENT"}</span>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <img
+                  src="/logo.png"
+                  alt="HealthTriage AI Logo"
+                  style={{ width: "32px", height: "32px", objectFit: "contain", borderRadius: "8px" }}
+                />
+                <div className="sheet-user-info">
+                  <strong>{user?.full_name || "Patient"}</strong>
+                  <span>Role: {user?.role || "PATIENT"}</span>
+                </div>
               </div>
               <button
                 type="button"

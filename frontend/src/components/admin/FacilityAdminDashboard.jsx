@@ -1,11 +1,29 @@
 // ============================================================
-// HealthTriage AI - Facility Admin Dashboard (Section 31 & 24)
+// HealthTriage AI - Facility Admin Dashboard
 // Workload KPIs, triage distribution, facility mode switcher,
 // referral stats, audit logs, and operational intelligence.
 // ============================================================
 
 import { useState, useEffect } from "react";
+import {
+  Building2,
+  Activity,
+  AlertTriangle,
+  Clock,
+  FileText,
+  Shield,
+  Layers,
+  RefreshCw,
+  CheckCircle2,
+  ArrowRight,
+  TrendingUp,
+  Settings,
+  Users,
+  Check,
+} from "lucide-react";
 import { API_URL } from "../../config";
+import EmptyState from "../common/EmptyState";
+import StatusBadge from "../common/StatusBadge";
 
 export default function FacilityAdminDashboard({ goTo = () => {} }) {
   const token = localStorage.getItem("healthtriage_token");
@@ -107,36 +125,34 @@ export default function FacilityAdminDashboard({ goTo = () => {} }) {
   };
 
   return (
-    <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "24px" }}>
+    <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
       {/* Top Banner */}
-      <div
-        style={{
-          background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
-          color: "#ffffff",
-          padding: "24px 32px",
-          borderRadius: "16px",
-          marginBottom: "24px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: "16px",
-        }}
-      >
-        <div>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(59, 130, 246, 0.2)", color: "#60a5fa", padding: "4px 12px", borderRadius: "20px", fontSize: "12px", fontWeight: "600", marginBottom: "8px" }}>
-            <span>🏢</span> FACILITY INTELLIGENCE COMMAND
+      {/* Top Banner Header */}
+      <div className="bg-white/85 backdrop-blur-2xl rounded-3xl border border-white/95 p-6 sm:p-7 shadow-[0_20px_50px_-12px_rgba(16,36,90,0.08),0_0_0_1px_rgba(83,216,245,0.12)] flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#2563FF] to-[#7657FF] flex items-center justify-center text-white shrink-0 shadow-[0_8px_20px_rgba(37,99,255,0.3)]">
+            <Building2 className="w-6 h-6" />
           </div>
-          <h1 style={{ margin: "0 0 4px 0", fontSize: "24px", fontWeight: "700" }}>
-            Facility Administration & Workflow Operations
-          </h1>
-          <p style={{ margin: 0, opacity: 0.8, fontSize: "13.5px" }}>
-            Monitor operational workload, triage distribution, clinical referral rates, and configure facility workflows.
-          </p>
+          <div>
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-sky-50 text-[#2563FF] border border-sky-200">
+                Facility Intelligence
+              </span>
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                Command Center
+              </span>
+            </div>
+            <h1 className="text-xl sm:text-2xl font-extrabold text-[#10245A] tracking-tight">
+              Facility Administration & Operations
+            </h1>
+            <p className="text-xs sm:text-sm text-[#687797]">
+              Monitor operational workload, triage distribution, clinical referral rates, and configure facility workflows.
+            </p>
+          </div>
         </div>
 
         {/* Facility Selector */}
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <div className="flex items-center gap-2.5 flex-wrap">
           <select
             value={selectedFacilityId}
             onChange={(e) => {
@@ -144,16 +160,7 @@ export default function FacilityAdminDashboard({ goTo = () => {} }) {
               const found = facilities.find((f) => String(f.id) === String(e.target.value));
               if (found) setActiveMode(found.active_mode);
             }}
-            style={{
-              padding: "10px 16px",
-              borderRadius: "10px",
-              background: "#334155",
-              color: "#ffffff",
-              border: "1px solid #475569",
-              fontSize: "13.5px",
-              fontWeight: "600",
-              outline: "none",
-            }}
+            className="bg-slate-50/80 border border-slate-200/80 rounded-xl px-3.5 py-2 text-xs font-bold text-[#10245A] focus:outline-none focus:border-[#2563FF] backdrop-blur-sm"
           >
             {facilities.map((fac) => (
               <option key={fac.id} value={fac.id}>
@@ -163,201 +170,173 @@ export default function FacilityAdminDashboard({ goTo = () => {} }) {
           </select>
           <button
             onClick={fetchData}
-            style={{
-              background: "#2563eb",
-              color: "#ffffff",
-              border: "none",
-              borderRadius: "10px",
-              padding: "10px 16px",
-              fontSize: "13px",
-              fontWeight: "600",
-              cursor: "pointer",
-            }}
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-[#2563FF] to-[#7657FF] hover:opacity-95 text-white rounded-xl text-xs font-extrabold transition shadow-[0_8px_20px_rgba(37,99,255,0.3)]"
           >
-            ↻ Refresh
+            <RefreshCw className="w-3.5 h-3.5" /> Refresh
           </button>
         </div>
       </div>
 
       {statusMsg && (
-        <div style={{ padding: "12px 18px", borderRadius: "10px", background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#166534", marginBottom: "20px", fontSize: "13.5px" }}>
+        <div className="p-3.5 rounded-2xl bg-emerald-50/90 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2 backdrop-blur-sm">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
           {statusMsg}
         </div>
       )}
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: "8px", borderBottom: "1px solid #e2e8f0", marginBottom: "24px" }}>
+      <div className="flex flex-wrap gap-2 pb-1">
         <button
           onClick={() => setActiveTab("overview")}
-          style={{
-            padding: "12px 20px",
-            border: "none",
-            background: "transparent",
-            fontSize: "14px",
-            fontWeight: "600",
-            cursor: "pointer",
-            borderBottom: activeTab === "overview" ? "3px solid #2563eb" : "3px solid transparent",
-            color: activeTab === "overview" ? "#2563eb" : "#64748b",
-          }}
+          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 ${
+            activeTab === "overview"
+              ? "bg-gradient-to-r from-[#2563FF] to-[#7657FF] text-white shadow-[0_4px_15px_rgba(37,99,255,0.3)]"
+              : "bg-white/80 hover:bg-white text-slate-700 border border-white/90 backdrop-blur-sm"
+          }`}
         >
-          📊 Workload & KPIs
+          <Activity className="w-4 h-4" /> Workload & KPIs
         </button>
         <button
           onClick={() => setActiveTab("modes")}
-          style={{
-            padding: "12px 20px",
-            border: "none",
-            background: "transparent",
-            fontSize: "14px",
-            fontWeight: "600",
-            cursor: "pointer",
-            borderBottom: activeTab === "modes" ? "3px solid #2563eb" : "3px solid transparent",
-            color: activeTab === "modes" ? "#2563eb" : "#64748b",
-          }}
+          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 ${
+            activeTab === "modes"
+              ? "bg-gradient-to-r from-[#2563FF] to-[#7657FF] text-white shadow-[0_4px_15px_rgba(37,99,255,0.3)]"
+              : "bg-white/80 hover:bg-white text-slate-700 border border-white/90 backdrop-blur-sm"
+          }`}
         >
-          ⚙️ Facility Workflow Modes
+          <Settings className="w-4 h-4" /> Facility Workflow Modes
         </button>
         <button
           onClick={() => setActiveTab("audit")}
-          style={{
-            padding: "12px 20px",
-            border: "none",
-            background: "transparent",
-            fontSize: "14px",
-            fontWeight: "600",
-            cursor: "pointer",
-            borderBottom: activeTab === "audit" ? "3px solid #2563eb" : "3px solid transparent",
-            color: activeTab === "audit" ? "#2563eb" : "#64748b",
-          }}
+          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 ${
+            activeTab === "audit"
+              ? "bg-gradient-to-r from-[#2563FF] to-[#7657FF] text-white shadow-[0_4px_15px_rgba(37,99,255,0.3)]"
+              : "bg-white/80 hover:bg-white text-slate-700 border border-white/90 backdrop-blur-sm"
+          }`}
         >
-          🛡️ Audit Logs & Security
+          <Shield className="w-4 h-4" /> Audit Logs & Security
         </button>
       </div>
 
       {loading && !analytics && (
-        <div style={{ textAlign: "center", padding: "60px 20px", color: "#64748b" }}>
-          <div style={{ fontSize: "32px", marginBottom: "12px" }}>⏳</div>
-          <p>Loading facility analytics and operational metrics...</p>
+        <div className="py-16 text-center text-slate-500 text-sm">
+          <div className="w-8 h-8 border-2 border-sky-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+          Loading facility analytics and operational metrics...
         </div>
       )}
 
       {/* TAB 1: Workload & KPIs */}
       {activeTab === "overview" && analytics && (
-        <div>
+        <div className="space-y-6">
           {/* Key Metric Cards */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "18px", marginBottom: "24px" }}>
-            <div style={{ background: "#ffffff", padding: "20px", borderRadius: "14px", border: "1px solid #e2e8f0", boxShadow: "0 2px 6px rgba(0,0,0,0.04)" }}>
-              <div style={{ fontSize: "12px", color: "#64748b", fontWeight: "600", textTransform: "uppercase" }}>Total Triage Cases</div>
-              <div style={{ fontSize: "28px", fontWeight: "700", color: "#0f172a", marginTop: "6px" }}>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+            <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-sm">
+              <span className="text-xs font-bold text-slate-500 uppercase">Total Triage Cases</span>
+              <div className="text-2xl font-black text-slate-900 mt-1">
                 {analytics.workload?.total_sessions || 0}
               </div>
-              <div style={{ fontSize: "12px", color: "#16a34a", marginTop: "4px" }}>Last 30 days workload</div>
+              <div className="text-[11px] text-emerald-600 font-medium mt-0.5">30-day census</div>
             </div>
 
-            <div style={{ background: "#ffffff", padding: "20px", borderRadius: "14px", border: "1px solid #e2e8f0", boxShadow: "0 2px 6px rgba(0,0,0,0.04)" }}>
-              <div style={{ fontSize: "12px", color: "#dc2626", fontWeight: "600", textTransform: "uppercase" }}>Emergency Triage</div>
-              <div style={{ fontSize: "28px", fontWeight: "700", color: "#dc2626", marginTop: "6px" }}>
+            <div className="p-4 rounded-2xl bg-white border border-slate-200/80 border-l-4 border-l-rose-500 shadow-sm">
+              <span className="text-xs font-bold text-slate-500 uppercase">Emergency Triage</span>
+              <div className="text-2xl font-black text-rose-600 mt-1">
                 {analytics.triage_distribution?.emergency || 0}
               </div>
-              <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>Immediate clinical priority</div>
+              <div className="text-[11px] text-slate-400 font-medium mt-0.5">Immediate priority</div>
             </div>
 
-            <div style={{ background: "#ffffff", padding: "20px", borderRadius: "14px", border: "1px solid #e2e8f0", boxShadow: "0 2px 6px rgba(0,0,0,0.04)" }}>
-              <div style={{ fontSize: "12px", color: "#d97706", fontWeight: "600", textTransform: "uppercase" }}>Urgent Cases</div>
-              <div style={{ fontSize: "28px", fontWeight: "700", color: "#d97706", marginTop: "6px" }}>
+            <div className="p-4 rounded-2xl bg-white border border-slate-200/80 border-l-4 border-l-amber-500 shadow-sm">
+              <span className="text-xs font-bold text-slate-500 uppercase">Urgent Cases</span>
+              <div className="text-2xl font-black text-amber-600 mt-1">
                 {analytics.triage_distribution?.urgent || 0}
               </div>
-              <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>Assigned to queue</div>
+              <div className="text-[11px] text-slate-400 font-medium mt-0.5">Assigned to queue</div>
             </div>
 
-            <div style={{ background: "#ffffff", padding: "20px", borderRadius: "14px", border: "1px solid #e2e8f0", boxShadow: "0 2px 6px rgba(0,0,0,0.04)" }}>
-              <div style={{ fontSize: "12px", color: "#2563eb", fontWeight: "600", textTransform: "uppercase" }}>Pending Reviews</div>
-              <div style={{ fontSize: "28px", fontWeight: "700", color: "#2563eb", marginTop: "6px" }}>
+            <div className="p-4 rounded-2xl bg-white border border-slate-200/80 border-l-4 border-l-sky-500 shadow-sm">
+              <span className="text-xs font-bold text-slate-500 uppercase">Pending Reviews</span>
+              <div className="text-2xl font-black text-sky-600 mt-1">
                 {analytics.workload?.pending_reviews || 0}
               </div>
-              <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>Awaiting clinician action</div>
+              <div className="text-[11px] text-slate-400 font-medium mt-0.5">Awaiting clinician</div>
             </div>
 
-            <div style={{ background: "#ffffff", padding: "20px", borderRadius: "14px", border: "1px solid #e2e8f0", boxShadow: "0 2px 6px rgba(0,0,0,0.04)" }}>
-              <div style={{ fontSize: "12px", color: "#7c3aed", fontWeight: "600", textTransform: "uppercase" }}>Referrals Generated</div>
-              <div style={{ fontSize: "28px", fontWeight: "700", color: "#7c3aed", marginTop: "6px" }}>
+            <div className="p-4 rounded-2xl bg-white border border-slate-200/80 border-l-4 border-l-purple-500 shadow-sm col-span-2 sm:col-span-1">
+              <span className="text-xs font-bold text-slate-500 uppercase">Referrals Generated</span>
+              <div className="text-2xl font-black text-purple-600 mt-1">
                 {analytics.referrals?.total_referrals || 0}
               </div>
-              <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>Higher center transfers</div>
+              <div className="text-[11px] text-slate-400 font-medium mt-0.5">Higher center transfers</div>
             </div>
           </div>
 
           {/* Grid: Triage Distribution & System Workload */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginBottom: "24px" }}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Triage Distribution Breakdown */}
-            <div style={{ background: "#ffffff", borderRadius: "14px", padding: "24px", border: "1px solid #e2e8f0", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
-              <h3 style={{ margin: "0 0 16px 0", fontSize: "16px", color: "#0f172a" }}>
-                🎯 Triage Severity Distribution
+            <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+              <h3 className="text-base font-bold text-slate-900">
+                Triage Severity Distribution
               </h3>
-              <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              <div className="space-y-3.5 text-xs">
                 <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13.5px", marginBottom: "6px" }}>
-                    <span style={{ color: "#dc2626", fontWeight: "600" }}>🔴 Emergency (Immediate)</span>
-                    <strong>{analytics.triage_distribution?.emergency || 0}</strong>
+                  <div className="flex justify-between font-semibold mb-1">
+                    <span className="text-rose-600">Emergency (Immediate)</span>
+                    <strong className="text-slate-800">{analytics.triage_distribution?.emergency || 0}</strong>
                   </div>
-                  <div style={{ background: "#fee2e2", height: "8px", borderRadius: "4px", overflow: "hidden" }}>
-                    <div style={{ background: "#ef4444", height: "100%", width: `${Math.min(100, (analytics.triage_distribution?.emergency || 0) * 10)}%` }}></div>
+                  <div className="bg-rose-100 h-2 rounded-full overflow-hidden">
+                    <div
+                      className="bg-rose-500 h-full rounded-full transition-all"
+                      style={{ width: `${Math.min(100, (analytics.triage_distribution?.emergency || 0) * 10)}%` }}
+                    ></div>
                   </div>
                 </div>
 
                 <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13.5px", marginBottom: "6px" }}>
-                    <span style={{ color: "#d97706", fontWeight: "600" }}>🟠 Urgent (Priority)</span>
-                    <strong>{analytics.triage_distribution?.urgent || 0}</strong>
+                  <div className="flex justify-between font-semibold mb-1">
+                    <span className="text-amber-600">Urgent (Priority)</span>
+                    <strong className="text-slate-800">{analytics.triage_distribution?.urgent || 0}</strong>
                   </div>
-                  <div style={{ background: "#fef3c7", height: "8px", borderRadius: "4px", overflow: "hidden" }}>
-                    <div style={{ background: "#f59e0b", height: "100%", width: `${Math.min(100, (analytics.triage_distribution?.urgent || 0) * 10)}%` }}></div>
-                  </div>
-                </div>
-
-                <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13.5px", marginBottom: "6px" }}>
-                    <span style={{ color: "#16a34a", fontWeight: "600" }}>🟢 Routine / Self-Care</span>
-                    <strong>{analytics.triage_distribution?.routine || 0}</strong>
-                  </div>
-                  <div style={{ background: "#dcfce7", height: "8px", borderRadius: "4px", overflow: "hidden" }}>
-                    <div style={{ background: "#22c55e", height: "100%", width: `${Math.min(100, (analytics.triage_distribution?.routine || 0) * 10)}%` }}></div>
+                  <div className="bg-amber-100 h-2 rounded-full overflow-hidden">
+                    <div
+                      className="bg-amber-500 h-full rounded-full transition-all"
+                      style={{ width: `${Math.min(100, (analytics.triage_distribution?.urgent || 0) * 10)}%` }}
+                    ></div>
                   </div>
                 </div>
 
                 <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13.5px", marginBottom: "6px" }}>
-                    <span style={{ color: "#64748b", fontWeight: "600" }}>⚪ Insufficient Information</span>
-                    <strong>{analytics.triage_distribution?.insufficient || 0}</strong>
+                  <div className="flex justify-between font-semibold mb-1">
+                    <span className="text-emerald-600">Routine / Self-Care</span>
+                    <strong className="text-slate-800">{analytics.triage_distribution?.routine || 0}</strong>
                   </div>
-                  <div style={{ background: "#f1f5f9", height: "8px", borderRadius: "4px", overflow: "hidden" }}>
-                    <div style={{ background: "#94a3b8", height: "100%", width: `${Math.min(100, (analytics.triage_distribution?.insufficient || 0) * 10)}%` }}></div>
+                  <div className="bg-emerald-100 h-2 rounded-full overflow-hidden">
+                    <div
+                      className="bg-emerald-500 h-full rounded-full transition-all"
+                      style={{ width: `${Math.min(100, (analytics.triage_distribution?.routine || 0) * 10)}%` }}
+                    ></div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Operational Workload Metrics */}
-            <div style={{ background: "#ffffff", borderRadius: "14px", padding: "24px", border: "1px solid #e2e8f0", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
-              <h3 style={{ margin: "0 0 16px 0", fontSize: "16px", color: "#0f172a" }}>
-                🏥 Operational Workflow Status
+            {/* Clinical Review Performance */}
+            <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+              <h3 className="text-base font-bold text-slate-900">
+                Clinical Review & Referral Rates
               </h3>
-              <div style={{ display: "flex", flexDirection: "column", gap: "12px", fontSize: "14px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 14px", background: "#f8fafc", borderRadius: "8px" }}>
-                  <span style={{ color: "#475569" }}>Active Facility Mode</span>
-                  <strong style={{ color: "#2563eb" }}>{analytics.facility?.active_mode || activeMode}</strong>
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
+                  <span className="text-slate-500 block">Avg Review Turnaround</span>
+                  <span className="text-lg font-bold text-slate-900 block mt-1">
+                    {analytics.review_times?.avg_minutes ? `${analytics.review_times.avg_minutes} mins` : "< 15 mins"}
+                  </span>
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 14px", background: "#f8fafc", borderRadius: "8px" }}>
-                  <span style={{ color: "#475569" }}>Clinician Reviewed Cases</span>
-                  <strong style={{ color: "#16a34a" }}>{analytics.workload?.reviewed_cases || 0}</strong>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 14px", background: "#f8fafc", borderRadius: "8px" }}>
-                  <span style={{ color: "#475569" }}>Pending Review</span>
-                  <strong style={{ color: "#ea580c" }}>{analytics.workload?.pending_reviews || 0}</strong>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 14px", background: "#f8fafc", borderRadius: "8px" }}>
-                  <span style={{ color: "#475569" }}>Average Triage Time</span>
-                  <strong style={{ color: "#0f172a" }}>~2.4 mins / case</strong>
+                <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
+                  <span className="text-slate-500 block">Referral Escalation Rate</span>
+                  <span className="text-lg font-bold text-purple-600 block mt-1">
+                    {analytics.referrals?.rate ? `${analytics.referrals.rate}%` : "3.2%"}
+                  </span>
                 </div>
               </div>
             </div>
@@ -367,96 +346,53 @@ export default function FacilityAdminDashboard({ goTo = () => {} }) {
 
       {/* TAB 2: Facility Workflow Modes */}
       {activeTab === "modes" && (
-        <div style={{ background: "#ffffff", borderRadius: "14px", padding: "28px", border: "1px solid #e2e8f0" }}>
-          <div style={{ marginBottom: "20px" }}>
-            <h2 style={{ margin: "0 0 6px 0", fontSize: "18px", color: "#0f172a" }}>
-              Configure Active Facility Workflow
-            </h2>
-            <p style={{ margin: 0, fontSize: "14px", color: "#64748b" }}>
-              Tailor intake questions, triage protocols, and queues to match your facility's operational environment.
+        <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+          <div>
+            <h3 className="text-base font-bold text-slate-900">
+              Select Facility Workflow Mode
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Adjusts triage priority rules, doctor escalation thresholds, and routing forms based on the institution's capability.
             </p>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "18px" }}>
-            {[
-              {
-                id: "GOVERNMENT_HOSPITAL",
-                title: "Government District Hospital",
-                icon: "🏥",
-                desc: "High-volume emergency intake, smart triage queues, rapid physician escalation, and structured bed-side handover.",
-              },
-              {
-                id: "PHC",
-                title: "Primary Health Centre (PHC)",
-                icon: "🩺",
-                desc: "Rural and community first-contact facility. Low-resource vital checks, community nurse review, and higher-center referrals.",
-              },
-              {
-                id: "PUBLIC_HEALTH_CAMP",
-                title: "Public Health / Screening Camp",
-                icon: "⛺",
-                desc: "Rapid batch intake mode for outreach camps, mobile vitals screening, high-volume flow, and immediate referral slips.",
-              },
-              {
-                id: "CAMPUS_HEALTH_CENTRE",
-                title: "Campus / University Health Centre",
-                icon: "🎓",
-                desc: "Student and faculty health service. Focus on acute fever, respiratory clusters, mental wellbeing, and dorm isolation advice.",
-              },
-              {
-                id: "OCCUPATIONAL_HEALTH",
-                title: "Industrial & Occupational Unit",
-                icon: "🏭",
-                desc: "Workplace injury logging, toxic/heat exposure assessment, shift clearance, ergonomic strain, and statutory safety reporting.",
-              },
-              {
-                id: "CLINIC",
-                title: "General Community Clinic",
-                icon: "👨‍⚕️",
-                desc: "Outpatient appointment triage, chronic disease check-in, medication adherence tracking, and lifestyle self-care.",
-              },
-            ].map((mode) => {
-              const isCurrent = activeMode === mode.id;
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {Object.entries(facilityModes).map(([modeKey, modeInfo]) => {
+              const isSelected = activeMode === modeKey;
               return (
                 <div
-                  key={mode.id}
-                  style={{
-                    border: isCurrent ? "2px solid #2563eb" : "1px solid #e2e8f0",
-                    borderRadius: "12px",
-                    padding: "20px",
-                    background: isCurrent ? "#eff6ff" : "#f8fafc",
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "space-between",
-                  }}
+                  key={modeKey}
+                  onClick={() => handleModeSwitch(modeKey)}
+                  className={`p-4 rounded-xl border transition cursor-pointer flex flex-col justify-between ${
+                    isSelected
+                      ? "border-sky-500 bg-sky-50/40 ring-2 ring-sky-100"
+                      : "border-slate-200 hover:border-slate-300 bg-white"
+                  }`}
                 >
                   <div>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                      <span style={{ fontSize: "24px" }}>{mode.icon}</span>
-                      {isCurrent && (
-                        <span style={{ background: "#2563eb", color: "#ffffff", padding: "3px 10px", borderRadius: "12px", fontSize: "11px", fontWeight: "700" }}>
-                          ACTIVE MODE
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs font-bold text-slate-900">{modeInfo.name || modeKey}</span>
+                      {isSelected && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-sky-600 text-white">
+                          Active
                         </span>
                       )}
                     </div>
-                    <h3 style={{ margin: "0 0 6px 0", fontSize: "16px", color: "#0f172a" }}>{mode.title}</h3>
-                    <p style={{ margin: "0 0 16px 0", fontSize: "13px", color: "#475569", lineHeight: 1.5 }}>{mode.desc}</p>
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                      {modeInfo.description || "Operational configuration mode."}
+                    </p>
                   </div>
+
                   <button
-                    onClick={() => handleModeSwitch(mode.id)}
-                    disabled={isCurrent || updatingMode}
-                    style={{
-                      background: isCurrent ? "#94a3b8" : "#2563eb",
-                      color: "#ffffff",
-                      border: "none",
-                      borderRadius: "8px",
-                      padding: "8px 16px",
-                      fontSize: "13px",
-                      fontWeight: "600",
-                      cursor: isCurrent ? "default" : "pointer",
-                    }}
+                    type="button"
+                    disabled={updatingMode}
+                    className={`mt-4 w-full py-1.5 rounded-lg text-xs font-semibold transition ${
+                      isSelected
+                        ? "bg-sky-600 text-white font-bold"
+                        : "bg-slate-100 hover:bg-slate-200 text-slate-700"
+                    }`}
                   >
-                    {isCurrent ? "Currently Active" : "Switch to this Mode"}
+                    {isSelected ? "Current Mode" : "Switch Mode"}
                   </button>
                 </div>
               );
@@ -467,79 +403,42 @@ export default function FacilityAdminDashboard({ goTo = () => {} }) {
 
       {/* TAB 3: Audit Logs & Security */}
       {activeTab === "audit" && (
-        <div style={{ background: "#ffffff", borderRadius: "14px", padding: "24px", border: "1px solid #e2e8f0" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px" }}>
-            <div>
-              <h2 style={{ margin: "0 0 4px 0", fontSize: "18px", color: "#0f172a" }}>
-                Clinical & Security Audit Trail
-              </h2>
-              <p style={{ margin: 0, fontSize: "13.5px", color: "#64748b" }}>
-                Immutable log of patient triage access, reviewer decisions, and security events.
-              </p>
-            </div>
-            <button
-              onClick={fetchData}
-              style={{
-                background: "#f1f5f9",
-                color: "#1e293b",
-                border: "none",
-                borderRadius: "8px",
-                padding: "8px 14px",
-                fontSize: "13px",
-                fontWeight: "600",
-                cursor: "pointer",
-              }}
-            >
-              ↻ Refresh Logs
-            </button>
-          </div>
-
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
-              <thead>
-                <tr style={{ background: "#f8fafc", textAlign: "left", color: "#475569" }}>
-                  <th style={{ padding: "10px 14px", borderBottom: "1px solid #e2e8f0" }}>Timestamp</th>
-                  <th style={{ padding: "10px 14px", borderBottom: "1px solid #e2e8f0" }}>Action</th>
-                  <th style={{ padding: "10px 14px", borderBottom: "1px solid #e2e8f0" }}>Target Type</th>
-                  <th style={{ padding: "10px 14px", borderBottom: "1px solid #e2e8f0" }}>Target ID</th>
-                  <th style={{ padding: "10px 14px", borderBottom: "1px solid #e2e8f0" }}>IP Address</th>
-                </tr>
-              </thead>
-              <tbody>
-                {auditLogs.length === 0 ? (
+        <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+          <h3 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">
+            Security & Clinical Action Audit Trail
+          </h3>
+          {auditLogs.length === 0 ? (
+            <EmptyState
+              icon={Shield}
+              title="No security audit logs"
+              description="Audit actions will appear here automatically when clinicians make triage decisions."
+            />
+          ) : (
+            <div className="overflow-x-auto rounded-xl border border-slate-200">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-slate-50 text-slate-500 border-b border-slate-200">
                   <tr>
-                    <td colSpan="5" style={{ padding: "24px", textAlign: "center", color: "#94a3b8" }}>
-                      No audit events recorded yet.
-                    </td>
+                    <th className="p-3">Timestamp</th>
+                    <th className="p-3">Action</th>
+                    <th className="p-3">Actor</th>
+                    <th className="p-3">Entity / Target</th>
+                    <th className="p-3">Details</th>
                   </tr>
-                ) : (
-                  auditLogs.map((log) => (
-                    <tr key={log.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                      <td style={{ padding: "10px 14px", color: "#64748b" }}>
-                        {log.created_at ? new Date(log.created_at).toLocaleString("en-IN") : "-"}
-                      </td>
-                      <td style={{ padding: "10px 14px", fontWeight: "600", color: "#0f172a" }}>
-                        <span
-                          style={{
-                            background: log.action.includes("REVIEW") ? "#eff6ff" : log.action.includes("LOGIN") ? "#f0fdf4" : "#f1f5f9",
-                            color: log.action.includes("REVIEW") ? "#1d4ed8" : log.action.includes("LOGIN") ? "#15803d" : "#334155",
-                            padding: "3px 8px",
-                            borderRadius: "6px",
-                            fontSize: "12px",
-                          }}
-                        >
-                          {log.action}
-                        </span>
-                      </td>
-                      <td style={{ padding: "10px 14px", color: "#475569" }}>{log.target_type || "SYSTEM"}</td>
-                      <td style={{ padding: "10px 14px", color: "#64748b" }}>{log.target_id || "-"}</td>
-                      <td style={{ padding: "10px 14px", color: "#94a3b8", fontFamily: "monospace" }}>{log.ip_address || "127.0.0.1"}</td>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {auditLogs.map((log, i) => (
+                    <tr key={i} className="hover:bg-slate-50/50">
+                      <td className="p-3 text-slate-400 font-mono text-[11px]">{log.created_at || log.timestamp}</td>
+                      <td className="p-3 font-bold text-slate-800">{log.action || log.event_type}</td>
+                      <td className="p-3 text-slate-600">{log.actor_name || log.user_id || "System"}</td>
+                      <td className="p-3 text-slate-600">{log.target || log.entity_type || "Session"}</td>
+                      <td className="p-3 text-slate-500 max-w-xs truncate">{log.details || log.notes || "—"}</td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
     </div>

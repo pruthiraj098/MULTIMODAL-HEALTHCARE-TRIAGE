@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Home,
   Sparkles,
@@ -19,7 +19,8 @@ import {
   ChevronRight,
   PhoneCall,
   X,
-  HeartPulse
+  LogOut,
+  Calendar
 } from "lucide-react";
 
 export default function AppSidebar({
@@ -29,8 +30,17 @@ export default function AppSidebar({
   onToggleCollapse = () => {},
   mobileOpen = false,
   onCloseMobile = () => {},
-  userRole = "PATIENT"
+  userRole = "PATIENT",
+  user = null
 }) {
+  const currentUser = user || (() => {
+    try {
+      return JSON.parse(localStorage.getItem("healthtriage_user") || "null");
+    } catch {
+      return null;
+    }
+  })();
+
   const primaryNavItems = [
     { label: "Dashboard", path: "/dashboard", icon: Home, badge: null },
     { label: "SANA Assistant", path: "/triage", icon: Sparkles, badge: "AI" },
@@ -59,6 +69,12 @@ export default function AppSidebar({
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("healthtriage_token");
+    localStorage.removeItem("healthtriage_user");
+    goTo("/welcome");
+  };
+
   return (
     <>
       {/* Mobile Backdrop */}
@@ -82,13 +98,42 @@ export default function AppSidebar({
             onClick={() => handleNavClick("/dashboard")}
             title="HealthTriage AI"
           >
-            <div className="brand-logo-icon">
-              <HeartPulse size={20} className="pulse-icon" />
+            <div
+              className="brand-logo-icon"
+              style={{
+                width: "42px",
+                height: "42px",
+                borderRadius: "10px",
+                background: "#ffffff",
+                padding: "2px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                border: "1px solid #E0E6ED",
+                boxShadow: "0 2px 6px rgba(21, 52, 91, 0.06)",
+                overflow: "hidden",
+                flexShrink: 0
+              }}
+            >
+              <img
+                src="/logo.png"
+                alt="HealthTriage AI"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "contain",
+                  display: "block"
+                }}
+              />
             </div>
             {!collapsed && (
               <div className="brand-titles">
-                <span className="brand-name">HealthTriage<span className="brand-accent">AI</span></span>
-                <span className="brand-subtitle">Clinical Intelligence</span>
+                <span className="brand-name" style={{ fontSize: "17px", fontWeight: "800", color: "#15345B", letterSpacing: "-0.3px" }}>
+                  HealthTriage<span className="brand-accent" style={{ color: "#1769D2" }}> AI</span>
+                </span>
+                <span className="brand-subtitle" style={{ fontSize: "12px", color: "#596579", fontWeight: "600" }}>
+                  Clinical Platform
+                </span>
               </div>
             )}
           </div>
@@ -104,15 +149,73 @@ export default function AppSidebar({
           </button>
         </div>
 
-        {/* Scrollable Nav Items */}
+        {/* User Mini Card (Clean Hospital Dashboard Style) */}
+        {!collapsed && currentUser && (
+          <div
+            style={{
+              padding: "10px 12px",
+              margin: "12px 12px 4px",
+              background: "#F5F7FA",
+              borderRadius: "12px",
+              border: "1px solid #E0E6ED",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px"
+            }}
+          >
+            <div
+              style={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "50%",
+                background: "#1769D2",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#ffffff",
+                fontWeight: "700",
+                fontSize: "14px",
+                flexShrink: 0
+              }}
+            >
+              {currentUser.full_name ? currentUser.full_name.charAt(0).toUpperCase() : "P"}
+            </div>
+            <div style={{ overflow: "hidden", flex: 1 }}>
+              <div
+                style={{
+                  fontSize: "14px",
+                  fontWeight: "700",
+                  color: "#15345B",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis"
+                }}
+              >
+                {currentUser.full_name || "Patient"}
+              </div>
+              <div
+                style={{
+                  fontSize: "12px",
+                  color: "#159C98",
+                  fontWeight: "600",
+                  textTransform: "capitalize"
+                }}
+              >
+                {currentUser.role?.toLowerCase() || "Patient"}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Navigation Items Scroll Container */}
         <div className="sidebar-nav-scroll">
-          {/* Section: Primary Care */}
+          {/* Primary Patient Section */}
           <div className="sidebar-section">
             {!collapsed && <div className="sidebar-section-title">PATIENT CARE</div>}
             <nav className="sidebar-nav-list">
               {primaryNavItems.map((item) => {
                 const Icon = item.icon;
-                const isActive = currentPath === item.path || (item.path === "/facilities" && currentPath === "/nearby");
+                const isActive = currentPath === item.path;
                 return (
                   <button
                     key={item.path}
@@ -122,7 +225,7 @@ export default function AppSidebar({
                     title={collapsed ? item.label : undefined}
                   >
                     <span className="nav-icon-box">
-                      <Icon size={19} />
+                      <Icon size={20} />
                     </span>
                     {!collapsed && (
                       <span className="nav-label-box">
@@ -136,34 +239,38 @@ export default function AppSidebar({
             </nav>
           </div>
 
-          {/* Section: Clinical Workspaces */}
-          <div className="sidebar-section">
-            {!collapsed && <div className="sidebar-section-title">CLINICAL WORKSPACES</div>}
-            <nav className="sidebar-nav-list">
-              {clinicalNavItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = currentPath === item.path;
-                return (
-                  <button
-                    key={item.path}
-                    type="button"
-                    className={`sidebar-nav-item ${isActive ? "active" : ""}`}
-                    onClick={() => handleNavClick(item.path)}
-                    title={collapsed ? item.label : undefined}
-                  >
-                    <span className="nav-icon-box">
-                      <Icon size={19} />
-                    </span>
-                    {!collapsed && (
-                      <span className="nav-label-box">
-                        <span className="nav-label">{item.label}</span>
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </nav>
-          </div>
+          {/* Clinical & Professional Section (if authorized) */}
+          {clinicalNavItems.some((item) => item.roles.includes(userRole)) && (
+            <div className="sidebar-section">
+              {!collapsed && <div className="sidebar-section-title">CLINICAL WORKSPACES</div>}
+              <nav className="sidebar-nav-list">
+                {clinicalNavItems
+                  .filter((item) => item.roles.includes(userRole))
+                  .map((item) => {
+                    const Icon = item.icon;
+                    const isActive = currentPath === item.path;
+                    return (
+                      <button
+                        key={item.path}
+                        type="button"
+                        className={`sidebar-nav-item ${isActive ? "active" : ""}`}
+                        onClick={() => handleNavClick(item.path)}
+                        title={collapsed ? item.label : undefined}
+                      >
+                        <span className="nav-icon-box">
+                          <Icon size={20} />
+                        </span>
+                        {!collapsed && (
+                          <span className="nav-label-box">
+                            <span className="nav-label">{item.label}</span>
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+              </nav>
+            </div>
+          )}
         </div>
 
         {/* Sidebar Footer */}
@@ -173,11 +280,11 @@ export default function AppSidebar({
             <div className="sidebar-emergency-card">
               <div className="emergency-header">
                 <PhoneCall size={14} className="emergency-icon" />
-                <span>Emergency Hotlines</span>
+                <span>24/7 Emergency Support</span>
               </div>
               <div className="emergency-buttons">
-                <a href="tel:108" className="emergency-btn red">🚑 108</a>
-                <a href="tel:112" className="emergency-btn amber">🚨 112</a>
+                <a href="tel:108" className="emergency-btn red">🚑 108 Ambulance</a>
+                <a href="tel:112" className="emergency-btn amber">🚨 112 ER</a>
               </div>
             </div>
           ) : (
@@ -185,6 +292,19 @@ export default function AppSidebar({
               🚨
             </a>
           )}
+
+          {/* Logout Action */}
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="sidebar-logout-btn"
+            title={collapsed ? "Logout" : undefined}
+          >
+            <span className="nav-icon-box">
+              <LogOut size={18} />
+            </span>
+            {!collapsed && <span className="nav-label">Sign Out</span>}
+          </button>
 
           {/* Collapse Toggle (Desktop only) */}
           <button

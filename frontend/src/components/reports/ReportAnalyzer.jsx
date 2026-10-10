@@ -1,5 +1,28 @@
 import React, { useState, useEffect, useRef } from "react";
+import {
+  FileText,
+  UploadCloud,
+  CheckCircle2,
+  AlertTriangle,
+  AlertCircle,
+  Activity,
+  Sparkles,
+  Filter,
+  Copy,
+  Check,
+  Trash2,
+  Calendar,
+  FileCheck,
+  Stethoscope,
+  ChevronRight,
+  ShieldAlert,
+  HelpCircle,
+  FileSearch,
+  RefreshCw,
+  Info
+} from "lucide-react";
 import { API_URL } from "../../config";
+import { EmptyState, StatusBadge, AlertCard } from "../common";
 
 export default function ReportAnalyzer({ goTo, embedded = false }) {
   const [reports, setReports] = useState([]);
@@ -15,6 +38,7 @@ export default function ReportAnalyzer({ goTo, embedded = false }) {
   const [error, setError] = useState("");
   const [copiedQuestion, setCopiedQuestion] = useState(null);
   const [filterAbnormalOnly, setFilterAbnormalOnly] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   const fileInputRef = useRef(null);
   const token = localStorage.getItem("healthtriage_token");
@@ -46,8 +70,7 @@ export default function ReportAnalyzer({ goTo, embedded = false }) {
     fetchReports();
   }, []);
 
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
+  const processFile = (file) => {
     if (!file) return;
 
     setError("");
@@ -78,6 +101,28 @@ export default function ReportAnalyzer({ goTo, embedded = false }) {
     } else {
       setFilePreview(null);
     }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    processFile(file);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    processFile(file);
   };
 
   const handleAnalyze = async (e) => {
@@ -168,31 +213,6 @@ export default function ReportAnalyzer({ goTo, embedded = false }) {
     setTimeout(() => setCopiedQuestion(null), 2000);
   };
 
-  const getUrgencyBadge = (urgency) => {
-    switch ((urgency || "").toUpperCase()) {
-      case "URGENT":
-        return { bg: "#fef2f2", border: "#fecaca", text: "#dc2626", label: "URGENT CLINICAL REVIEW", icon: "🚨" };
-      case "PROMPT_REVIEW":
-        return { bg: "#fffbeb", border: "#fde68a", text: "#b45309", label: "PROMPT MEDICAL REVIEW", icon: "⚠️" };
-      default:
-        return { bg: "#ecfdf5", border: "#a7f3d0", text: "#047857", label: "ROUTINE REVIEW", icon: "✅" };
-    }
-  };
-
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case "critical_low":
-      case "critical_high":
-        return { bg: "#fef2f2", text: "#dc2626", label: "CRITICAL" };
-      case "low":
-        return { bg: "#eff6ff", text: "#1d4ed8", label: "LOW" };
-      case "high":
-        return { bg: "#fffbeb", text: "#b45309", label: "HIGH" };
-      default:
-        return { bg: "#ecfdf5", text: "#047857", label: "NORMAL" };
-    }
-  };
-
   const displayedParameters = (selectedReport?.parameters || selectedReport?.extracted_parameters || []).filter(
     (p) => !filterAbnormalOnly || p.is_abnormal || p.status !== "normal"
   );
@@ -201,540 +221,452 @@ export default function ReportAnalyzer({ goTo, embedded = false }) {
     selectedReport?.abnormal_count ??
     displayedParameters.filter((p) => p.is_abnormal || p.status !== "normal").length;
 
-  const urgencyInfo = getUrgencyBadge(selectedReport?.overall_urgency);
+  const normalCount = (selectedReport?.parameters || selectedReport?.extracted_parameters || []).length - abnormalCount;
 
   return (
-    <div className="medical-report-analyzer" style={{ maxWidth: embedded ? "100%" : "1200px", margin: "0 auto" }}>
-      {/* Header */}
+    <div className={`space-y-6 ${embedded ? "" : "max-w-7xl mx-auto"}`}>
+      {/* Page Header */}
       {!embedded && (
-        <div style={{ marginBottom: "24px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
-            <span style={{ fontSize: "24px" }}>📄</span>
-            <h1 style={{ margin: 0, fontSize: "22px", fontWeight: "800", color: "#0f172a" }}>
-              Smart Medical Report Analyzer
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xs font-semibold uppercase tracking-wider text-sky-600 bg-sky-50 px-2.5 py-1 rounded-full border border-sky-100">
+                Diagnostic OCR & Biomarker Engine
+              </span>
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+              Medical Reports & Diagnostic OCR
             </h1>
-            <span
-              style={{
-                fontSize: "11px",
-                fontWeight: "700",
-                background: "#e0e7ff",
-                color: "#3730a3",
-                padding: "3px 10px",
-                borderRadius: "9999px"
-              }}
-            >
-              Multimodal AI & Biomarker Engine
-            </span>
+            <p className="text-sm text-slate-500 mt-1">
+              Upload blood panels, pathology, or imaging reports for instant parameter extraction, plain-language translation, and doctor questions.
+            </p>
           </div>
-          <p style={{ margin: 0, fontSize: "14px", color: "#64748b" }}>
-            Upload laboratory blood panels, pathology, or imaging reports for instant biomarker extraction, plain-language translation, and doctor consultation questions.
-          </p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={fetchReports}
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-600 bg-white border border-slate-200/80 rounded-xl hover:bg-slate-50 transition-colors shadow-sm"
+              title="Refresh report history"
+            >
+              <RefreshCw size={14} className={loadingHistory ? "animate-spin" : ""} />
+              Refresh
+            </button>
+          </div>
         </div>
       )}
 
-      {/* Main Layout Grid */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: reports.length > 0 ? "320px 1fr" : "1fr",
-          gap: "24px",
-          alignItems: "start"
-        }}
-      >
-        {/* Left Column: Upload Box + Past Reports History */}
-        <div>
+      {/* Main Grid: Upload & History (Left) | Analysis Workplace (Right) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left Column (4 cols on lg): Upload & History */}
+        <div className="lg:col-span-4 space-y-6">
           {/* Upload Card */}
-          <div
-            style={{
-              background: "#ffffff",
-              borderRadius: "16px",
-              border: "1px solid #e2e8f0",
-              padding: "20px",
-              boxShadow: "0 2px 10px rgba(15, 23, 42, 0.04)",
-              marginBottom: "20px"
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "14px" }}>
-              <span style={{ fontSize: "16px" }}>📤</span>
-              <h3 style={{ margin: 0, fontSize: "14px", fontWeight: "800", color: "#1e293b", textTransform: "uppercase" }}>
-                Upload Lab Report
-              </h3>
+          <div className="bg-white/85 backdrop-blur-xl rounded-3xl border border-white/95 p-6 shadow-[0_16px_40px_-10px_rgba(16,36,90,0.08),0_0_0_1px_rgba(83,216,245,0.12)] space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#2563FF] to-[#53D8F5] text-white flex items-center justify-center font-bold shadow-sm">
+                  <UploadCloud size={18} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-extrabold text-[#10245A] tracking-tight">
+                    Upload Medical Report
+                  </h3>
+                  <span className="text-xs text-[#687797]">PDF, JPG, PNG or WEBP (Max 15MB)</span>
+                </div>
+              </div>
             </div>
 
             {error && (
-              <div
-                style={{
-                  background: "#fef2f2",
-                  border: "1px solid #fecaca",
-                  color: "#dc2626",
-                  borderRadius: "10px",
-                  padding: "10px 12px",
-                  fontSize: "12px",
-                  marginBottom: "14px"
-                }}
-              >
-                {error}
+              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2">
+                <AlertCircle size={16} className="shrink-0 mt-0.5 text-rose-600" />
+                <span>{error}</span>
               </div>
             )}
 
-            <form onSubmit={handleAnalyze}>
-              {/* File Dropzone */}
+            <form onSubmit={handleAnalyze} className="space-y-4">
+              {/* Drag-and-Drop Area */}
               <div
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
-                style={{
-                  border: "2px dashed #cbd5e1",
-                  borderRadius: "12px",
-                  padding: "20px 14px",
-                  textAlign: "center",
-                  cursor: "pointer",
-                  background: uploadFile ? "#f8fafc" : "#fafafa",
-                  transition: "border-color 0.2s ease",
-                  marginBottom: "14px"
-                }}
+                className={`relative border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center min-h-[160px] ${
+                  isDragOver
+                    ? "border-sky-500 bg-sky-50/60 scale-[0.99]"
+                    : uploadFile
+                    ? "border-emerald-400 bg-emerald-50/30"
+                    : "border-slate-300 hover:border-sky-400 hover:bg-slate-50/60"
+                }`}
               >
                 <input
                   type="file"
                   ref={fileInputRef}
                   onChange={handleFileChange}
-                  accept=".pdf,image/png,image/jpeg,image/webp"
-                  style={{ display: "none" }}
+                  accept=".pdf,image/jpeg,image/png,image/webp"
+                  className="hidden"
                 />
 
                 {uploadFile ? (
-                  <div>
+                  <div className="space-y-2">
                     {filePreview ? (
                       <img
                         src={filePreview}
                         alt="Preview"
-                        style={{ maxHeight: "80px", maxWidth: "100%", borderRadius: "8px", marginBottom: "8px" }}
+                        className="w-16 h-16 object-cover rounded-lg mx-auto border border-emerald-300 shadow-sm"
                       />
                     ) : (
-                      <div style={{ fontSize: "32px", marginBottom: "6px" }}>📑</div>
+                      <div className="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto">
+                        <FileCheck size={24} />
+                      </div>
                     )}
-                    <strong style={{ display: "block", fontSize: "13px", color: "#0f172a", wordBreak: "break-all" }}>
-                      {uploadFile.name}
-                    </strong>
-                    <span style={{ fontSize: "11px", color: "#64748b" }}>
-                      {(uploadFile.size / 1024).toFixed(1)} KB • Click to change
+                    <div>
+                      <span className="text-xs font-semibold text-slate-800 line-clamp-1 break-all">
+                        {uploadFile.name}
+                      </span>
+                      <span className="text-[11px] text-slate-500">
+                        {(uploadFile.size / (1024 * 1024)).toFixed(2)} MB • Ready to analyze
+                      </span>
+                    </div>
+                    <span className="inline-block text-[11px] font-semibold text-sky-600 hover:underline">
+                      Change File
                     </span>
                   </div>
                 ) : (
-                  <div>
-                    <div style={{ fontSize: "28px", marginBottom: "6px" }}>📁</div>
-                    <strong style={{ fontSize: "13px", color: "#2563eb", display: "block" }}>
-                      Choose PDF or Image
-                    </strong>
-                    <span style={{ fontSize: "11px", color: "#94a3b8" }}>
-                      PDF, JPG, PNG up to 15MB
+                  <div className="space-y-2">
+                    <div className="w-12 h-12 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center mx-auto">
+                      <FileText size={24} />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-slate-800">
+                        Drop your medical document here
+                      </p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        or click to browse from device
+                      </p>
+                    </div>
+                    <span className="inline-block text-[10px] font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-600">
+                      Supports Multi-page PDF & Photos
                     </span>
                   </div>
                 )}
               </div>
 
-              {/* Optional Symptoms Input */}
-              <div style={{ marginBottom: "16px" }}>
-                <label style={{ display: "block", fontSize: "12px", fontWeight: "700", color: "#334155", marginBottom: "6px" }}>
-                  Current Symptoms (Optional Context):
+              {/* Optional Symptoms Field */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Associated Symptoms <span className="text-slate-400 font-normal">(Optional)</span>
                 </label>
                 <textarea
                   rows={2}
                   value={symptoms}
                   onChange={(e) => setSymptoms(e.target.value)}
-                  placeholder="e.g. Fatigue, weakness, fever for 3 days..."
-                  style={{
-                    width: "100%",
-                    padding: "8px 12px",
-                    borderRadius: "8px",
-                    border: "1px solid #cbd5e1",
-                    fontSize: "12px",
-                    resize: "vertical"
-                  }}
+                  placeholder="e.g. Fatigue, dizziness for 2 weeks, fasting test..."
+                  className="w-full text-xs rounded-xl border border-slate-200 p-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 placeholder:text-slate-400 resize-none"
                 />
               </div>
 
+              {/* Status Banner when analyzing */}
+              {analyzing && statusMessage && (
+                <div className="p-3 rounded-xl bg-sky-50 border border-sky-200 text-sky-700 text-xs flex items-center gap-2 animate-pulse">
+                  <RefreshCw size={14} className="animate-spin text-sky-600 shrink-0" />
+                  <span>{statusMessage}</span>
+                </div>
+              )}
+
+              {/* Submit CTA */}
               <button
                 type="submit"
                 disabled={analyzing || !uploadFile}
-                style={{
-                  width: "100%",
-                  background: analyzing || !uploadFile ? "#94a3b8" : "#2563eb",
-                  color: "#ffffff",
-                  border: "none",
-                  borderRadius: "10px",
-                  padding: "12px",
-                  fontSize: "13px",
-                  fontWeight: "700",
-                  cursor: analyzing || !uploadFile ? "not-allowed" : "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "8px"
-                }}
+                className={`w-full py-3 px-4 rounded-xl text-xs font-extrabold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm ${
+                  analyzing || !uploadFile
+                    ? "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200"
+                    : "bg-gradient-to-r from-[#2563FF] via-[#1544C4] to-[#7657FF] hover:opacity-95 text-white shadow-[0_8px_24px_rgba(37,99,255,0.35)]"
+                }`}
               >
                 {analyzing ? (
                   <>
-                    <span className="spinner-icon">🔄</span>
-                    <span>Analyzing...</span>
+                    <RefreshCw size={14} className="animate-spin" />
+                    Extracting Biomarkers...
                   </>
                 ) : (
                   <>
-                    <span>⚡ Analyze Medical Report</span>
+                    <Sparkles size={14} />
+                    Analyze Medical Report
                   </>
                 )}
               </button>
-
-              {statusMessage && (
-                <p style={{ margin: "10px 0 0 0", fontSize: "11px", color: "#2563eb", textAlign: "center", fontWeight: "600" }}>
-                  {statusMessage}
-                </p>
-              )}
             </form>
           </div>
 
-          {/* Past Reports List */}
-          {reports.length > 0 && (
-            <div
-              style={{
-                background: "#ffffff",
-                borderRadius: "16px",
-                border: "1px solid #e2e8f0",
-                padding: "20px",
-                boxShadow: "0 2px 10px rgba(15, 23, 42, 0.04)"
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                <h4 style={{ margin: 0, fontSize: "13px", fontWeight: "800", color: "#1e293b", textTransform: "uppercase" }}>
-                  Report History ({reports.length})
-                </h4>
-              </div>
+          {/* Recent Reports List */}
+          <div className="bg-white/85 backdrop-blur-xl rounded-3xl border border-white/95 p-6 shadow-[0_16px_40px_-10px_rgba(16,36,90,0.08),0_0_0_1px_rgba(83,216,245,0.12)] space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100/80">
+              <h3 className="text-xs font-extrabold text-[#10245A] uppercase tracking-wider flex items-center gap-1.5">
+                <FileSearch size={14} className="text-[#2563FF]" />
+                Recent Reports ({reports.length})
+              </h3>
+              {loadingHistory && <RefreshCw size={12} className="animate-spin text-slate-400" />}
+            </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "360px", overflowY: "auto" }}>
+            {loadingHistory && reports.length === 0 ? (
+              <div className="py-6 text-center text-xs text-slate-400 space-y-2">
+                <RefreshCw size={18} className="animate-spin mx-auto text-sky-500" />
+                <p>Loading previous reports...</p>
+              </div>
+            ) : reports.length === 0 ? (
+              <div className="py-6 text-center text-xs text-slate-400">
+                <FileText size={28} className="mx-auto text-slate-300 mb-1" />
+                <p>No reports uploaded yet.</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">Upload your first report above.</p>
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1">
                 {reports.map((r) => {
                   const isSelected = selectedReport?.id === r.id;
-                  const itemUrgency = getUrgencyBadge(r.overall_urgency);
+                  const isUrgent = (r.overall_urgency || "").toUpperCase() === "URGENT";
+                  const isPrompt = (r.overall_urgency || "").toUpperCase() === "PROMPT_REVIEW";
+
                   return (
                     <div
                       key={r.id}
                       onClick={() => setSelectedReport(r)}
-                      style={{
-                        padding: "10px 12px",
-                        borderRadius: "10px",
-                        border: `1px solid ${isSelected ? "#2563eb" : "#e2e8f0"}`,
-                        background: isSelected ? "#eff6ff" : "#f8fafc",
-                        cursor: "pointer",
-                        transition: "all 0.15s ease"
-                      }}
+                      className={`group p-3 rounded-xl border text-left cursor-pointer transition-all duration-150 relative ${
+                        isSelected
+                          ? "bg-sky-50/70 border-sky-500 shadow-sm ring-1 ring-sky-500/20"
+                          : "bg-slate-50/60 hover:bg-slate-100/70 border-slate-200/80"
+                      }`}
                     >
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "4px" }}>
-                        <strong
-                          style={{
-                            fontSize: "12px",
-                            color: isSelected ? "#1d4ed8" : "#0f172a",
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            maxWidth: "180px"
-                          }}
-                        >
-                          {r.file_name}
-                        </strong>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <p className={`text-xs font-bold truncate ${isSelected ? "text-sky-950" : "text-slate-800"}`}>
+                            {r.report_type || r.file_name}
+                          </p>
+                          <div className="flex items-center gap-2 text-[10px] text-slate-500 mt-1">
+                            <span className="flex items-center gap-0.5">
+                              <Calendar size={10} />
+                              {r.created_at ? new Date(r.created_at).toLocaleDateString() : "Recent"}
+                            </span>
+                            <span>•</span>
+                            <span className="truncate max-w-[110px]">{r.file_name}</span>
+                          </div>
+                        </div>
+
                         <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDeleteReport(r.id);
                           }}
+                          className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-rose-600 rounded hover:bg-rose-50 transition-all"
                           title="Delete report"
-                          style={{
-                            background: "transparent",
-                            border: "none",
-                            color: "#94a3b8",
-                            fontSize: "12px",
-                            cursor: "pointer",
-                            padding: "0 2px"
-                          }}
                         >
-                          🗑️
+                          <Trash2 size={13} />
                         </button>
                       </div>
 
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "11px" }}>
-                        <span style={{ color: "#64748b" }}>
-                          {r.created_at ? new Date(r.created_at).toLocaleDateString() : "Recent"}
-                        </span>
+                      <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-slate-200/50">
                         <span
-                          style={{
-                            padding: "2px 6px",
-                            borderRadius: "4px",
-                            background: itemUrgency.bg,
-                            color: itemUrgency.text,
-                            fontWeight: "700",
-                            fontSize: "10px"
-                          }}
+                          className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            isUrgent
+                              ? "bg-rose-100 text-rose-700"
+                              : isPrompt
+                              ? "bg-amber-100 text-amber-800"
+                              : "bg-emerald-100 text-emerald-800"
+                          }`}
                         >
-                          {r.abnormal_count > 0 ? `${r.abnormal_count} Flagged` : "Normal"}
+                          {isUrgent ? "🔴 Urgent" : isPrompt ? "🟡 Prompt" : "🟢 Routine"}
+                        </span>
+
+                        <span className="text-[10px] font-semibold text-slate-500">
+                          {r.abnormal_count > 0 ? (
+                            <span className="text-amber-700 font-bold">{r.abnormal_count} Flagged</span>
+                          ) : (
+                            <span className="text-emerald-700 font-semibold">Normal</span>
+                          )}
                         </span>
                       </div>
                     </div>
                   );
                 })}
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
-        {/* Right Column: Detailed Report Analysis View */}
-        <div>
+        {/* Right Column (8 cols on lg): Detailed Report Analysis View */}
+        <div className="lg:col-span-8 space-y-6">
           {selectedReport ? (
-            <div
-              style={{
-                background: "#ffffff",
-                borderRadius: "20px",
-                border: "1px solid #e2e8f0",
-                padding: "28px",
-                boxShadow: "0 4px 20px rgba(15, 23, 42, 0.05)"
-              }}
-            >
-              {/* Report Header Card */}
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "flex-start",
-                  flexWrap: "wrap",
-                  gap: "16px",
-                  paddingBottom: "20px",
-                  borderBottom: "1px solid #e2e8f0",
-                  marginBottom: "24px"
-                }}
-              >
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
-                    <h2 style={{ margin: 0, fontSize: "20px", fontWeight: "900", color: "#0f172a" }}>
-                      {selectedReport.report_type || "Medical Laboratory Report"}
+            <div className="bg-white/85 backdrop-blur-2xl rounded-3xl border border-white/95 p-6 sm:p-8 shadow-[0_20px_50px_-12px_rgba(16,36,90,0.08),0_0_0_1px_rgba(83,216,245,0.12)] space-y-6">
+              {/* Header Bar */}
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-5 border-b border-slate-100">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-xl font-extrabold text-[#10245A] tracking-tight">
+                      {selectedReport.report_type || "Diagnostic Laboratory Report"}
                     </h2>
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-sky-100 text-sky-800">
+                      Analyzed
+                    </span>
                   </div>
-                  <div style={{ display: "flex", gap: "16px", fontSize: "12px", color: "#64748b" }}>
-                    <span>📁 {selectedReport.file_name}</span>
+                  <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                    <span className="flex items-center gap-1">
+                      <FileText size={12} className="text-slate-400" />
+                      {selectedReport.file_name}
+                    </span>
                     {selectedReport.created_at && (
-                      <span>📅 Analyzed: {new Date(selectedReport.created_at).toLocaleString()}</span>
+                      <span className="flex items-center gap-1">
+                        <Calendar size={12} className="text-slate-400" />
+                        {new Date(selectedReport.created_at).toLocaleString()}
+                      </span>
                     )}
                   </div>
                 </div>
 
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                {/* Urgency & Abnormal Badges */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <StatusBadge
+                    status={
+                      selectedReport.overall_urgency === "URGENT"
+                        ? "emergency"
+                        : selectedReport.overall_urgency === "PROMPT_REVIEW"
+                        ? "urgent"
+                        : "routine"
+                    }
+                    size="md"
+                  />
                   <span
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "6px",
-                      padding: "6px 14px",
-                      borderRadius: "9999px",
-                      background: urgencyInfo.bg,
-                      border: `1px solid ${urgencyInfo.border}`,
-                      color: urgencyInfo.text,
-                      fontSize: "12px",
-                      fontWeight: "800"
-                    }}
+                    className={`inline-flex items-center gap-1 text-xs font-bold px-3 py-1 rounded-full border ${
+                      abnormalCount > 0
+                        ? "bg-amber-50 text-amber-800 border-amber-200"
+                        : "bg-emerald-50 text-emerald-800 border-emerald-200"
+                    }`}
                   >
-                    <span>{urgencyInfo.icon}</span>
-                    <span>{urgencyInfo.label}</span>
-                  </span>
-
-                  <span
-                    style={{
-                      padding: "6px 14px",
-                      borderRadius: "9999px",
-                      background: abnormalCount > 0 ? "#fef3c7" : "#ecfdf5",
-                      border: `1px solid ${abnormalCount > 0 ? "#fde68a" : "#a7f3d0"}`,
-                      color: abnormalCount > 0 ? "#b45309" : "#047857",
-                      fontSize: "12px",
-                      fontWeight: "800"
-                    }}
-                  >
-                    {abnormalCount} Abnormal Finding{abnormalCount === 1 ? "" : "s"}
+                    {abnormalCount > 0 ? `⚠️ ${abnormalCount} Attention Item${abnormalCount > 1 ? "s" : ""}` : "✅ All Parameters Normal"}
                   </span>
                 </div>
               </div>
 
-              {/* Critical Alert Banner if Urgent */}
+              {/* Urgent Warning Alert if applicable */}
               {selectedReport.overall_urgency === "URGENT" && (
-                <div
-                  style={{
-                    background: "#fef2f2",
-                    border: "1px solid #fecaca",
-                    borderRadius: "12px",
-                    padding: "16px",
-                    marginBottom: "24px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px"
-                  }}
-                >
-                  <span style={{ fontSize: "24px" }}>🚨</span>
-                  <div>
-                    <strong style={{ color: "#991b1b", fontSize: "14px", display: "block" }}>
-                      URGENT CLINICAL ATTENTION RECOMMENDED
-                    </strong>
-                    <span style={{ color: "#b91c1c", fontSize: "12px" }}>
-                      One or more extracted laboratory markers indicate values significantly outside safe physiological limits. Contact your physician or urgent care clinic promptly.
-                    </span>
-                  </div>
-                </div>
+                <AlertCard
+                  type="emergency"
+                  title="Urgent Clinical Attention Recommended"
+                  message="One or more extracted laboratory markers indicate values significantly outside safe physiological limits. Contact your physician or urgent care clinic promptly."
+                />
               )}
 
-              {/* Plain-Language Clinical Synthesis */}
-              <div
-                style={{
-                  background: "#f8fafc",
-                  borderRadius: "16px",
-                  border: "1px solid #e2e8f0",
-                  padding: "20px",
-                  marginBottom: "24px"
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-                  <span style={{ fontSize: "16px" }}>💡</span>
-                  <h3 style={{ margin: 0, fontSize: "14px", fontWeight: "800", color: "#1e293b", textTransform: "uppercase" }}>
-                    Plain-Language Clinical Explanation
+              {/* 1. SECTION: SUMMARY & CLINICAL SYNTHESIS */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-md bg-sky-100 text-sky-700 flex items-center justify-center font-bold text-xs">
+                    💡
+                  </div>
+                  <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                    Summary & Plain-Language Explanation
                   </h3>
                 </div>
-                <p style={{ margin: 0, fontSize: "14px", color: "#334155", lineHeight: "1.6" }}>
-                  {selectedReport.plain_language_explanation || selectedReport.summary}
-                </p>
+                <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/80 text-sm text-slate-700 leading-relaxed">
+                  {selectedReport.plain_language_explanation || selectedReport.summary || "No specific summary generated for this report."}
+                </div>
               </div>
 
-              {/* Symptom Correlation Section */}
+              {/* 2. SECTION: SYMPTOM CORRELATIONS (if present) */}
               {selectedReport.symptom_correlations && (
-                <div
-                  style={{
-                    background: "#f0fdf4",
-                    borderRadius: "16px",
-                    border: "1px solid #bbf7d0",
-                    padding: "20px",
-                    marginBottom: "24px"
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-                    <span style={{ fontSize: "16px" }}>🔗</span>
-                    <h3 style={{ margin: 0, fontSize: "14px", fontWeight: "800", color: "#166534", textTransform: "uppercase" }}>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-md bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">
+                      🔗
+                    </div>
+                    <h3 className="text-xs font-bold text-emerald-950 uppercase tracking-wider">
                       Symptom Correlation
                     </h3>
                   </div>
-                  <p style={{ margin: 0, fontSize: "13px", color: "#14532d", lineHeight: "1.6" }}>
+                  <div className="bg-emerald-50/70 rounded-xl p-4 border border-emerald-200 text-xs text-emerald-900 leading-relaxed">
                     {selectedReport.symptom_correlations}
-                  </p>
+                  </div>
                 </div>
               )}
 
-              {/* Extracted Biomarkers Section */}
-              <div style={{ marginBottom: "24px" }}>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    flexWrap: "wrap",
-                    gap: "12px",
-                    marginBottom: "16px"
-                  }}
-                >
+              {/* 3. SECTION: EXTRACTED BIOMARKERS & KEY VALUES */}
+              <div className="space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div>
-                    <h3 style={{ margin: 0, fontSize: "15px", fontWeight: "800", color: "#0f172a", textTransform: "uppercase" }}>
+                    <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                      <Activity size={14} className="text-sky-600" />
                       Extracted Laboratory Biomarkers ({displayedParameters.length})
                     </h3>
-                    <p style={{ margin: "2px 0 0 0", fontSize: "12px", color: "#64748b" }}>
-                      Parameters extracted with adult reference ranges and status
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Standard adult reference ranges, extracted measurements, and clinical classification
                     </p>
                   </div>
 
                   <button
                     type="button"
                     onClick={() => setFilterAbnormalOnly(!filterAbnormalOnly)}
-                    style={{
-                      background: filterAbnormalOnly ? "#2563eb" : "#f1f5f9",
-                      color: filterAbnormalOnly ? "#ffffff" : "#475569",
-                      border: "none",
-                      borderRadius: "8px",
-                      padding: "6px 12px",
-                      fontSize: "12px",
-                      fontWeight: "700",
-                      cursor: "pointer"
-                    }}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                      filterAbnormalOnly
+                        ? "bg-sky-600 text-white shadow-sm"
+                        : "bg-slate-100 hover:bg-slate-200 text-slate-700"
+                    }`}
                   >
-                    {filterAbnormalOnly ? "Show All Parameters" : "Show Abnormal Only"}
+                    <Filter size={12} />
+                    {filterAbnormalOnly ? "Showing Flagged Only" : "Show Flagged Only"}
                   </button>
                 </div>
 
                 {displayedParameters.length === 0 ? (
-                  <div style={{ textAlign: "center", padding: "24px", color: "#64748b", fontSize: "13px" }}>
-                    No parameters found matching the selected filter.
+                  <div className="p-8 text-center bg-slate-50 rounded-xl border border-slate-200 text-slate-500 text-xs">
+                    No biomarkers found matching the filter criteria.
                   </div>
                 ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {displayedParameters.map((p, idx) => {
-                      const statusBadge = getStatusBadge(p.status);
                       const isAbnormal = p.is_abnormal || p.status !== "normal";
+                      const isCritical = p.status === "critical_low" || p.status === "critical_high";
 
                       return (
                         <div
                           key={idx}
-                          style={{
-                            background: isAbnormal ? "#fff" : "#f8fafc",
-                            borderRadius: "14px",
-                            border: `1px solid ${isAbnormal ? "#fca5a5" : "#e2e8f0"}`,
-                            padding: "16px",
-                            boxShadow: isAbnormal ? "0 2px 8px rgba(239, 68, 68, 0.08)" : "none"
-                          }}
+                          className={`p-3.5 rounded-xl border transition-all ${
+                            isCritical
+                              ? "bg-rose-50/60 border-rose-300 shadow-sm"
+                              : isAbnormal
+                              ? "bg-amber-50/50 border-amber-300 shadow-sm"
+                              : "bg-slate-50/70 border-slate-200/80"
+                          }`}
                         >
-                          <div
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                              flexWrap: "wrap",
-                              gap: "8px",
-                              marginBottom: "8px"
-                            }}
-                          >
-                            <span style={{ fontSize: "14px", fontWeight: "800", color: "#0f172a" }}>
+                          <div className="flex items-start justify-between gap-2 mb-1.5">
+                            <span className="text-xs font-bold text-slate-900">
                               {p.name}
                             </span>
                             <span
-                              style={{
-                                padding: "3px 10px",
-                                borderRadius: "9999px",
-                                background: statusBadge.bg,
-                                color: statusBadge.text,
-                                fontSize: "11px",
-                                fontWeight: "800"
-                              }}
+                              className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full ${
+                                isCritical
+                                  ? "bg-rose-200 text-rose-900"
+                                  : isAbnormal
+                                  ? "bg-amber-200 text-amber-900"
+                                  : "bg-emerald-100 text-emerald-800"
+                              }`}
                             >
-                              {statusBadge.label}
+                              {p.status ? p.status.replace("_", " ") : isAbnormal ? "Flagged" : "Normal"}
                             </span>
                           </div>
 
-                          {/* Value vs Reference Range */}
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "baseline",
-                              gap: "12px",
-                              marginBottom: "8px",
-                              flexWrap: "wrap"
-                            }}
-                          >
-                            <span style={{ fontSize: "18px", fontWeight: "900", color: isAbnormal ? "#dc2626" : "#0f172a" }}>
+                          <div className="flex items-baseline gap-2 mb-1">
+                            <span
+                              className={`text-base font-black ${
+                                isCritical ? "text-rose-700" : isAbnormal ? "text-amber-800" : "text-slate-900"
+                              }`}
+                            >
                               {p.value} {p.unit || ""}
                             </span>
-                            <span style={{ fontSize: "12px", color: "#64748b" }}>
-                              Normal Reference: <strong>{p.reference_range || "Standard adult range"}</strong>
-                            </span>
                           </div>
 
-                          {/* Plain-Language Parameter Explanation */}
+                          <div className="text-[11px] text-slate-500 mb-1">
+                            Ref: <span className="font-semibold text-slate-700">{p.reference_range || "Standard adult range"}</span>
+                          </div>
+
                           {p.explanation && (
-                            <p style={{ margin: 0, fontSize: "12px", color: "#475569", lineHeight: "1.5" }}>
+                            <p className="text-[11px] text-slate-600 mt-1.5 pt-1.5 border-t border-slate-200/60 leading-normal">
                               {p.explanation}
                             </p>
                           )}
@@ -745,61 +677,48 @@ export default function ReportAnalyzer({ goTo, embedded = false }) {
                 )}
               </div>
 
-              {/* Doctor Questions Checklist */}
+              {/* 4. SECTION: QUESTIONS TO ASK YOUR DOCTOR */}
               {selectedReport.doctor_questions && selectedReport.doctor_questions.length > 0 && (
-                <div
-                  style={{
-                    background: "#faf5ff",
-                    borderRadius: "16px",
-                    border: "1px solid #e9d5ff",
-                    padding: "20px",
-                    marginBottom: "24px"
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-                    <span style={{ fontSize: "16px" }}>🩺</span>
-                    <h3 style={{ margin: 0, fontSize: "14px", fontWeight: "800", color: "#6b21a8", textTransform: "uppercase" }}>
-                      Questions to Ask Your Doctor About This Report
-                    </h3>
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-md bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs">
+                      <Stethoscope size={13} />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-bold text-purple-950 uppercase tracking-wider">
+                        Questions for Your Physician
+                      </h3>
+                      <p className="text-[11px] text-purple-700">
+                        Personalized clinical questions synthesized from your flagged parameters
+                      </p>
+                    </div>
                   </div>
-                  <p style={{ margin: "0 0 14px 0", fontSize: "12px", color: "#7e22ce" }}>
-                    Bring these personalized questions to your appointment to get the most clarity on your results:
-                  </p>
 
-                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <div className="space-y-2">
                     {selectedReport.doctor_questions.map((q, qIdx) => (
                       <div
                         key={qIdx}
-                        style={{
-                          background: "#ffffff",
-                          borderRadius: "10px",
-                          border: "1px solid #f3e8ff",
-                          padding: "10px 14px",
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          gap: "12px"
-                        }}
+                        className="bg-purple-50/50 border border-purple-200/80 rounded-xl p-3 flex items-center justify-between gap-3 text-xs"
                       >
-                        <span style={{ fontSize: "13px", color: "#1e293b", fontWeight: "500" }}>
+                        <span className="text-slate-800 font-medium leading-relaxed">
                           • {q}
                         </span>
                         <button
                           type="button"
                           onClick={() => copyDoctorQuestion(q, qIdx)}
-                          style={{
-                            background: copiedQuestion === qIdx ? "#10b981" : "#f1f5f9",
-                            color: copiedQuestion === qIdx ? "#ffffff" : "#475569",
-                            border: "none",
-                            borderRadius: "6px",
-                            padding: "4px 8px",
-                            fontSize: "11px",
-                            fontWeight: "700",
-                            cursor: "pointer",
-                            whiteSpace: "nowrap"
-                          }}
+                          className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-lg bg-white border border-purple-200 text-purple-700 hover:bg-purple-100 transition-colors shadow-xs"
                         >
-                          {copiedQuestion === qIdx ? "✓ Copied" : "Copy"}
+                          {copiedQuestion === qIdx ? (
+                            <>
+                              <Check size={12} className="text-emerald-600" />
+                              <span className="text-emerald-700">Copied</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy size={12} />
+                              <span>Copy</span>
+                            </>
+                          )}
                         </button>
                       </div>
                     ))}
@@ -807,39 +726,25 @@ export default function ReportAnalyzer({ goTo, embedded = false }) {
                 </div>
               )}
 
-              {/* Safety Notice */}
-              <div
-                style={{
-                  padding: "14px 18px",
-                  borderRadius: "12px",
-                  background: "#f1f5f9",
-                  fontSize: "11px",
-                  color: "#64748b",
-                  lineHeight: "1.5"
-                }}
-              >
-                <strong>⚠️ Clinical Laboratory Disclaimer: </strong>
-                {selectedReport.disclaimer ||
-                  "Laboratory findings must be interpreted by your ordering physician within the context of your overall clinical history. Results marked outside normal ranges warrant clinical consultation."}
+              {/* 5. SECTION: SAFETY NOTICE & DISCLAIMER */}
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-[11px] text-slate-500 flex items-start gap-2.5 leading-relaxed">
+                <Info size={16} className="text-slate-400 shrink-0 mt-0.5" />
+                <div>
+                  <strong className="text-slate-700">Clinical Laboratory Disclaimer: </strong>
+                  {selectedReport.disclaimer ||
+                    "Laboratory findings must be interpreted by your ordering physician within the context of your overall clinical history. Results marked outside normal ranges warrant clinical consultation."}
+                </div>
               </div>
             </div>
           ) : (
-            <div
-              style={{
-                background: "#ffffff",
-                borderRadius: "20px",
-                border: "2px dashed #cbd5e1",
-                padding: "60px 24px",
-                textAlign: "center"
-              }}
-            >
-              <div style={{ fontSize: "48px", marginBottom: "12px" }}>📋</div>
-              <h3 style={{ margin: "0 0 6px 0", fontSize: "18px", fontWeight: "800", color: "#0f172a" }}>
-                No Medical Report Selected
-              </h3>
-              <p style={{ margin: "0 0 20px 0", fontSize: "13px", color: "#64748b", maxWidth: "400px", marginLeft: "auto", marginRight: "auto" }}>
-                Upload a lab report PDF or image from the left panel to instantly extract findings, check abnormal values, and generate doctor questions.
-              </p>
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center shadow-sm">
+              <EmptyState
+                icon={FileText}
+                title="No Medical Report Selected"
+                description="Upload a lab report PDF or image from the left panel to instantly extract findings, check abnormal values, and generate doctor questions."
+                actionText="Upload Medical Report"
+                onAction={() => fileInputRef.current?.click()}
+              />
             </div>
           )}
         </div>

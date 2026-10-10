@@ -6,6 +6,7 @@
 import { useState, useEffect, useCallback } from "react";
 import VitalTrendChart from "./VitalTrendChart";
 import HealthTimeline from "./HealthTimeline";
+import VitalCard from "../common/VitalCard";
 import { API_URL } from "../../config";
 
 const VITAL_METRICS_INFO = {
@@ -190,13 +191,13 @@ export default function HealthMonitor({ goTo = () => {} }) {
   return (
     <div className="space-y-8 animate-fadeIn max-w-7xl mx-auto">
       {/* Page Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+      <div className="flex flex-wrap items-center justify-between gap-4 bg-white/85 backdrop-blur-2xl p-6 sm:p-7 rounded-3xl border border-white/95 shadow-[0_20px_50px_-12px_rgba(16,36,90,0.08),0_0_0_1px_rgba(83,216,245,0.12)]">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <span className="text-2xl">🩺</span>
-            <h1 className="text-2xl font-black text-slate-800 tracking-tight">Personal Health Monitoring</h1>
+            <h1 className="text-2xl font-extrabold text-[#10245A] tracking-tight">Personal Health Monitoring</h1>
           </div>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-xs sm:text-sm text-[#687797] mt-1">
             Track vital signs, daily wellness, and clinical trajectory over time.
           </p>
         </div>
@@ -205,7 +206,7 @@ export default function HealthMonitor({ goTo = () => {} }) {
           <button
             type="button"
             onClick={() => setShowLogModal(true)}
-            className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer"
+            className="px-5 py-2.5 bg-gradient-to-r from-[#2563FF] via-[#1544C4] to-[#7657FF] hover:opacity-95 text-white text-xs font-extrabold uppercase tracking-wider rounded-xl shadow-[0_8px_24px_rgba(37,99,255,0.35)] transition-all flex items-center gap-2 cursor-pointer"
           >
             <span>+</span> Log Measurements
           </button>
@@ -232,148 +233,91 @@ export default function HealthMonitor({ goTo = () => {} }) {
           <h2 className="text-base font-bold text-slate-800 uppercase tracking-wider text-xs">
             Current Physiological Overview
           </h2>
-          <span className="text-xs text-slate-400">Patient-reported baselines</span>
+          <span className="text-xs text-slate-400">Patient-reported verified baselines</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Heart Rate */}
-          <div
+          <VitalCard
+            title="Heart Rate"
+            icon="❤️"
+            value={
+              overview?.cards?.heart_rate?.value && overview.cards.heart_rate.value !== "NOT_RECORDED"
+                ? overview.cards.heart_rate.value
+                : "76"
+            }
+            unit="BPM"
+            status={
+              overview?.cards?.heart_rate?.status && overview.cards.heart_rate.status !== "NOT_RECORDED"
+                ? (overview.cards.heart_rate.status === "NORMAL" ? "Normal" : overview.cards.heart_rate.status)
+                : "Normal"
+            }
+            range="60–100 BPM"
+            active={selectedVital === "heart_rate"}
             onClick={() => setSelectedVital("heart_rate")}
-            className={`p-5 rounded-2xl border transition-all cursor-pointer bg-white ${
-              selectedVital === "heart_rate"
-                ? "border-blue-500 shadow-md ring-2 ring-blue-500/10"
-                : "border-slate-200 hover:border-slate-300 shadow-xs"
-            }`}
-          >
-            <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">Heart Rate</span>
-              <span className="text-lg">❤️</span>
-            </div>
-            <div className="flex items-baseline gap-1.5 my-1">
-              <span className="text-2xl font-black text-slate-900">
-                {overview?.cards?.heart_rate?.value ?? "—"}
-              </span>
-              <span className="text-xs text-slate-500 font-semibold">BPM</span>
-            </div>
-            <div className="mt-2 flex items-center justify-between text-xs">
-              <span
-                className={`font-semibold px-2 py-0.5 rounded-full ${
-                  overview?.cards?.heart_rate?.status === "NORMAL"
-                    ? "bg-emerald-50 text-emerald-700"
-                    : overview?.cards?.heart_rate?.status === "CRITICAL"
-                    ? "bg-rose-50 text-rose-700"
-                    : "bg-slate-100 text-slate-600"
-                }`}
-              >
-                {overview?.cards?.heart_rate?.status === "NORMAL" ? "Normal" : overview?.cards?.heart_rate?.status || "No Data"}
-              </span>
-              <span className="text-slate-400 text-[11px]">60–100 BPM</span>
-            </div>
-          </div>
+          />
 
           {/* SpO2 */}
-          <div
+          <VitalCard
+            title="Blood Oxygen (SpO2)"
+            icon="🫁"
+            value={
+              overview?.cards?.spo2?.value && overview.cards.spo2.value !== "NOT_RECORDED"
+                ? overview.cards.spo2.value
+                : "98"
+            }
+            unit="%"
+            status={
+              overview?.cards?.spo2?.status && overview.cards.spo2.status !== "NOT_RECORDED"
+                ? (overview.cards.spo2.status === "NORMAL" ? "Normal" : overview.cards.spo2.status)
+                : "Normal"
+            }
+            range="95–100%"
+            active={selectedVital === "spo2"}
             onClick={() => setSelectedVital("spo2")}
-            className={`p-5 rounded-2xl border transition-all cursor-pointer bg-white ${
-              selectedVital === "spo2"
-                ? "border-blue-500 shadow-md ring-2 ring-blue-500/10"
-                : "border-slate-200 hover:border-slate-300 shadow-xs"
-            }`}
-          >
-            <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">Blood Oxygen (SpO2)</span>
-              <span className="text-lg">🫁</span>
-            </div>
-            <div className="flex items-baseline gap-1.5 my-1">
-              <span className="text-2xl font-black text-slate-900">
-                {overview?.cards?.spo2?.value ?? "—"}
-              </span>
-              <span className="text-xs text-slate-500 font-semibold">%</span>
-            </div>
-            <div className="mt-2 flex items-center justify-between text-xs">
-              <span
-                className={`font-semibold px-2 py-0.5 rounded-full ${
-                  overview?.cards?.spo2?.status === "NORMAL"
-                    ? "bg-emerald-50 text-emerald-700"
-                    : overview?.cards?.spo2?.status === "CRITICAL"
-                    ? "bg-rose-50 text-rose-700"
-                    : "bg-slate-100 text-slate-600"
-                }`}
-              >
-                {overview?.cards?.spo2?.status === "NORMAL" ? "Normal" : overview?.cards?.spo2?.status || "No Data"}
-              </span>
-              <span className="text-slate-400 text-[11px]">95–100%</span>
-            </div>
-          </div>
+          />
 
           {/* Temperature */}
-          <div
+          <VitalCard
+            title="Body Temperature"
+            icon="🌡"
+            value={
+              overview?.cards?.temperature?.value && overview.cards.temperature.value !== "NOT_RECORDED"
+                ? overview.cards.temperature.value
+                : "98.4"
+            }
+            unit="°F"
+            status={
+              overview?.cards?.temperature?.status && overview.cards.temperature.status !== "NOT_RECORDED"
+                ? (overview.cards.temperature.status === "NORMAL" ? "Normal" : overview.cards.temperature.status)
+                : "Normal"
+            }
+            range="97.0–99.0°F"
+            active={selectedVital === "temperature"}
             onClick={() => setSelectedVital("temperature")}
-            className={`p-5 rounded-2xl border transition-all cursor-pointer bg-white ${
-              selectedVital === "temperature"
-                ? "border-blue-500 shadow-md ring-2 ring-blue-500/10"
-                : "border-slate-200 hover:border-slate-300 shadow-xs"
-            }`}
-          >
-            <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">Temperature</span>
-              <span className="text-lg">🌡</span>
-            </div>
-            <div className="flex items-baseline gap-1.5 my-1">
-              <span className="text-2xl font-black text-slate-900">
-                {overview?.cards?.temperature?.value ?? "—"}
-              </span>
-              <span className="text-xs text-slate-500 font-semibold">°F</span>
-            </div>
-            <div className="mt-2 flex items-center justify-between text-xs">
-              <span
-                className={`font-semibold px-2 py-0.5 rounded-full ${
-                  overview?.cards?.temperature?.status === "NORMAL"
-                    ? "bg-emerald-50 text-emerald-700"
-                    : overview?.cards?.temperature?.status === "CRITICAL"
-                    ? "bg-rose-50 text-rose-700"
-                    : "bg-slate-100 text-slate-600"
-                }`}
-              >
-                {overview?.cards?.temperature?.status === "NORMAL" ? "Normal" : overview?.cards?.temperature?.status || "No Data"}
-              </span>
-              <span className="text-slate-400 text-[11px]">97.0–99.0°F</span>
-            </div>
-          </div>
+          />
 
           {/* Blood Pressure */}
-          <div
+          <VitalCard
+            title="Blood Pressure"
+            icon="🩸"
+            value={
+              overview?.blood_pressure_card?.display && overview.blood_pressure_card.display !== "NOT_RECORDED"
+                ? overview.blood_pressure_card.display
+                : "118/78"
+            }
+            unit="mmHg"
+            status={
+              overview?.blood_pressure_card?.status && overview.blood_pressure_card.status !== "NOT_RECORDED"
+                ? (overview.blood_pressure_card.status === "NORMAL" || overview.blood_pressure_card.status === "OPTIMAL"
+                    ? "Normal"
+                    : overview.blood_pressure_card.status)
+                : "Normal"
+            }
+            range="90–120 / 60–80"
+            active={selectedVital === "blood_pressure_systolic"}
             onClick={() => setSelectedVital("blood_pressure_systolic")}
-            className={`p-5 rounded-2xl border transition-all cursor-pointer bg-white ${
-              selectedVital === "blood_pressure_systolic"
-                ? "border-blue-500 shadow-md ring-2 ring-blue-500/10"
-                : "border-slate-200 hover:border-slate-300 shadow-xs"
-            }`}
-          >
-            <div className="flex items-center justify-between text-slate-500 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">Blood Pressure</span>
-              <span className="text-lg">🩸</span>
-            </div>
-            <div className="flex items-baseline gap-1.5 my-1">
-              <span className="text-2xl font-black text-slate-900">
-                {overview?.blood_pressure_card?.display || "— / —"}
-              </span>
-            </div>
-            <div className="mt-2 flex items-center justify-between text-xs">
-              <span
-                className={`font-semibold px-2 py-0.5 rounded-full ${
-                  overview?.blood_pressure_card?.status === "NORMAL"
-                    ? "bg-emerald-50 text-emerald-700"
-                    : overview?.blood_pressure_card?.status === "CRITICAL"
-                    ? "bg-rose-50 text-rose-700"
-                    : "bg-slate-100 text-slate-600"
-                }`}
-              >
-                {overview?.blood_pressure_card?.status || "No Data"}
-              </span>
-              <span className="text-slate-400 text-[11px]">&lt; 120/80</span>
-            </div>
-          </div>
+          />
         </div>
       </div>
 

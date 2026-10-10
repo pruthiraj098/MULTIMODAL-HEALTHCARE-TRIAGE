@@ -302,76 +302,43 @@ export default function HealthIntelligenceHub({ goTo = () => {} }) {
   };
 
   return (
-    <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "20px" }}>
+    <div className="max-w-7xl mx-auto space-y-6">
       {/* Header Banner */}
-      <div
-        style={{
-          background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%)",
-          color: "#ffffff",
-          padding: "26px 32px",
-          borderRadius: "18px",
-          boxShadow: "0 10px 25px -5px rgba(67, 56, 202, 0.35)",
-          marginBottom: "24px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: "16px",
-        }}
-      >
-        <div>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(255,255,255,0.18)", padding: "4px 12px", borderRadius: "20px", fontSize: "12px", fontWeight: "700", marginBottom: "8px" }}>
+      <div className="bg-white/85 backdrop-blur-2xl rounded-3xl border border-white/95 p-6 sm:p-8 shadow-[0_20px_50px_-12px_rgba(16,36,90,0.08),0_0_0_1px_rgba(83,216,245,0.12)]">
+        <div className="relative z-10 space-y-2">
+          <div className="inline-flex items-center gap-2 bg-sky-50 px-3.5 py-1 rounded-full text-xs font-extrabold text-[#2563FF] border border-sky-200">
             <span>🧠</span> SANA HEALTH INTELLIGENCE MODULE
           </div>
-          <h1 style={{ margin: "0 0 6px 0", fontSize: "26px", fontWeight: "700" }}>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#10245A] tracking-tight">
             Comprehensive Disease & Medication Intelligence
           </h1>
-          <p style={{ margin: 0, opacity: 0.9, fontSize: "14px", maxWidth: "750px" }}>
-            Verified clinical conditions, multi-factor symptom analysis, Best Next-Step engine, pharmacopeia knowledge, multi-drug safety checker, and longitudinal report tracking.
+          <p className="text-xs sm:text-sm text-[#687797] max-w-3xl leading-relaxed">
+            Understand how your health changes over time: verified clinical conditions, multi-factor symptom analysis, Best Next-Step engine, pharmacopeia knowledge, multi-drug safety checker, and longitudinal report tracking.
           </p>
         </div>
       </div>
 
       {/* Navigation Tabs */}
-      <div
-        style={{
-          display: "flex",
-          gap: "6px",
-          overflowX: "auto",
-          borderBottom: "2px solid #e2e8f0",
-          marginBottom: "24px",
-          paddingBottom: "4px"
-        }}
-      >
+      <div className="flex items-center gap-1.5 p-1.5 bg-white/80 backdrop-blur-xl rounded-2xl border border-white/95 shadow-sm overflow-x-auto">
         {[
-          { id: "symptoms", label: "🔍 Symptom Analyzer", icon: "🩺" },
-          { id: "diseases", label: "📚 Disease Explorer", icon: "📖" },
-          { id: "medications", label: "💊 Pharmacopeia", icon: "🧪" },
-          { id: "interactions", label: "🛡️ Safety & Interactions", icon: "⚡" },
-          { id: "reports", label: "📊 What Changed?", icon: "📈" },
-          { id: "schedule", label: "⏰ Prescription Timetable", icon: "🗓️" },
-          { id: "health_review", label: "📋 SANA 360° Health Review", icon: "🌟" },
+          { id: "symptoms", label: "Symptom Analyzer", icon: "🩺" },
+          { id: "diseases", label: "Disease Explorer", icon: "📖" },
+          { id: "medications", label: "Pharmacopeia", icon: "🧪" },
+          { id: "interactions", label: "Safety & Interactions", icon: "⚡" },
+          { id: "reports", label: "What Changed?", icon: "📈" },
+          { id: "schedule", label: "Prescription Timetable", icon: "🗓️" },
+          { id: "health_review", label: "SANA 360° Review", icon: "🌟" },
         ].map((tab) => {
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "10px 18px",
-                border: "none",
-                background: isActive ? "#4338ca" : "transparent",
-                color: isActive ? "#ffffff" : "#475569",
-                borderRadius: "10px",
-                fontSize: "13.5px",
-                fontWeight: isActive ? "700" : "600",
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-                transition: "all 0.15s ease",
-              }}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                isActive
+                  ? "bg-gradient-to-r from-[#2563FF] to-[#7657FF] text-white shadow-[0_4px_12px_rgba(37,99,255,0.25)]"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
             >
               <span>{tab.icon}</span>
               <span>{tab.label}</span>

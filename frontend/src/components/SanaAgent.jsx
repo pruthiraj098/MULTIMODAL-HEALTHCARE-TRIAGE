@@ -84,6 +84,7 @@ export default function SanaAgent({
         isOpen={isVoiceStudioOpen}
         onClose={handleCloseVoice}
         userName={userName}
+        initialLanguage={selectedLanguage}
         initialVitals={currentVitals}
         onVitalsUpdated={onVitalsUpdated}
       />

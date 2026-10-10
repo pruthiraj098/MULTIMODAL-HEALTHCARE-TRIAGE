@@ -1,18 +1,22 @@
 // ============================================================
-// HealthTriage AI - SANA Orb Component
-// Futuristic JARVIS-Inspired AI Healthcare Visual Identity
+// HealthTriage AI - SANA Visual Control Component
+// Professional Healthcare Assistant Status & Practical Mic Control
 // ============================================================
 
-import { useMemo } from "react";
+import React, { useMemo } from "react";
+import { Heart, Mic, Sparkles, Volume2, AlertTriangle, Activity, AlertCircle } from "lucide-react";
 
 /**
  * States:
- * - 'idle': available, microphone off
+ * - 'idle': available, ready
  * - 'activating': microphone initializing
- * - 'listening': actively hearing user voice, animated equalizer waves
- * - 'thinking': processing with Gemini & safety engine
- * - 'speaking': speaking response via TTS
+ * - 'listening': actively hearing user voice
+ * - 'finalizing_transcript': finishing utterance, verifying speech
+ * - 'ready_to_respond': turn captured, preparing triage
+ * - 'thinking': processing with clinical triage engine
+ * - 'speaking': speaking response via audio
  * - 'emergency': critical red flag alert state
+ * - 'error': error or microphone permission denied
  */
 export default function SanaOrb({
   state = "idle",
@@ -22,144 +26,134 @@ export default function SanaOrb({
   interactive = true,
 }) {
   const sizeMap = {
-    sm: { dimension: 56, coreSize: 34, iconSize: 18 },
-    md: { dimension: 96, coreSize: 58, iconSize: 28 },
-    lg: { dimension: 140, coreSize: 84, iconSize: 38 },
-    hero: { dimension: 190, coreSize: 114, iconSize: 50 },
+    sm: { dimension: 40, iconSize: 18 },
+    md: { dimension: 52, iconSize: 24 },
+    lg: { dimension: 64, iconSize: 28 },
+    hero: { dimension: 72, iconSize: 32 },
   };
 
-  const { dimension, coreSize, iconSize } = sizeMap[size] || sizeMap.md;
+  const { dimension, iconSize } = sizeMap[size] || sizeMap.md;
 
-  const stateConfig = useMemo(() => {
+  const config = useMemo(() => {
     switch (state) {
       case "activating":
         return {
-          themeClass: "sana-orb-activating",
-          glowColor: "rgba(56, 189, 248, 0.6)",
-          coreColor: "#0284c7",
-          statusText: "Activating...",
-          icon: "⚡",
+          bg: "#EBF3FC",
+          color: "#1769D2",
+          border: "#1769D2",
+          icon: Activity,
+          statusText: "Connecting...",
+          pulse: false,
         };
       case "listening":
         return {
-          themeClass: "sana-orb-listening",
-          glowColor: "rgba(16, 185, 129, 0.75)",
-          coreColor: "#059669",
+          bg: "#198754",
+          color: "#FFFFFF",
+          border: "#146C43",
+          icon: Mic,
           statusText: "Listening...",
-          icon: "🎙️",
+          pulse: true,
+        };
+      case "finalizing_transcript":
+      case "ready_to_respond":
+        return {
+          bg: "#159C98",
+          color: "#FFFFFF",
+          border: "#11817E",
+          icon: Sparkles,
+          statusText: "Processing speech...",
+          pulse: false,
         };
       case "thinking":
         return {
-          themeClass: "sana-orb-thinking",
-          glowColor: "rgba(147, 51, 234, 0.75)",
-          coreColor: "#7c3aed",
-          statusText: "Thinking...",
-          icon: "✦",
+          bg: "#1769D2",
+          color: "#FFFFFF",
+          border: "#1255AA",
+          icon: Sparkles,
+          statusText: "Analyzing symptoms...",
+          pulse: false,
         };
       case "speaking":
         return {
-          themeClass: "sana-orb-speaking",
-          glowColor: "rgba(14, 165, 233, 0.8)",
-          coreColor: "#2563eb",
-          statusText: "Speaking...",
-          icon: "🔊",
+          bg: "#159C98",
+          color: "#FFFFFF",
+          border: "#11817E",
+          icon: Volume2,
+          statusText: "SANA is speaking...",
+          pulse: true,
         };
       case "emergency":
         return {
-          themeClass: "sana-orb-emergency",
-          glowColor: "rgba(239, 68, 68, 0.85)",
-          coreColor: "#dc2626",
-          statusText: "EMERGENCY ALERT",
-          icon: "🚨",
+          bg: "#C83D4D",
+          color: "#FFFFFF",
+          border: "#A52837",
+          icon: AlertTriangle,
+          statusText: "Clinical Alert",
+          pulse: true,
+        };
+      case "error":
+        return {
+          bg: "#FEF7EA",
+          color: "#C78116",
+          border: "#F59E0B",
+          icon: AlertCircle,
+          statusText: "Microphone Error",
+          pulse: false,
         };
       case "idle":
       default:
         return {
-          themeClass: "sana-orb-idle",
-          glowColor: "rgba(40, 103, 232, 0.35)",
-          coreColor: "#2563eb",
-          statusText: "Tap to Talk",
-          icon: "❤️",
+          bg: "#1769D2",
+          color: "#FFFFFF",
+          border: "#1255AA",
+          icon: Mic,
+          statusText: "Talk to SANA",
+          pulse: false,
         };
     }
   }, [state]);
 
+  const IconComponent = config.icon;
+
   return (
     <div
-      className={`sana-orb-wrapper ${stateConfig.themeClass} ${
-        interactive ? "interactive" : ""
-      }`}
-      onClick={interactive ? onClick : undefined}
-      role={interactive ? "button" : "presentation"}
-      tabIndex={interactive ? 0 : -1}
-      aria-label={`SANA AI Health Agent - State: ${stateConfig.statusText}`}
-      style={{ width: dimension, height: dimension }}
+      style={{
+        display: "inline-flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "6px",
+        userSelect: "none"
+      }}
     >
-      {/* Outer Pulse Waves (Animated during listening / speaking / emergency) */}
-      <div className="sana-orb-aura-ring ring-1" />
-      <div className="sana-orb-aura-ring ring-2" />
-      <div className="sana-orb-aura-ring ring-3" />
-
-      {/* Rotating Cyber Ring */}
-      <svg
-        className="sana-orb-orbit-svg"
-        viewBox="0 0 100 100"
-        style={{ width: dimension, height: dimension }}
-      >
-        <circle
-          cx="50"
-          cy="50"
-          r="46"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeDasharray="6 8"
-          className="orbit-circle-outer"
-        />
-        <circle
-          cx="50"
-          cy="50"
-          r="38"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1"
-          strokeDasharray="4 6"
-          className="orbit-circle-inner"
-        />
-      </svg>
-
-      {/* Audio Equalizer Bars (Active during listening & speaking) */}
-      {(state === "listening" || state === "speaking") && (
-        <div className="sana-equalizer-bars">
-          <span className="eq-bar bar-1" />
-          <span className="eq-bar bar-2" />
-          <span className="eq-bar bar-3" />
-          <span className="eq-bar bar-4" />
-          <span className="eq-bar bar-5" />
-        </div>
-      )}
-
-      {/* Core Glowing Orb */}
-      <div
-        className="sana-orb-core"
-        style={{
-          width: coreSize,
-          height: coreSize,
-        }}
-      >
-        <div className="sana-orb-inner-glow" />
-        <span
-          className="sana-orb-symbol"
-          style={{ fontSize: iconSize }}
-          aria-hidden="true"
+      <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        {/* Practical Professional Action Button */}
+        <button
+          type="button"
+          onClick={interactive ? onClick : undefined}
+          style={{
+            width: `${dimension}px`,
+            height: `${dimension}px`,
+            borderRadius: "50%",
+            background: config.bg,
+            color: config.color,
+            border: `2px solid ${config.border}`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: interactive ? "pointer" : "default",
+            boxShadow: "0 2px 8px rgba(21, 52, 91, 0.12)",
+            transition: "transform 0.15s ease, background 0.2s ease"
+          }}
+          title={`SANA Assistant: ${config.statusText}`}
+          aria-label={`SANA Assistant: ${config.statusText}`}
         >
-          {stateConfig.icon}
-        </span>
+          <IconComponent size={iconSize} />
+        </button>
       </div>
 
       {showLabel && (
-        <span className="sana-orb-badge-label">
-          {stateConfig.statusText}
+        <span style={{ fontSize: "12px", fontWeight: "700", color: "#15345B" }}>
+          {config.statusText}
         </span>
       )}
     </div>

@@ -27,25 +27,32 @@ from language_service import detect_language, SUPPORTED_LANGUAGES, get_disclaime
 # VERBAL VITAL SIGNS EXTRACTION
 # ============================================================
 
+# Indic Numerals Translation Map (Odia and Devanagari numerals to ASCII digits)
+INDIC_DIGIT_MAP = str.maketrans("୦୧୨୩୪୫୬୭୮୯०१२३४५६७८९", "01234567890123456789")
+
+
 def extract_vitals_from_speech(text: str) -> Dict[str, Any]:
     """
     Extracts numerical vital signs spoken in natural language.
+    Supports English, Hindi, Odia, and regional phrasing and numerals.
     Examples:
-    - "My oxygen is 91" -> spo2: 91
-    - "heart rate is 110" / "pulse is 85" -> heart_rate: 110
-    - "temperature is 101.4" / "fever is 102" -> temperature: 101.4
-    - "BP is 130 over 85" / "BP is 140/90" -> systolic: 140, diastolic: 90
+    - "My oxygen is 91" / "ଅକ୍ସିଜେନ୍ ୯୪%" -> spo2: 91 / 94
+    - "heart rate is 110" / "ଧଡ଼କନ୍ ୮୫" -> heart_rate: 110 / 85
+    - "temperature is 101.4" / "ଜ୍ୱର ୧୦୨" -> temperature: 101.4 / 102
+    - "BP is 130 over 85" / "ରକ୍ତଚାପ ୧୨୦ ବାଇ ୮୦" -> systolic: 120, diastolic: 80
     - "breathing 24" -> respiratory_rate: 24
     """
     extracted: Dict[str, Any] = {}
     if not text:
         return extracted
 
-    clean = text.lower()
+    # Normalize Indic numerals to ASCII digits
+    normalized_digits = text.translate(INDIC_DIGIT_MAP)
+    clean = normalized_digits.lower()
 
-    # SpO2 / Oxygen (e.g. "oxygen is 91", "checked my oxygen and it is 91", "spo2 94%")
+    # SpO2 / Oxygen (e.g. "oxygen is 91", "ଅକ୍ସିଜେନ୍ ୯୪%", "ऑक्सीजन 95")
     spo2_match = re.search(
-        r"(?:oxygen|spo2|o2|sat(?:uration)?)(?:\s+(?:level|reading|count))?(?:\s+(?:is|was|at|of|showed|shows|and\s+it\s+is|is\s+around|is\s+about|:))?\s*(\d{2,3})(?:\s*%)?",
+        r"(?:oxygen|spo2|o2|sat(?:uration)?|ଅକ୍ସିଜେନ୍|ऑक्सीजन|অক্সিজেন)(?:\s+(?:level|reading|count|ମାତ୍ରା|स्तर))?(?:\s+(?:is|was|at|of|showed|shows|and\s+it\s+is|is\s+around|is\s+about|ଅଛି|ହେଉଛି|है|ছিল|:))?\s*(\d{2,3})(?:\s*%)?",
         clean
     )
     if spo2_match:
@@ -56,9 +63,9 @@ def extract_vitals_from_speech(text: str) -> Dict[str, Any]:
         except ValueError:
             pass
 
-    # Heart Rate / Pulse (e.g. "heart rate is 110", "pulse is 85", "heart rate around 95")
+    # Heart Rate / Pulse (e.g. "heart rate is 110", "pulse is 85", "ଧଡ଼କନ୍ ୯୫", "धड़कन 110")
     hr_match = re.search(
-        r"(?:heart\s*rate|pulse(?:\s*rate)?|bpm)(?:\s+(?:reading))?(?:\s+(?:is|was|at|of|showed|shows|and\s+it\s+is|is\s+around|is\s+about|:))?\s*(\d{2,3})",
+        r"(?:heart\s*rate|pulse(?:\s*rate)?|bpm|ଧଡ଼କନ୍|धड़कन|হৃদস্পন্দন)(?:\s+(?:reading))?(?:\s+(?:is|was|at|of|showed|shows|and\s+it\s+is|is\s+around|is\s+about|ଅଛି|है|:))?\s*(\d{2,3})",
         clean
     )
     if hr_match:
@@ -69,9 +76,9 @@ def extract_vitals_from_speech(text: str) -> Dict[str, Any]:
         except ValueError:
             pass
 
-    # Temperature / Fever (e.g. "temp is 101.4", "fever is 102", "temperature 102.5")
+    # Temperature / Fever (e.g. "temp is 101.4", "fever is 102", "ଜ୍ୱର ୧୦୧.୫", "बुखार 102")
     temp_match = re.search(
-        r"(?:temp(?:erature)?|fever)(?:\s+(?:reading))?(?:\s+(?:is|was|at|of|showed|shows|and\s+it\s+is|is\s+around|is\s+about|:))?\s*(\d{2,3}(?:\.\d)?)",
+        r"(?:temp(?:erature)?|fever|ଜ୍ୱର|बुखार|জ্বর)(?:\s+(?:reading))?(?:\s+(?:is|was|at|of|showed|shows|and\s+it\s+is|is\s+around|is\s+about|ଅଛି|है|:))?\s*(\d{2,3}(?:\.\d)?)",
         clean
     )
     if temp_match:
@@ -82,9 +89,9 @@ def extract_vitals_from_speech(text: str) -> Dict[str, Any]:
         except ValueError:
             pass
 
-    # Blood Pressure (e.g. "120/80" or "120 over 80", "BP is 140 over 90")
+    # Blood Pressure (e.g. "120/80", "BP is 140 over 90", "ରକ୍ତଚାପ ୧୨୦ ବାଇ ୮୦")
     bp_match = re.search(
-        r"(?:bp|blood\s*pressure)(?:\s+(?:reading))?(?:\s+(?:is|was|at|of|showed|shows|and\s+it\s+is|is\s+around|is\s+about|:))?\s*(\d{2,3})\s*(?:/|over)\s*(\d{2,3})",
+        r"(?:bp|blood\s*pressure|ରକ୍ତଚାପ|ब्लड\s*प्रेशर|रक्तचाप|রক্তচাপ)(?:\s+(?:reading))?(?:\s+(?:is|was|at|of|showed|shows|and\s+it\s+is|is\s+around|is\s+about|ଅଛି|है|:))?\s*(\d{2,3})\s*(?:/|over|ବାଇ|बटा|বাই)\s*(\d{2,3})",
         clean
     )
     if bp_match:
@@ -99,7 +106,7 @@ def extract_vitals_from_speech(text: str) -> Dict[str, Any]:
 
     # Respiratory rate
     resp_match = re.search(
-        r"(?:respirat(?:ion|ory)|breath(?:ing)?\s*rate)\s*(?:is|was|:)?\s*(\d{1,2})",
+        r"(?:respirat(?:ion|ory)|breath(?:ing)?\s*rate|ନିଶ୍ୱାସ|सांस)\s*(?:is|was|:)?\s*(\d{1,2})",
         clean
     )
     if resp_match:
@@ -373,6 +380,13 @@ def build_sana_prompt(
 
     disclaimer = get_disclaimer(language)
 
+    correction_directive = (
+        "CRITICAL SYMPTOM CORRECTION DIRECTIVE: If the patient's latest input corrects an earlier symptom, duration, "
+        "or detail (e.g. 'No, the pain started three days ago, not yesterday', 'Actually no fever', 'It is on the left side'), "
+        "you MUST acknowledge the correction immediately in your spoken response (e.g. 'Got it, three days ago, thank you for clarifying that.'), "
+        "update your clinical understanding accordingly, and NEVER revert to or mention the old refuted value."
+    )
+
     return f"""
 {SANA_SYSTEM_PROMPT}
 
@@ -383,6 +397,7 @@ Patient Name: {user_name or "Patient"}
 Target Language: {lang_info['name']} ({lang_info['native_name']})
 {role_directive}
 {lang_directive}
+{correction_directive}
 
 ============================================================
 LONGITUDINAL PATIENT PROFILE & HEALTH HISTORY
@@ -428,10 +443,12 @@ You must respond with valid JSON with the exact keys:
 
 Rules:
 1. ONLY return the valid JSON object, without backticks or markdown wrap.
-2. The 'spoken_response' MUST BE SHORT (max 3 sentences) so the patient doesn't have to listen to a lecture.
-3. If an image or report is attached, reference its findings in plain words without diagnosing.
-4. Remember previous context and known active medications. If patient mentions taking new medicines or supplements that might conflict with their known medications, alert them.
-5. All text fields MUST be in {lang_info['name']} ({lang_info['native_name']}).
+2. The 'spoken_response' MUST BE SHORT (strictly 1 to 3 sentences) so the patient doesn't have to listen to a lecture.
+3. If the patient corrects a previous symptom or duration, acknowledge the correction immediately and update your assessment.
+4. Speak like a calm, empathetic nurse: never sound robotic or bureaucratic, and avoid repeating introductory greetings on ongoing turns.
+5. If an image or report is attached, reference its findings in plain words without diagnosing.
+6. Remember previous context and known active medications. If patient mentions taking new medicines or supplements that might conflict with their known medications, alert them.
+7. All text fields MUST be in {lang_info['name']} ({lang_info['native_name']}).
 """
 
 

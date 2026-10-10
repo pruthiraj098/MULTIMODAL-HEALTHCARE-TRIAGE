@@ -1,4 +1,22 @@
 import React, { useState, useEffect } from "react";
+import {
+  Sparkles,
+  Heart,
+  Droplets,
+  Moon,
+  Smile,
+  Zap,
+  BookOpen,
+  Calendar,
+  Activity,
+  AlertTriangle,
+  PhoneCall,
+  CheckCircle2,
+  ChevronRight,
+  Info,
+  ShieldCheck,
+  Search
+} from "lucide-react";
 import { API_URL } from "../../config";
 
 export default function SelfCareGuide({ goTo, embedded = false }) {
@@ -14,7 +32,7 @@ export default function SelfCareGuide({ goTo, embedded = false }) {
   const [todayDate, setTodayDate] = useState(new Date().toISOString().split("T")[0]);
   const [waterGlasses, setWaterGlasses] = useState(4);
   const [sleepHours, setSleepHours] = useState(7.0);
-  const [mood, setMood] = useState("Neutral");
+  const [mood, setMood] = useState("Good");
   const [energyLevel, setEnergyLevel] = useState("Medium");
   const [wellnessNotes, setWellnessNotes] = useState("");
   const [savingWellness, setSavingWellness] = useState(false);
@@ -31,16 +49,16 @@ export default function SelfCareGuide({ goTo, embedded = false }) {
 
   const token = localStorage.getItem("healthtriage_token");
 
-  // Quick categories for symptom selector
-  const quickCategories = [
-    { label: "Cough & Cold", query: "Cough and mild throat tickle" },
+  // Quick symptom chips matching exact prompt specifications
+  const quickSymptomChips = [
+    { label: "Cough", query: "Cough and mild throat tickle" },
     { label: "Sore Throat", query: "Scratchy sore throat" },
     { label: "Sinus Congestion", query: "Nasal congestion and stuffy nose" },
-    { label: "Tension Headache", query: "Mild tension headache and fatigue" },
-    { label: "Mild Nausea", query: "Mild nausea and queasiness" },
-    { label: "Heartburn / Acidity", query: "Mild acid reflux and heartburn" },
+    { label: "Headache", query: "Mild tension headache and fatigue" },
+    { label: "Nausea", query: "Mild nausea and queasiness" },
+    { label: "Heartburn", query: "Mild acid reflux and heartburn" },
     { label: "Muscle Soreness", query: "Mild muscle strain and ache" },
-    { label: "Mild Constipation", query: "Occasional mild constipation" },
+    { label: "Constipation", query: "Occasional mild constipation" },
     { label: "Sleep Restlessness", query: "Difficulty falling asleep and restlessness" },
   ];
 
@@ -61,7 +79,7 @@ export default function SelfCareGuide({ goTo, embedded = false }) {
         if (data.today_checkin) {
           setWaterGlasses(data.today_checkin.water_glasses || 0);
           setSleepHours(data.today_checkin.sleep_hours || 7.0);
-          setMood(data.today_checkin.mood || "Neutral");
+          setMood(data.today_checkin.mood || "Good");
           setEnergyLevel(data.today_checkin.energy_level || "Medium");
           setWellnessNotes(data.today_checkin.notes || "");
         }
@@ -182,107 +200,119 @@ export default function SelfCareGuide({ goTo, embedded = false }) {
   const isEmergency = remedyResult && remedyResult.alert_level === "EMERGENCY";
 
   return (
-    <div className={`w-full max-w-6xl mx-auto ${embedded ? "p-0" : "p-4 sm:p-6"} space-y-6 text-slate-100`}>
-      {/* HEADER BANNER */}
-      <div className="bg-gradient-to-r from-emerald-950/70 via-slate-900 to-teal-950/70 border border-emerald-500/20 rounded-2xl p-6 shadow-xl relative overflow-hidden backdrop-blur-md">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                Phase 6 - Natural & Self-Care
-              </span>
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/30">
-                Evidence-Based
-              </span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2">
-              <span className="text-emerald-400">Natural & Self-Care</span> Guidance
-            </h1>
-            <p className="text-sm text-slate-400 mt-1 max-w-2xl">
-              Supportive comfort measures, conservative home care, hydration & sleep tracking.
-              Home care never replaces clinical diagnosis or emergency escalation.
-            </p>
+    <div className={`w-full max-w-6xl mx-auto ${embedded ? "p-0" : "p-4 sm:p-6"} space-y-6`}>
+      {/* 1. PROFESSIONAL PAGE HEADER */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              🌿 Supportive Wellness
+            </span>
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+              Evidence-Based Comfort
+            </span>
           </div>
-
-          <div className="flex items-center gap-3">
-            {goTo && (
-              <button
-                onClick={() => goTo("dashboard")}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 transition"
-              >
-                Back to Dashboard
-              </button>
-            )}
-          </div>
+          <h1 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2">
+            Natural &amp; Self-Care Guidance
+          </h1>
+          <p className="text-sm text-slate-500 mt-1 max-w-2xl">
+            Non-pharmacological comfort measures, hydration &amp; sleep habits, and lifestyle recovery protocols.
+          </p>
         </div>
 
-        {/* CLINICAL DISCLAIMER BAR */}
-        <div className="mt-4 pt-3 border-t border-slate-800 text-xs text-amber-300/80 flex items-start gap-2 bg-amber-500/5 p-2.5 rounded-lg border-amber-500/20">
-          <span className="text-amber-400 font-bold shrink-0">NOTICE:</span>
-          <span>
-            Comfort measures and supportive home care do not replace medical evaluation or treatment.
-            If symptoms escalate, persist beyond expected duration, or include red flags, seek immediate clinical care.
-          </span>
+        {goTo && (
+          <button
+            type="button"
+            onClick={() => goTo("/dashboard")}
+            className="px-4 py-2 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition"
+          >
+            ← Patient Dashboard
+          </button>
+        )}
+      </div>
+
+      {/* 2. CLINICAL SAFETY DISCLAIMER NOTICE */}
+      <div className="p-3.5 rounded-xl bg-amber-50/80 border border-amber-200 text-xs text-amber-900 flex items-start gap-2.5">
+        <AlertTriangle size={16} className="text-amber-600 shrink-0 mt-0.5" />
+        <div className="leading-relaxed">
+          <strong className="font-bold text-amber-950">Clinical Disclaimer: </strong>
+          Supportive comfort measures and home wellness do not replace professional medical evaluation, diagnosis, or prescription treatment. If symptoms persist, escalate, or present red flags, consult a healthcare provider immediately.
         </div>
       </div>
 
-      {/* NAVIGATION TABS */}
-      <div className="flex flex-wrap gap-2 border-b border-slate-800 pb-2">
-        <button
+      {/* 3. FOUR PROMINENT FEATURE NAVIGATION CARDS (Section 20 Redesign) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Card 1: Symptom Self-Care */}
+        <div
           onClick={() => setActiveTab("remedies")}
-          className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition flex items-center gap-2 ${
+          className={`p-5 rounded-2xl border transition-all cursor-pointer bg-white ${
             activeTab === "remedies"
-              ? "bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20 font-bold"
-              : "bg-slate-900/60 text-slate-400 hover:text-white hover:bg-slate-800"
+              ? "border-emerald-500 shadow-md ring-2 ring-emerald-500/15"
+              : "border-slate-200 hover:border-slate-300 shadow-xs"
           }`}
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-          Symptom Remedies
-        </button>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-2xl">🌿</span>
+            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+              activeTab === "remedies" ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"
+            }`}>
+              Active
+            </span>
+          </div>
+          <h3 className="font-extrabold text-slate-800 text-base">Symptom Self-Care</h3>
+          <p className="text-xs text-slate-500 mt-1">Supportive comfort guidance</p>
+        </div>
 
-        <button
+        {/* Card 2: Daily Wellness */}
+        <div
           onClick={() => setActiveTab("wellness")}
-          className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition flex items-center gap-2 ${
+          className={`p-5 rounded-2xl border transition-all cursor-pointer bg-white ${
             activeTab === "wellness"
-              ? "bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20 font-bold"
-              : "bg-slate-900/60 text-slate-400 hover:text-white hover:bg-slate-800"
+              ? "border-cyan-500 shadow-md ring-2 ring-cyan-500/15"
+              : "border-slate-200 hover:border-slate-300 shadow-xs"
           }`}
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          Daily Wellness Log
-        </button>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-2xl">📅</span>
+            <span className="text-[10px] font-bold text-slate-500">Daily Log</span>
+          </div>
+          <h3 className="font-extrabold text-slate-800 text-base">Daily Wellness</h3>
+          <p className="text-xs text-slate-500 mt-1">Track your wellness &amp; habits</p>
+        </div>
 
-        <button
+        {/* Card 3: Lifestyle Analytics */}
+        <div
           onClick={() => setActiveTab("trends")}
-          className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition flex items-center gap-2 ${
+          className={`p-5 rounded-2xl border transition-all cursor-pointer bg-white ${
             activeTab === "trends"
-              ? "bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20 font-bold"
-              : "bg-slate-900/60 text-slate-400 hover:text-white hover:bg-slate-800"
+              ? "border-indigo-500 shadow-md ring-2 ring-indigo-500/15"
+              : "border-slate-200 hover:border-slate-300 shadow-xs"
           }`}
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-          </svg>
-          Lifestyle Analytics ({wellnessHistory.length})
-        </button>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-2xl">📊</span>
+            <span className="text-[10px] font-bold text-slate-500">{wellnessHistory.length} Logs</span>
+          </div>
+          <h3 className="font-extrabold text-slate-800 text-base">Lifestyle Analytics</h3>
+          <p className="text-xs text-slate-500 mt-1">Understand your habits over time</p>
+        </div>
 
-        <button
+        {/* Card 4: Remedy Library */}
+        <div
           onClick={() => setActiveTab("library")}
-          className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition flex items-center gap-2 ${
+          className={`p-5 rounded-2xl border transition-all cursor-pointer bg-white ${
             activeTab === "library"
-              ? "bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20 font-bold"
-              : "bg-slate-900/60 text-slate-400 hover:text-white hover:bg-slate-800"
+              ? "border-blue-500 shadow-md ring-2 ring-blue-500/15"
+              : "border-slate-200 hover:border-slate-300 shadow-xs"
           }`}
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-          </svg>
-          Clinical Remedy Library
-        </button>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-2xl">📚</span>
+            <span className="text-[10px] font-bold text-slate-500">Knowledge</span>
+          </div>
+          <h3 className="font-extrabold text-slate-800 text-base">Remedy Library</h3>
+          <p className="text-xs text-slate-500 mt-1">Evidence-based clinical info</p>
+        </div>
       </div>
 
       {/* ============================================================ */}
@@ -290,48 +320,50 @@ export default function SelfCareGuide({ goTo, embedded = false }) {
       {/* ============================================================ */}
       {activeTab === "remedies" && (
         <div className="space-y-6">
-          {/* SEARCH FORM CARD */}
-          <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-lg backdrop-blur-md">
-            <h2 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-              Symptom Self-Care Assessment
-            </h2>
-            <p className="text-xs text-slate-400 mb-4">
-              Enter your mild symptom below. The engine screens for emergency red flags, verifies against your active vitals, and provides vetted comfort measures.
+          {/* MODERN SYMPTOM INPUT CARD */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+              <h2 className="text-base font-extrabold text-slate-800">
+                Symptom Self-Care Assessment
+              </h2>
+            </div>
+            <p className="text-xs text-slate-500 mb-5">
+              Enter a mild symptom below. The engine screens for emergency red flags, cross-references clinical safety criteria, and displays vetted comfort measures.
             </p>
 
-            <form onSubmit={handleSearchRemedies} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+            <form onSubmit={handleSearchRemedies} className="space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5">
                 <div className="md:col-span-7">
-                  <label className="block text-xs font-semibold text-slate-400 mb-1">
-                    Describe Your Symptom
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                    Symptom Description
                   </label>
                   <input
                     type="text"
                     value={symptomInput}
                     onChange={(e) => setSymptomInput(e.target.value)}
-                    placeholder="e.g. Dry hacking cough at night, mild heartburn, scratchy throat..."
-                    className="w-full bg-slate-950/70 border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition"
+                    placeholder="e.g. Dry hacking cough, mild tension headache, scratchy throat..."
+                    className="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition"
                   />
                 </div>
 
                 <div className="md:col-span-3">
-                  <label className="block text-xs font-semibold text-slate-400 mb-1">
-                    Reported Severity
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                    Severity Level
                   </label>
                   <select
                     value={severity}
                     onChange={(e) => setSeverity(e.target.value)}
-                    className="w-full bg-slate-950/70 border border-slate-700/80 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 transition"
+                    className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition"
                   >
                     <option value="mild">Mild (Discomfort, functional)</option>
                     <option value="moderate">Moderate (Noticeable burden)</option>
-                    <option value="severe">Severe (Urgent medical evaluation needed)</option>
+                    <option value="severe">Severe (Urgent medical review)</option>
                   </select>
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-semibold text-slate-400 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
                     Duration (Days)
                   </label>
                   <input
@@ -340,16 +372,16 @@ export default function SelfCareGuide({ goTo, embedded = false }) {
                     max="60"
                     value={durationDays}
                     onChange={(e) => setDurationDays(e.target.value)}
-                    className="w-full bg-slate-950/70 border border-slate-700/80 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 transition"
+                    className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition"
                   />
                 </div>
               </div>
 
-              {/* QUICK PILLS */}
+              {/* QUICK SYMPTOM CHIPS (PROMPT SECTION 20) */}
               <div>
-                <span className="text-xs text-slate-500 mr-2 font-medium">Quick Suggestions:</span>
-                <div className="inline-flex flex-wrap gap-1.5 mt-1">
-                  {quickCategories.map((c, i) => (
+                <span className="text-xs font-bold text-slate-500 block mb-2">Quick Symptom Chips:</span>
+                <div className="flex flex-wrap gap-2">
+                  {quickSymptomChips.map((c, i) => (
                     <button
                       key={i}
                       type="button"
@@ -358,7 +390,7 @@ export default function SelfCareGuide({ goTo, embedded = false }) {
                         setSeverity("mild");
                         setDurationDays(1);
                       }}
-                      className="text-xs px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-emerald-950 hover:text-emerald-300 hover:border-emerald-500/40 border border-slate-700/70 text-slate-300 transition"
+                      className="text-xs px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-300 border border-slate-200 text-slate-700 font-semibold transition cursor-pointer"
                     >
                       {c.label}
                     </button>
@@ -367,27 +399,25 @@ export default function SelfCareGuide({ goTo, embedded = false }) {
               </div>
 
               {remedyError && (
-                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
+                <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium">
                   {remedyError}
                 </div>
               )}
 
-              <div className="flex justify-end">
+              <div className="flex justify-end pt-1">
                 <button
                   type="submit"
                   disabled={loadingRemedy}
-                  className="px-6 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 hover:from-emerald-400 hover:to-teal-400 transition shadow-lg shadow-emerald-500/20 disabled:opacity-50 flex items-center gap-2"
+                  className="px-6 py-2.5 rounded-xl font-bold text-sm bg-emerald-600 hover:bg-emerald-700 text-white transition shadow-xs disabled:opacity-50 flex items-center gap-2 cursor-pointer"
                 >
                   {loadingRemedy ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></div>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                       Checking Clinical Safety...
                     </>
                   ) : (
                     <>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                      </svg>
+                      <Search size={16} />
                       Evaluate Remedies
                     </>
                   )}
@@ -398,14 +428,14 @@ export default function SelfCareGuide({ goTo, embedded = false }) {
 
           {/* EMERGENCY ESCALATION OVERRIDE BANNER */}
           {isEmergency && (
-            <div className="bg-rose-950/60 border-2 border-rose-500/80 rounded-2xl p-6 shadow-2xl relative overflow-hidden backdrop-blur-md animate-pulse">
+            <div className="bg-rose-50 border-2 border-rose-500 rounded-2xl p-6 shadow-md relative overflow-hidden">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-rose-500 text-white flex items-center justify-center font-bold text-2xl shrink-0">
+                <div className="w-12 h-12 rounded-xl bg-rose-600 text-white flex items-center justify-center font-black text-2xl shrink-0">
                   !
                 </div>
                 <div className="space-y-3 flex-1">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <h3 className="text-xl font-extrabold text-rose-200">
+                    <h3 className="text-lg font-black text-rose-900">
                       EMERGENCY WARNING: SEEK IMMEDIATE CARE
                     </h3>
                     <span className="px-3 py-1 rounded-full text-xs font-black bg-rose-600 text-white uppercase tracking-wider">
@@ -413,12 +443,12 @@ export default function SelfCareGuide({ goTo, embedded = false }) {
                     </span>
                   </div>
 
-                  <p className="text-sm text-rose-100/90 leading-relaxed font-medium">
+                  <p className="text-sm text-rose-800 leading-relaxed font-semibold">
                     {remedyResult.warning}
                   </p>
 
                   {remedyResult.safety_reasons && remedyResult.safety_reasons.length > 0 && (
-                    <div className="bg-rose-900/40 p-3 rounded-xl border border-rose-500/40 text-xs text-rose-200 space-y-1">
+                    <div className="bg-white/80 p-3 rounded-xl border border-rose-200 text-xs text-rose-900 space-y-1">
                       <span className="font-bold">Clinical Concerns Identified:</span>
                       <ul className="list-disc list-inside space-y-0.5">
                         {remedyResult.safety_reasons.map((r, i) => (
@@ -430,25 +460,17 @@ export default function SelfCareGuide({ goTo, embedded = false }) {
 
                   <div className="pt-2 flex flex-wrap gap-3">
                     <a
-                      href="tel:112"
-                      className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-sm shadow-lg flex items-center gap-2"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                      </svg>
-                      Call Emergency (112)
-                    </a>
-                    <a
                       href="tel:108"
-                      className="px-5 py-2.5 rounded-xl bg-rose-700 hover:bg-rose-600 text-white font-bold text-sm shadow-lg flex items-center gap-2"
+                      className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm shadow-xs flex items-center gap-2"
                     >
-                      Ambulance (108)
+                      <PhoneCall size={16} />
+                      Ambulance Speed Dial (108)
                     </a>
                     <a
-                      href="tel:911"
-                      className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm border border-slate-600 flex items-center gap-2"
+                      href="tel:112"
+                      className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm shadow-xs flex items-center gap-2"
                     >
-                      US Emergency (911)
+                      National Emergency (112)
                     </a>
                   </div>
                 </div>
@@ -460,39 +482,34 @@ export default function SelfCareGuide({ goTo, embedded = false }) {
           {remedyResult && !isEmergency && (
             <div className="space-y-6">
               {/* TOP SUMMARY BAR */}
-              <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                       {remedyResult.matched_category || "Supportive Care"}
                     </span>
-                    <span className="text-xs text-slate-400">
+                    <span className="text-xs text-slate-500">
                       Category: {remedyResult.category_type || "General"}
                     </span>
                   </div>
-                  <h3 className="text-xl font-bold text-white">
+                  <h3 className="text-lg font-bold text-slate-800">
                     Guidance for: "{remedyResult.symptom}"
                   </h3>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <div className="text-right">
-                    <span className="text-xs text-slate-400 block">Triage Status</span>
-                    <span className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                      Safe for Supportive Home Care
-                    </span>
-                  </div>
+                  <span className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    ✓ Verified Safe for Home Comfort
+                  </span>
                 </div>
               </div>
 
               {/* SAFETY WARNINGS / MEDICATION ALERTS */}
               {remedyResult.safety_warnings && remedyResult.safety_warnings.length > 0 && (
-                <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs space-y-1">
-                  <span className="font-bold flex items-center gap-1.5 text-amber-300">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    Safety Considerations & Cross-Checks:
+                <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs space-y-1">
+                  <span className="font-bold flex items-center gap-1.5 text-amber-800">
+                    <AlertTriangle size={15} />
+                    Safety Considerations &amp; Cross-Checks:
                   </span>
                   <ul className="list-disc list-inside space-y-1 pl-1">
                     {remedyResult.safety_warnings.map((w, i) => (
@@ -507,34 +524,34 @@ export default function SelfCareGuide({ goTo, embedded = false }) {
                 {remedyResult.remedies && remedyResult.remedies.map((rem, idx) => (
                   <div
                     key={idx}
-                    className="bg-slate-900/90 border border-slate-800 hover:border-emerald-500/30 rounded-2xl p-5 shadow-lg flex flex-col justify-between transition group"
+                    className="bg-white border border-slate-200 hover:border-emerald-300 rounded-2xl p-5 shadow-xs flex flex-col justify-between transition"
                   >
                     <div className="space-y-3">
                       <div className="flex items-start justify-between gap-2">
-                        <h4 className="text-base font-bold text-white group-hover:text-emerald-300 transition">
+                        <h4 className="text-base font-bold text-slate-800">
                           {rem.name}
                         </h4>
                         <span className={`px-2 py-0.5 rounded text-[11px] font-semibold shrink-0 ${
-                          rem.evidence_strength.includes("High")
-                            ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-                            : "bg-blue-500/20 text-blue-300 border border-blue-500/30"
+                          rem.evidence_strength?.includes("High")
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                            : "bg-blue-50 text-blue-700 border border-blue-200"
                         }`}>
                           {rem.evidence_strength}
                         </span>
                       </div>
 
-                      <div className="bg-slate-950/70 p-3 rounded-xl border border-slate-800 text-xs text-slate-300 leading-relaxed">
-                        <span className="font-semibold text-emerald-400 block mb-1">Instructions:</span>
+                      <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 text-xs text-slate-700 leading-relaxed">
+                        <span className="font-bold text-emerald-700 block mb-1">Instructions:</span>
                         {rem.instructions}
                       </div>
 
-                      <div className="text-xs text-slate-400 leading-relaxed">
-                        <span className="font-semibold text-slate-300">Clinical Rationale: </span>
+                      <div className="text-xs text-slate-500 leading-relaxed">
+                        <strong className="text-slate-700">Clinical Rationale: </strong>
                         {rem.rationale}
                       </div>
 
                       {rem.precautions && (
-                        <div className="bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-lg text-xs text-rose-300 leading-relaxed font-medium">
+                        <div className="bg-rose-50 border border-rose-200 p-2.5 rounded-xl text-xs text-rose-800 leading-relaxed font-medium">
                           {rem.precautions}
                         </div>
                       )}
@@ -546,17 +563,15 @@ export default function SelfCareGuide({ goTo, embedded = false }) {
               {/* CONTRAINDICATIONS & WHEN TO SEE DOCTOR 2-COLUMN */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* CONTRAINDICATIONS */}
-                <div className="bg-slate-900/80 border border-rose-500/20 rounded-2xl p-5 shadow-lg">
-                  <h4 className="text-sm font-bold text-rose-300 flex items-center gap-2 mb-3">
-                    <svg className="w-4 h-4 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                    </svg>
+                <div className="bg-white border border-rose-200 rounded-2xl p-5 shadow-xs">
+                  <h4 className="text-sm font-bold text-rose-800 flex items-center gap-2 mb-3">
+                    <span className="w-2 h-2 rounded-full bg-rose-500" />
                     Contraindications (Do NOT Use Home Care If:)
                   </h4>
-                  <ul className="space-y-2 text-xs text-slate-300">
+                  <ul className="space-y-2 text-xs text-slate-700">
                     {remedyResult.contraindications && remedyResult.contraindications.map((c, i) => (
                       <li key={i} className="flex items-start gap-2">
-                        <span className="text-rose-400 font-bold shrink-0">x</span>
+                        <span className="text-rose-500 font-bold shrink-0">✕</span>
                         <span>{c}</span>
                       </li>
                     ))}
@@ -564,17 +579,15 @@ export default function SelfCareGuide({ goTo, embedded = false }) {
                 </div>
 
                 {/* WHEN TO SEE A DOCTOR */}
-                <div className="bg-slate-900/80 border border-blue-500/20 rounded-2xl p-5 shadow-lg">
-                  <h4 className="text-sm font-bold text-blue-300 flex items-center gap-2 mb-3">
-                    <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
+                <div className="bg-white border border-blue-200 rounded-2xl p-5 shadow-xs">
+                  <h4 className="text-sm font-bold text-blue-800 flex items-center gap-2 mb-3">
+                    <span className="w-2 h-2 rounded-full bg-blue-500" />
                     When to See a Doctor (Decision Checkpoints)
                   </h4>
-                  <ul className="space-y-2 text-xs text-slate-300">
+                  <ul className="space-y-2 text-xs text-slate-700">
                     {remedyResult.when_to_see_doctor && remedyResult.when_to_see_doctor.map((w, i) => (
                       <li key={i} className="flex items-start gap-2">
-                        <span className="text-blue-400 font-bold shrink-0">-</span>
+                        <span className="text-blue-500 font-bold shrink-0">→</span>
                         <span>{w}</span>
                       </li>
                     ))}
@@ -584,13 +597,13 @@ export default function SelfCareGuide({ goTo, embedded = false }) {
 
               {/* GENERAL LIFESTYLE RECOMMENDATIONS */}
               {remedyResult.general_lifestyle && (
-                <div className="bg-emerald-950/20 border border-emerald-500/20 rounded-2xl p-5 shadow-lg">
-                  <h4 className="text-sm font-bold text-emerald-300 mb-2">
-                    Lifestyle & Immune Recovery Protocol
+                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+                  <h4 className="text-sm font-bold text-slate-800 mb-3">
+                    Lifestyle &amp; Immune Recovery Protocol
                   </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-300">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-700">
                     {remedyResult.general_lifestyle.map((g, i) => (
-                      <div key={i} className="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">
+                      <div key={i} className="bg-slate-50 p-3 rounded-xl border border-slate-200">
                         {g}
                       </div>
                     ))}
@@ -607,15 +620,15 @@ export default function SelfCareGuide({ goTo, embedded = false }) {
       {/* ============================================================ */}
       {activeTab === "wellness" && (
         <div className="space-y-6">
-          <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl backdrop-blur-md">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-800">
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
               <div>
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
+                <h2 className="text-base font-extrabold text-slate-800 flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-cyan-500" />
                   Daily Holistic Wellness Check-in
                 </h2>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Track your restorative pillars: daily water hydration, sleep quality, mood, and vitality.
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Log your daily water hydration, sleep duration, mood, and vitality.
                 </p>
               </div>
 
@@ -624,24 +637,24 @@ export default function SelfCareGuide({ goTo, embedded = false }) {
                   type="date"
                   value={todayDate}
                   onChange={(e) => setTodayDate(e.target.value)}
-                  className="bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-400"
+                  className="bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-cyan-500 font-medium"
                 />
               </div>
             </div>
 
             <form onSubmit={handleSaveWellness} className="space-y-6">
               {/* WATER HYDRATION SECTION */}
-              <div className="space-y-3 bg-slate-950/60 p-5 rounded-2xl border border-cyan-500/20">
+              <div className="space-y-3 bg-cyan-50/40 p-5 rounded-2xl border border-cyan-200">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2.5">
                     <span className="text-2xl">💧</span>
                     <div>
-                      <h3 className="text-sm font-bold text-white">Daily Hydration Tracker</h3>
-                      <p className="text-xs text-slate-400">Clinical goal: 8 to 10 glasses (2 - 2.5 Liters)</p>
+                      <h3 className="text-sm font-bold text-slate-800">Daily Hydration Tracker</h3>
+                      <p className="text-xs text-slate-500">Clinical goal: 8 to 10 glasses (2 – 2.5 Liters)</p>
                     </div>
                   </div>
-                  <span className={`text-base font-extrabold px-3 py-1 rounded-xl ${
-                    waterGlasses >= 8 ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40" : "bg-slate-800 text-slate-300"
+                  <span className={`text-sm font-extrabold px-3 py-1 rounded-xl ${
+                    waterGlasses >= 8 ? "bg-cyan-100 text-cyan-800 border border-cyan-300" : "bg-white text-slate-700 border border-slate-200"
                   }`}>
                     {waterGlasses} / 8 Glasses
                   </span>
@@ -654,10 +667,10 @@ export default function SelfCareGuide({ goTo, embedded = false }) {
                       key={g}
                       type="button"
                       onClick={() => setWaterGlasses(g === waterGlasses ? g - 1 : g)}
-                      className={`p-3 rounded-xl border text-center transition flex flex-col items-center gap-1 ${
+                      className={`p-3 rounded-xl border text-center transition flex flex-col items-center gap-1 cursor-pointer ${
                         g <= waterGlasses
-                          ? "bg-cyan-500/20 border-cyan-400 text-cyan-300 shadow-md shadow-cyan-500/10"
-                          : "bg-slate-900 border-slate-800 text-slate-600 hover:border-slate-700"
+                          ? "bg-cyan-100 border-cyan-400 text-cyan-900 shadow-xs"
+                          : "bg-white border-slate-200 text-slate-400 hover:border-slate-300"
                       }`}
                     >
                       <span className="text-lg">{g <= waterGlasses ? "💧" : "🥛"}</span>
@@ -670,14 +683,14 @@ export default function SelfCareGuide({ goTo, embedded = false }) {
                   <button
                     type="button"
                     onClick={() => setWaterGlasses(Math.max(0, waterGlasses - 1))}
-                    className="px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
+                    className="px-3 py-1 text-xs rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold cursor-pointer"
                   >
                     - 1 Glass
                   </button>
                   <button
                     type="button"
                     onClick={() => setWaterGlasses(waterGlasses + 1)}
-                    className="px-2.5 py-1 text-xs rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold"
+                    className="px-3 py-1 text-xs rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white font-bold cursor-pointer"
                   >
                     + 1 Glass
                   </button>
@@ -685,19 +698,19 @@ export default function SelfCareGuide({ goTo, embedded = false }) {
               </div>
 
               {/* SLEEP RESTORATION SECTION */}
-              <div className="space-y-3 bg-slate-950/60 p-5 rounded-2xl border border-indigo-500/20">
+              <div className="space-y-3 bg-indigo-50/40 p-5 rounded-2xl border border-indigo-200">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2.5">
                     <span className="text-2xl">🌙</span>
                     <div>
-                      <h3 className="text-sm font-bold text-white">Sleep Duration</h3>
-                      <p className="text-xs text-slate-400">Optimal adult restorative range: 7.0 - 9.0 hours</p>
+                      <h3 className="text-sm font-bold text-slate-800">Sleep Duration</h3>
+                      <p className="text-xs text-slate-500">Optimal adult restorative range: 7.0 – 9.0 hours</p>
                     </div>
                   </div>
-                  <span className={`text-base font-extrabold px-3 py-1 rounded-xl ${
+                  <span className={`text-sm font-extrabold px-3 py-1 rounded-xl ${
                     sleepHours >= 7 && sleepHours <= 9
-                      ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40"
-                      : "bg-slate-800 text-slate-300"
+                      ? "bg-indigo-100 text-indigo-800 border border-indigo-300"
+                      : "bg-white text-slate-700 border border-slate-200"
                   }`}>
                     {sleepHours} Hours
                   </span>
@@ -711,11 +724,11 @@ export default function SelfCareGuide({ goTo, embedded = false }) {
                     step="0.5"
                     value={sleepHours}
                     onChange={(e) => setSleepHours(parseFloat(e.target.value))}
-                    className="w-full accent-indigo-400 bg-slate-800 h-2 rounded-lg cursor-pointer"
+                    className="w-full accent-indigo-600 h-2 bg-slate-200 rounded-lg cursor-pointer"
                   />
                   <div className="flex justify-between text-[11px] text-slate-500 font-medium">
                     <span>3 hrs (Deprived)</span>
-                    <span className="text-indigo-400 font-bold">7 - 9 hrs (Optimal)</span>
+                    <span className="text-indigo-700 font-bold">7 – 9 hrs (Optimal)</span>
                     <span>12 hrs</span>
                   </div>
                 </div>
@@ -724,8 +737,8 @@ export default function SelfCareGuide({ goTo, embedded = false }) {
               {/* MOOD & ENERGY SECTION */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* MOOD */}
-                <div className="bg-slate-950/60 p-5 rounded-2xl border border-slate-800 space-y-2">
-                  <label className="block text-xs font-bold text-slate-300">
+                <div className="bg-white p-5 rounded-2xl border border-slate-200 space-y-2.5">
+                  <label className="block text-xs font-bold text-slate-700">
                     Today's Mood State
                   </label>
                   <div className="grid grid-cols-5 gap-1.5">
@@ -740,10 +753,10 @@ export default function SelfCareGuide({ goTo, embedded = false }) {
                         key={m.label}
                         type="button"
                         onClick={() => setMood(m.label)}
-                        className={`p-2.5 rounded-xl border text-center transition flex flex-col items-center gap-1 ${
+                        className={`p-2.5 rounded-xl border text-center transition flex flex-col items-center gap-1 cursor-pointer ${
                           mood === m.label
-                            ? "bg-emerald-500/20 border-emerald-400 text-emerald-300"
-                            : "bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700"
+                            ? "bg-emerald-50 border-emerald-400 text-emerald-800 font-bold"
+                            : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
                         }`}
                       >
                         <span className="text-lg">{m.emoji}</span>
@@ -754,24 +767,24 @@ export default function SelfCareGuide({ goTo, embedded = false }) {
                 </div>
 
                 {/* ENERGY LEVEL */}
-                <div className="bg-slate-950/60 p-5 rounded-2xl border border-slate-800 space-y-2">
-                  <label className="block text-xs font-bold text-slate-300">
+                <div className="bg-white p-5 rounded-2xl border border-slate-200 space-y-2.5">
+                  <label className="block text-xs font-bold text-slate-700">
                     Energy / Vitality Level
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     {[
-                      { label: "High", sub: "Energized", color: "emerald" },
-                      { label: "Medium", sub: "Balanced", color: "blue" },
-                      { label: "Low", sub: "Sluggish", color: "amber" },
+                      { label: "High", sub: "Energized" },
+                      { label: "Medium", sub: "Balanced" },
+                      { label: "Low", sub: "Sluggish" },
                     ].map((e) => (
                       <button
                         key={e.label}
                         type="button"
                         onClick={() => setEnergyLevel(e.label)}
-                        className={`p-3 rounded-xl border text-center transition flex flex-col items-center justify-center ${
+                        className={`p-3 rounded-xl border text-center transition flex flex-col items-center justify-center cursor-pointer ${
                           energyLevel === e.label
-                            ? "bg-slate-800 border-emerald-400 text-emerald-300 shadow-md"
-                            : "bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700"
+                            ? "bg-emerald-50 border-emerald-400 text-emerald-800 font-bold"
+                            : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
                         }`}
                       >
                         <span className="text-xs font-bold">{e.label}</span>
@@ -783,34 +796,34 @@ export default function SelfCareGuide({ goTo, embedded = false }) {
               </div>
 
               {/* NOTES */}
-              <div className="space-y-1">
-                <label className="block text-xs font-semibold text-slate-400">
-                  Daily Notes & Comfort Observations (Optional)
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-slate-700">
+                  Daily Notes &amp; Comfort Observations (Optional)
                 </label>
                 <textarea
                   rows="2"
                   value={wellnessNotes}
                   onChange={(e) => setWellnessNotes(e.target.value)}
-                  placeholder="e.g. Drank ginger tea in the morning, went for a 20 min walk, cough settled down..."
-                  className="w-full bg-slate-950/70 border border-slate-700 rounded-xl px-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
+                  placeholder="e.g. Drank ginger tea in the morning, went for a 20 min walk, symptoms settled..."
+                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-cyan-500"
                 />
               </div>
 
               {wellnessMessage && (
-                <div className={`p-3 rounded-xl text-xs font-semibold ${
+                <div className={`p-3.5 rounded-xl text-xs font-bold ${
                   wellnessMessage.includes("Error")
-                    ? "bg-rose-500/10 border border-rose-500/30 text-rose-300"
-                    : "bg-emerald-500/10 border border-emerald-500/30 text-emerald-300"
+                    ? "bg-rose-50 border border-rose-200 text-rose-700"
+                    : "bg-emerald-50 border border-emerald-200 text-emerald-700"
                 }`}>
                   {wellnessMessage}
                 </div>
               )}
 
-              <div className="flex justify-end pt-2">
+              <div className="flex justify-end pt-1">
                 <button
                   type="submit"
                   disabled={savingWellness}
-                  className="px-6 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 hover:from-cyan-400 hover:to-teal-400 transition shadow-lg shadow-cyan-500/20 disabled:opacity-50"
+                  className="px-6 py-2.5 rounded-xl font-bold text-sm bg-cyan-600 hover:bg-cyan-700 text-white transition shadow-xs disabled:opacity-50 cursor-pointer"
                 >
                   {savingWellness ? "Saving Record..." : "Save Today's Check-in"}
                 </button>
@@ -832,37 +845,37 @@ export default function SelfCareGuide({ goTo, embedded = false }) {
           ) : (
             <>
               {/* TOP METRIC CARDS */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl shadow-lg">
-                  <span className="text-xs text-slate-400 block mb-1">Check-in Streak</span>
-                  <span className="text-2xl font-extrabold text-white">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+                <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-xs">
+                  <span className="text-xs text-slate-500 block mb-1">Check-in Streak</span>
+                  <span className="text-2xl font-black text-slate-800">
                     {wellnessTrends?.total_checkins || 0}
                   </span>
-                  <span className="text-[11px] text-slate-500 block">Past 14 Days</span>
+                  <span className="text-[11px] text-slate-400 block">Past 14 Days</span>
                 </div>
 
-                <div className="bg-slate-900/80 border border-cyan-500/20 p-4 rounded-2xl shadow-lg">
-                  <span className="text-xs text-cyan-400 block mb-1">Avg Water Intake</span>
-                  <span className="text-2xl font-extrabold text-white">
+                <div className="bg-white border border-cyan-200 p-4 rounded-2xl shadow-xs">
+                  <span className="text-xs text-cyan-700 font-bold block mb-1">Avg Water Intake</span>
+                  <span className="text-2xl font-black text-slate-800">
                     {wellnessTrends?.average_water_glasses || 0}
                   </span>
-                  <span className="text-[11px] text-slate-500 block">Glasses / day (Goal: 8)</span>
+                  <span className="text-[11px] text-slate-400 block">Glasses / day (Goal: 8)</span>
                 </div>
 
-                <div className="bg-slate-900/80 border border-indigo-500/20 p-4 rounded-2xl shadow-lg">
-                  <span className="text-xs text-indigo-400 block mb-1">Avg Sleep</span>
-                  <span className="text-2xl font-extrabold text-white">
+                <div className="bg-white border border-indigo-200 p-4 rounded-2xl shadow-xs">
+                  <span className="text-xs text-indigo-700 font-bold block mb-1">Avg Sleep</span>
+                  <span className="text-2xl font-black text-slate-800">
                     {wellnessTrends?.average_sleep_hours || 0}
                   </span>
-                  <span className="text-[11px] text-slate-500 block">Hours / night (7-9 optimal)</span>
+                  <span className="text-[11px] text-slate-400 block">Hours / night (7-9 goal)</span>
                 </div>
 
-                <div className="bg-slate-900/80 border border-emerald-500/20 p-4 rounded-2xl shadow-lg">
-                  <span className="text-xs text-emerald-400 block mb-1">Dominant Mood</span>
-                  <span className="text-lg font-extrabold text-white truncate block">
-                    {wellnessTrends?.dominant_mood || "Neutral"}
+                <div className="bg-white border border-emerald-200 p-4 rounded-2xl shadow-xs">
+                  <span className="text-xs text-emerald-700 font-bold block mb-1">Dominant Mood</span>
+                  <span className="text-lg font-black text-slate-800 truncate block">
+                    {wellnessTrends?.dominant_mood || "Good"}
                   </span>
-                  <span className="text-[11px] text-slate-500 block">
+                  <span className="text-[11px] text-slate-400 block">
                     Energy: {wellnessTrends?.dominant_energy || "Medium"}
                   </span>
                 </div>
@@ -870,16 +883,14 @@ export default function SelfCareGuide({ goTo, embedded = false }) {
 
               {/* LIFESTYLE INSIGHTS BOX */}
               {wellnessTrends?.lifestyle_insights && wellnessTrends.lifestyle_insights.length > 0 && (
-                <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-2">
-                  <h3 className="text-sm font-bold text-emerald-400 flex items-center gap-2">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Clinical Lifestyle & Recovery Insights
+                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-2">
+                  <h3 className="text-sm font-bold text-emerald-700 flex items-center gap-2">
+                    <ShieldCheck size={16} />
+                    Clinical Lifestyle &amp; Recovery Insights
                   </h3>
                   <div className="space-y-1.5 pt-1">
                     {wellnessTrends.lifestyle_insights.map((ins, i) => (
-                      <div key={i} className="text-xs text-slate-300 bg-slate-950/50 p-2.5 rounded-xl border border-slate-800/80 leading-relaxed">
+                      <div key={i} className="text-xs text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-200 leading-relaxed">
                         {ins}
                       </div>
                     ))}
@@ -888,35 +899,35 @@ export default function SelfCareGuide({ goTo, embedded = false }) {
               )}
 
               {/* RECENT CHECK-INS TABLE */}
-              <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-3">
-                <h3 className="text-sm font-bold text-white">Logged Check-in Records</h3>
+              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-3">
+                <h3 className="text-sm font-bold text-slate-800">Logged Check-in Records</h3>
 
                 {wellnessHistory.length === 0 ? (
-                  <p className="text-xs text-slate-500 py-4 text-center">
-                    No wellness check-ins recorded yet. Switch to the "Daily Wellness Log" tab to create your first entry!
+                  <p className="text-xs text-slate-500 py-6 text-center">
+                    No wellness check-ins recorded yet. Switch to the "Daily Wellness" card above to create your first entry!
                   </p>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs">
                       <thead>
-                        <tr className="border-b border-slate-800 text-slate-400">
-                          <th className="pb-2 font-semibold">Date</th>
-                          <th className="pb-2 font-semibold">Hydration</th>
-                          <th className="pb-2 font-semibold">Sleep</th>
-                          <th className="pb-2 font-semibold">Mood</th>
-                          <th className="pb-2 font-semibold">Energy</th>
-                          <th className="pb-2 font-semibold">Notes</th>
+                        <tr className="border-b border-slate-200 text-slate-500">
+                          <th className="pb-2 font-bold">Date</th>
+                          <th className="pb-2 font-bold">Hydration</th>
+                          <th className="pb-2 font-bold">Sleep</th>
+                          <th className="pb-2 font-bold">Mood</th>
+                          <th className="pb-2 font-bold">Energy</th>
+                          <th className="pb-2 font-bold">Notes</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-800/60">
+                      <tbody className="divide-y divide-slate-100">
                         {wellnessHistory.map((item) => (
-                          <tr key={item.id} className="hover:bg-slate-800/30 transition">
-                            <td className="py-2.5 font-medium text-slate-200">{item.checkin_date}</td>
-                            <td className="py-2.5 text-cyan-300 font-semibold">{item.water_glasses} glasses</td>
-                            <td className="py-2.5 text-indigo-300 font-semibold">{item.sleep_hours} hrs</td>
-                            <td className="py-2.5 text-slate-300">{item.mood || "-"}</td>
-                            <td className="py-2.5 text-slate-300">{item.energy_level || "-"}</td>
-                            <td className="py-2.5 text-slate-400 truncate max-w-xs">{item.notes || "-"}</td>
+                          <tr key={item.id} className="hover:bg-slate-50 transition">
+                            <td className="py-2.5 font-bold text-slate-800">{item.checkin_date}</td>
+                            <td className="py-2.5 text-cyan-700 font-semibold">{item.water_glasses} glasses</td>
+                            <td className="py-2.5 text-indigo-700 font-semibold">{item.sleep_hours} hrs</td>
+                            <td className="py-2.5 text-slate-700">{item.mood || "—"}</td>
+                            <td className="py-2.5 text-slate-700">{item.energy_level || "—"}</td>
+                            <td className="py-2.5 text-slate-500 truncate max-w-xs">{item.notes || "—"}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -934,11 +945,11 @@ export default function SelfCareGuide({ goTo, embedded = false }) {
       {/* ============================================================ */}
       {activeTab === "library" && (
         <div className="space-y-6">
-          <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-lg">
-            <h2 className="text-lg font-bold text-white mb-1">
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+            <h2 className="text-base font-extrabold text-slate-800 mb-1">
               Evidence-Based Home Remedies Knowledge Base
             </h2>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500">
               Peer-reviewed non-pharmacological comfort measures for minor, non-emergency conditions.
             </p>
           </div>
@@ -948,39 +959,40 @@ export default function SelfCareGuide({ goTo, embedded = false }) {
               Loading clinical library...
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-5">
               {libraryData && Object.keys(libraryData).map((catKey) => {
                 const item = libraryData[catKey];
                 return (
-                  <div key={catKey} className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
-                    <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <div key={catKey} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                       <div>
-                        <h3 className="text-base font-bold text-emerald-400">{item.title}</h3>
-                        <span className="text-xs text-slate-400">Category: {item.category}</span>
+                        <h3 className="text-base font-bold text-slate-800">{item.title}</h3>
+                        <span className="text-xs text-slate-500">Category: {item.category}</span>
                       </div>
                       <button
+                        type="button"
                         onClick={() => {
                           setSymptomInput(item.title);
                           setActiveTab("remedies");
                         }}
-                        className="text-xs px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 transition font-semibold"
+                        className="text-xs px-3.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 transition font-bold cursor-pointer"
                       >
-                        Assess Symptom &rarr;
+                        Assess Symptom →
                       </button>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {item.evidence_remedies.map((r, i) => (
-                        <div key={i} className="bg-slate-950/70 p-3.5 rounded-xl border border-slate-800/80 space-y-1.5">
+                        <div key={i} className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-1.5">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-white">{r.name}</span>
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">
+                            <span className="text-xs font-bold text-slate-800">{r.name}</span>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white text-slate-600 border border-slate-200">
                               {r.evidence_strength}
                             </span>
                           </div>
-                          <p className="text-xs text-slate-300">{r.instructions}</p>
+                          <p className="text-xs text-slate-600 leading-relaxed">{r.instructions}</p>
                           {r.precautions && (
-                            <p className="text-[11px] text-rose-300 bg-rose-500/10 p-1.5 rounded border border-rose-500/20">
+                            <p className="text-[11px] text-rose-700 bg-rose-50 p-2 rounded-lg border border-rose-200">
                               {r.precautions}
                             </p>
                           )}

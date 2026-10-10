@@ -1,10 +1,32 @@
 // ============================================================
-// HealthTriage AI - Nurse Dashboard & Intake Workspace (Section 9)
+// HealthTriage AI - Nurse Dashboard & Intake Workspace
 // Rapid Patient Intake, Vitals Monitoring, Triage Priority & Escalation
 // ============================================================
 
 import React, { useState, useEffect, useMemo } from "react";
+import {
+  Activity,
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  Heart,
+  Plus,
+  RefreshCw,
+  Search,
+  ShieldAlert,
+  Stethoscope,
+  Thermometer,
+  User,
+  UserPlus,
+  ArrowRight,
+  ChevronRight,
+  Flame,
+  Check,
+  AlertCircle,
+} from "lucide-react";
 import { API_URL } from "../../config";
+import EmptyState from "../common/EmptyState";
+import StatusBadge from "../common/StatusBadge";
 
 export default function NurseDashboard({
   goTo = () => {},
@@ -21,7 +43,7 @@ export default function NurseDashboard({
 
   const [nurseData, setNurseData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("queue"); // "queue" | "intake_form" | "monitoring"
+  const [activeTab, setActiveTab] = useState("queue"); // "queue" | "intake_form"
 
   // Patient Intake Form State
   const [patientName, setPatientName] = useState("");
@@ -47,18 +69,18 @@ export default function NurseDashboard({
     const temp = parseFloat(temperature);
     const sys = parseFloat(systolicBp);
 
-    if (hr > 130) list.push("🔴 Critical Tachycardia (HR > 130 bpm)");
-    else if (hr > 100) list.push("🟡 Elevated Pulse (HR > 100 bpm)");
-    else if (hr < 50) list.push("🔴 Bradycardia (HR < 50 bpm)");
+    if (hr > 130) list.push("Critical Tachycardia (HR > 130 bpm)");
+    else if (hr > 100) list.push("Elevated Pulse (HR > 100 bpm)");
+    else if (hr < 50) list.push("Bradycardia (HR < 50 bpm)");
 
-    if (sp < 90) list.push("🔴 Severe Hypoxia (SpO2 < 90%) — Immediate O2 required");
-    else if (sp < 95) list.push("🟡 Borderline Hypoxemia (SpO2 < 95%)");
+    if (sp < 90) list.push("Severe Hypoxia (SpO2 < 90%) — Immediate O2 required");
+    else if (sp < 95) list.push("Borderline Hypoxemia (SpO2 < 95%)");
 
-    if (temp > 102) list.push("🔴 High Grade Pyrexia (Temp > 102°F)");
-    else if (temp > 100) list.push("🟡 Febrile (Temp > 100°F)");
+    if (temp > 102) list.push("High Grade Pyrexia (Temp > 102°F)");
+    else if (temp > 100) list.push("Febrile (Temp > 100°F)");
 
-    if (sys > 180) list.push("🔴 Hypertensive Crisis (Systolic > 180 mmHg)");
-    else if (sys < 90) list.push("🔴 Hypotension (Systolic < 90 mmHg)");
+    if (sys > 180) list.push("Hypertensive Crisis (Systolic > 180 mmHg)");
+    else if (sys < 90) list.push("Hypotension (Systolic < 90 mmHg)");
 
     return list;
   }, [heartRate, spo2, temperature, systolicBp]);
@@ -115,7 +137,7 @@ export default function NurseDashboard({
           systolic_bp: systolicBp ? parseFloat(systolicBp) : null,
           diastolic_bp: diastolicBp ? parseFloat(diastolicBp) : null,
           observations: observations.trim() || null,
-          escalate_to_doctor: escalateToDoctor || vitalWarnings.some((w) => w.startsWith("🔴"))
+          escalate_to_doctor: escalateToDoctor || vitalWarnings.some((w) => w.includes("Critical") || w.includes("Severe") || w.includes("Crisis"))
         })
       });
 
@@ -149,210 +171,183 @@ export default function NurseDashboard({
   const allCases = nurseData?.all_cases || [];
 
   return (
-    <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "24px 20px" }}>
+    <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
       {/* Top Banner Header */}
-      <div
-        style={{
-          background: "linear-gradient(135deg, #065f46 0%, #047857 100%)",
-          color: "#ffffff",
-          borderRadius: "20px",
-          padding: "24px 30px",
-          marginBottom: "24px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: "16px",
-          boxShadow: "0 10px 25px -5px rgba(6, 95, 70, 0.3)"
-        }}
-      >
-        <div>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(255, 255, 255, 0.2)", color: "#ffffff", padding: "3px 10px", borderRadius: "12px", fontSize: "11px", fontWeight: "700", marginBottom: "6px" }}>
-            <span>👩‍⚕️</span> NURSING &amp; TRIAGE INTAKE
+      <div className="bg-white/85 backdrop-blur-2xl rounded-3xl border border-white/95 p-6 sm:p-7 shadow-[0_20px_50px_-12px_rgba(16,36,90,0.08),0_0_0_1px_rgba(83,216,245,0.12)] flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#58DDB5] to-[#2563FF] flex items-center justify-center text-white shrink-0 shadow-[0_8px_20px_rgba(88,221,181,0.3)]">
+            <Activity className="w-6 h-6" />
           </div>
-          <h1 style={{ fontSize: "24px", fontWeight: "800", margin: "0 0 4px 0" }}>
-            Nurse Dashboard &amp; Intake Desk
-          </h1>
-          <p style={{ fontSize: "13.5px", color: "#a7f3d0", margin: 0 }}>
-            First-contact patient check-in, vitals monitoring, priority classification, and doctor escalation.
-          </p>
+          <div>
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-teal-50 text-teal-800 border border-teal-200">
+                Nursing & Triage Intake
+              </span>
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                First-Contact Desk
+              </span>
+            </div>
+            <h1 className="text-xl sm:text-2xl font-extrabold text-[#10245A] tracking-tight">
+              Nurse Dashboard & Intake Desk
+            </h1>
+            <p className="text-xs sm:text-sm text-[#687797]">
+              First-contact patient check-in, vitals monitoring, priority classification, and doctor escalation.
+            </p>
+          </div>
         </div>
 
-        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-          <div style={{ background: "rgba(255, 255, 255, 0.12)", padding: "8px 16px", borderRadius: "12px", border: "1px solid rgba(255, 255, 255, 0.2)", textAlign: "right" }}>
-            <div style={{ fontSize: "14px", fontWeight: "700", color: "#ffffff" }}>
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="px-4 py-2.5 rounded-2xl bg-slate-50/80 border border-slate-200/80 text-right backdrop-blur-sm">
+            <div className="text-xs font-extrabold text-[#10245A]">
               Nurse {user?.full_name || "Clinical Nurse"}
             </div>
-            <div style={{ fontSize: "11px", color: "#a7f3d0" }}>Nursing Officer • On Duty</div>
+            <div className="text-[10px] text-teal-600 font-bold">Nursing Officer • On Duty</div>
           </div>
           <button
             onClick={() => setActiveTab("intake_form")}
-            style={{
-              background: "#ffffff",
-              color: "#065f46",
-              border: "none",
-              borderRadius: "10px",
-              padding: "10px 18px",
-              fontSize: "13.5px",
-              fontWeight: "700",
-              cursor: "pointer",
-              boxShadow: "0 4px 10px rgba(0,0,0,0.1)"
-            }}
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#2563FF] to-[#7657FF] hover:opacity-95 text-white font-extrabold text-xs shadow-[0_8px_20px_rgba(37,99,255,0.3)] transition flex items-center gap-1.5"
           >
-            + New Patient Check-In
+            <UserPlus className="w-3.5 h-3.5" />
+            New Patient Check-In
           </button>
         </div>
       </div>
 
       {/* Metrics Bar */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginBottom: "24px" }}>
-        <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "18px 20px", borderLeft: "5px solid #dc2626" }}>
-          <div style={{ fontSize: "12px", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>Emergency Triage</div>
-          <div style={{ fontSize: "26px", fontWeight: "800", color: "#dc2626", marginTop: "4px" }}>{counts.emergency || 0}</div>
-          <div style={{ fontSize: "11.5px", color: "#94a3b8", marginTop: "2px" }}>Immediate resuscitation / doctor alert</div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="p-5 rounded-3xl bg-white/85 backdrop-blur-xl border border-white/95 border-l-4 border-l-rose-500 shadow-[0_16px_40px_-10px_rgba(16,36,90,0.06)]">
+          <span className="text-[11px] font-extrabold text-[#687797] uppercase tracking-wider">Emergency Triage</span>
+          <div className="text-2xl font-black text-rose-600 mt-1">{counts.emergency || 0}</div>
+          <div className="text-[11px] text-slate-400 mt-0.5 font-medium">Immediate resuscitation / doctor alert</div>
         </div>
-        <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "18px 20px", borderLeft: "5px solid #f59e0b" }}>
-          <div style={{ fontSize: "12px", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>Urgent Cases</div>
-          <div style={{ fontSize: "26px", fontWeight: "800", color: "#f59e0b", marginTop: "4px" }}>{counts.urgent || 0}</div>
-          <div style={{ fontSize: "11.5px", color: "#94a3b8", marginTop: "2px" }}>Priority nurse observation</div>
+        <div className="p-5 rounded-3xl bg-white/85 backdrop-blur-xl border border-white/95 border-l-4 border-l-amber-500 shadow-[0_16px_40px_-10px_rgba(16,36,90,0.06)]">
+          <span className="text-[11px] font-extrabold text-[#687797] uppercase tracking-wider">Urgent Cases</span>
+          <div className="text-2xl font-black text-amber-600 mt-1">{counts.urgent || 0}</div>
+          <div className="text-[11px] text-slate-400 mt-0.5 font-medium">Priority nurse observation</div>
         </div>
-        <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "18px 20px", borderLeft: "5px solid #10b981" }}>
-          <div style={{ fontSize: "12px", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>Routine OPD Intake</div>
-          <div style={{ fontSize: "26px", fontWeight: "800", color: "#10b981", marginTop: "4px" }}>{counts.routine || 0}</div>
-          <div style={{ fontSize: "11.5px", color: "#94a3b8", marginTop: "2px" }}>Stable outpatient queue</div>
+        <div className="p-5 rounded-3xl bg-white/85 backdrop-blur-xl border border-white/95 border-l-4 border-l-emerald-500 shadow-[0_16px_40px_-10px_rgba(16,36,90,0.06)]">
+          <span className="text-[11px] font-extrabold text-[#687797] uppercase tracking-wider">Routine OPD Intake</span>
+          <div className="text-2xl font-black text-emerald-600 mt-1">{counts.routine || 0}</div>
+          <div className="text-[11px] text-slate-400 mt-0.5 font-medium">Stable outpatient queue</div>
         </div>
-        <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "18px 20px", borderLeft: "5px solid #2563eb" }}>
-          <div style={{ fontSize: "12px", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>Total Intake Today</div>
-          <div style={{ fontSize: "26px", fontWeight: "800", color: "#2563eb", marginTop: "4px" }}>{counts.all || 0}</div>
-          <div style={{ fontSize: "11.5px", color: "#94a3b8", marginTop: "2px" }}>Total processed intake slips</div>
+        <div className="p-5 rounded-3xl bg-white/85 backdrop-blur-xl border border-white/95 border-l-4 border-l-sky-500 shadow-[0_16px_40px_-10px_rgba(16,36,90,0.06)]">
+          <span className="text-[11px] font-extrabold text-[#687797] uppercase tracking-wider">Total Intake Today</span>
+          <div className="text-2xl font-black text-[#2563FF] mt-1">{counts.all || 0}</div>
+          <div className="text-[11px] text-slate-400 mt-0.5 font-medium">Total processed intake slips</div>
         </div>
       </div>
 
       {/* Navigation Tabs */}
-      <div style={{ display: "flex", gap: "10px", borderBottom: "1px solid #e2e8f0", paddingBottom: "12px", marginBottom: "20px" }}>
+      <div className="flex flex-wrap gap-2 pb-1">
         <button
           onClick={() => setActiveTab("queue")}
-          style={{
-            background: activeTab === "queue" ? "#065f46" : "#f1f5f9",
-            color: activeTab === "queue" ? "#ffffff" : "#475569",
-            border: "none",
-            borderRadius: "10px",
-            padding: "8px 18px",
-            fontSize: "13px",
-            fontWeight: "700",
-            cursor: "pointer"
-          }}
+          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition ${
+            activeTab === "queue"
+              ? "bg-gradient-to-r from-[#2563FF] to-[#7657FF] text-white shadow-[0_4px_15px_rgba(37,99,255,0.3)]"
+              : "bg-white/80 hover:bg-white text-slate-700 border border-white/90 backdrop-blur-sm"
+          }`}
         >
-          📋 Live Triage Queue ({allCases.length})
+          Live Triage Queue ({allCases.length})
         </button>
         <button
           onClick={() => setActiveTab("intake_form")}
-          style={{
-            background: activeTab === "intake_form" ? "#065f46" : "#f1f5f9",
-            color: activeTab === "intake_form" ? "#ffffff" : "#475569",
-            border: "none",
-            borderRadius: "10px",
-            padding: "8px 18px",
-            fontSize: "13px",
-            fontWeight: "700",
-            cursor: "pointer"
-          }}
+          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 ${
+            activeTab === "intake_form"
+              ? "bg-gradient-to-r from-[#2563FF] to-[#7657FF] text-white shadow-[0_4px_15px_rgba(37,99,255,0.3)]"
+              : "bg-white/80 hover:bg-white text-slate-700 border border-white/90 backdrop-blur-sm"
+          }`}
         >
-          📝 Rapid Patient Intake &amp; Vitals Recording
+          <UserPlus className="w-4 h-4" />
+          Rapid Patient Intake & Vitals
         </button>
       </div>
 
       {/* TAB 1: LIVE TRIAGE QUEUE */}
       {activeTab === "queue" && (
-        <div style={{ background: "#ffffff", borderRadius: "18px", border: "1px solid #e2e8f0", padding: "24px", boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
             <div>
-              <h3 style={{ fontSize: "17px", fontWeight: "700", color: "#0f172a", margin: "0 0 4px 0" }}>
-                Active Nursing Triage Queue
-              </h3>
-              <p style={{ fontSize: "13px", color: "#64748b", margin: 0 }}>
+              <h3 className="text-base font-bold text-slate-900">Active Nursing Triage Queue</h3>
+              <p className="text-xs text-slate-500">
                 Patients waiting for physician consultation or vital updates.
               </p>
             </div>
             <button
               onClick={fetchNurseOverview}
-              style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "6px 12px", fontSize: "12px", cursor: "pointer" }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 text-xs font-semibold transition self-start sm:self-auto"
             >
-              🔄 Refresh List
+              <RefreshCw className="w-3.5 h-3.5" /> Refresh List
             </button>
           </div>
 
           {loading ? (
-            <div style={{ textAlign: "center", padding: "40px", color: "#64748b" }}>Loading queue...</div>
+            <div className="py-12 text-center text-slate-500 text-sm">
+              <div className="w-8 h-8 border-2 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+              Loading queue...
+            </div>
           ) : allCases.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "40px", color: "#64748b" }}>No patients in current nursing queue.</div>
+            <EmptyState
+              icon={User}
+              title="No patients in current nursing queue"
+              description="Click '+ New Patient Check-In' above to register a walk-in patient."
+              primaryAction={{
+                label: "Register Walk-in Patient",
+                onClick: () => setActiveTab("intake_form"),
+              }}
+            />
           ) : (
-            <div style={{ display: "grid", gap: "12px" }}>
-              {allCases.map((c) => {
-                const isEmergency = c.triage_level === "EMERGENCY" || c.is_emergency;
-                const isUrgent = c.triage_level === "URGENT";
-                return (
-                  <div
-                    key={c.id}
-                    style={{
-                      border: isEmergency ? "2px solid #ef4444" : isUrgent ? "1px solid #f59e0b" : "1px solid #e2e8f0",
-                      background: isEmergency ? "#fff5f5" : "#ffffff",
-                      borderRadius: "14px",
-                      padding: "16px 20px",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center"
-                    }}
-                  >
-                    <div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
-                        <span
-                          style={{
-                            background: isEmergency ? "#dc2626" : isUrgent ? "#d97706" : "#059669",
-                            color: "#ffffff",
-                            padding: "2px 8px",
-                            borderRadius: "6px",
-                            fontSize: "11px",
-                            fontWeight: "800",
-                          }}
-                        >
-                          {c.triage_level || "ROUTINE"}
-                        </span>
-                        <strong style={{ fontSize: "15px", color: "#0f172a" }}>
-                          {c.patient_name || "Patient"}
-                        </strong>
-                        <span style={{ fontSize: "12.5px", color: "#64748b" }}>
-                          {c.age ? `${c.age} yrs` : ""} {c.gender ? `• ${c.gender}` : ""}
-                        </span>
-                        <span style={{ fontSize: "11px", color: "#94a3b8" }}>
-                          Queue ID #{c.id}
-                        </span>
-                      </div>
-                      <div style={{ fontSize: "13.5px", color: "#334155" }}>
-                        <strong>Symptoms:</strong> {c.symptoms}
-                      </div>
-                    </div>
-
-                    <div style={{ display: "flex", gap: "8px" }}>
-                      <button
-                        onClick={() => goTo("/queue")}
-                        style={{
-                          background: "#065f46",
-                          color: "#ffffff",
-                          border: "none",
-                          borderRadius: "8px",
-                          padding: "8px 14px",
-                          fontSize: "12.5px",
-                          fontWeight: "600",
-                          cursor: "pointer"
-                        }}
+            <div className="overflow-x-auto border border-slate-200/80 rounded-xl">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase text-[10.5px] tracking-wider">
+                    <th className="py-3 px-3.5">Queue ID</th>
+                    <th className="py-3 px-3.5">Patient</th>
+                    <th className="py-3 px-3.5">Age / Gender</th>
+                    <th className="py-3 px-3.5">Priority</th>
+                    <th className="py-3 px-3.5">Reported Symptoms</th>
+                    <th className="py-3 px-3.5 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {allCases.map((c) => {
+                    const isEmergency = c.triage_level === "EMERGENCY" || c.is_emergency;
+                    const isUrgent = c.triage_level === "URGENT";
+                    return (
+                      <tr
+                        key={c.id}
+                        className={`transition hover:bg-slate-50/80 ${
+                          isEmergency ? "bg-rose-50/20" : isUrgent ? "bg-amber-50/20" : ""
+                        }`}
                       >
-                        Clinical Details &amp; Actions →
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
+                        <td className="py-3 px-3.5 font-mono font-bold text-slate-700 whitespace-nowrap">
+                          #Q-{c.id}
+                        </td>
+                        <td className="py-3 px-3.5">
+                          <strong className="text-slate-900 block text-xs">{c.patient_name || "Patient"}</strong>
+                        </td>
+                        <td className="py-3 px-3.5 whitespace-nowrap text-slate-600">
+                          {c.age ? `${c.age} yrs` : "N/A"} {c.gender ? `• ${c.gender}` : ""}
+                        </td>
+                        <td className="py-3 px-3.5 whitespace-nowrap">
+                          <StatusBadge status={c.triage_level} />
+                        </td>
+                        <td className="py-3 px-3.5 text-slate-600 max-w-[280px] truncate" title={c.symptoms}>
+                          {c.symptoms || "General intake"}
+                        </td>
+                        <td className="py-3 px-3.5 text-right whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => goTo("/queue")}
+                            className="px-3 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs shadow-sm transition inline-flex items-center gap-1"
+                          >
+                            Details <ArrowRight className="w-3 h-3" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
@@ -360,27 +355,36 @@ export default function NurseDashboard({
 
       {/* TAB 2: RAPID INTAKE & VITALS RECORDING FORM */}
       {activeTab === "intake_form" && (
-        <div style={{ display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: "24px" }}>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* Intake Form */}
-          <div style={{ background: "#ffffff", borderRadius: "18px", border: "1px solid #e2e8f0", padding: "26px", boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
-            <h3 style={{ fontSize: "18px", fontWeight: "800", color: "#0f172a", marginBottom: "16px" }}>
-              Patient Intake &amp; Vital Signs Registration
-            </h3>
+          <div className="lg:col-span-7 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-5">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-200">
+                  STEP-BY-STEP INTAKE
+                </span>
+              </div>
+              <h3 className="text-base font-bold text-slate-900">
+                Patient Intake & Vital Signs Registration
+              </h3>
+            </div>
 
             {intakeSuccess && (
-              <div style={{ background: "#dcfce7", border: "1px solid #86efac", color: "#166534", padding: "14px", borderRadius: "12px", marginBottom: "20px" }}>
-                <div style={{ fontWeight: "700", marginBottom: "4px" }}>✓ {intakeSuccess.message}</div>
-                <div style={{ fontSize: "12.5px" }}>
+              <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs space-y-1">
+                <div className="font-bold flex items-center gap-1.5">
+                  <Check className="w-4 h-4 text-emerald-600" /> {intakeSuccess.message}
+                </div>
+                <div>
                   Assigned Triage Priority: <strong>{intakeSuccess.triage_level}</strong> • Session ID: #{intakeSuccess.session_id}
                 </div>
               </div>
             )}
 
-            <form onSubmit={handleSubmitIntake}>
+            <form onSubmit={handleSubmitIntake} className="space-y-4">
               {/* Patient Basic Info */}
-              <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr", gap: "12px", marginBottom: "14px" }}>
-                <div>
-                  <label style={{ display: "block", fontSize: "12px", fontWeight: "700", color: "#334155", marginBottom: "4px" }}>
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                <div className="sm:col-span-6">
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
                     Full Patient Name *
                   </label>
                   <input
@@ -389,11 +393,11 @@ export default function NurseDashboard({
                     value={patientName}
                     onChange={(e) => setPatientName(e.target.value)}
                     placeholder="e.g. Ramesh Patel"
-                    style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "13px" }}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:bg-white transition"
                   />
                 </div>
-                <div>
-                  <label style={{ display: "block", fontSize: "12px", fontWeight: "700", color: "#334155", marginBottom: "4px" }}>
+                <div className="sm:col-span-3">
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
                     Age (Years)
                   </label>
                   <input
@@ -401,17 +405,17 @@ export default function NurseDashboard({
                     value={patientAge}
                     onChange={(e) => setPatientAge(e.target.value)}
                     placeholder="e.g. 42"
-                    style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "13px" }}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:bg-white transition"
                   />
                 </div>
-                <div>
-                  <label style={{ display: "block", fontSize: "12px", fontWeight: "700", color: "#334155", marginBottom: "4px" }}>
+                <div className="sm:col-span-3">
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
                     Gender
                   </label>
                   <select
                     value={patientGender}
                     onChange={(e) => setPatientGender(e.target.value)}
-                    style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "13px" }}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-teal-500 focus:bg-white transition"
                   >
                     <option value="Female">Female</option>
                     <option value="Male">Male</option>
@@ -421,9 +425,9 @@ export default function NurseDashboard({
               </div>
 
               {/* Symptoms */}
-              <div style={{ marginBottom: "16px" }}>
-                <label style={{ display: "block", fontSize: "12px", fontWeight: "700", color: "#334155", marginBottom: "4px" }}>
-                  Patient-Reported Symptoms &amp; Chief Complaint *
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Patient-Reported Symptoms & Chief Complaint *
                 </label>
                 <textarea
                   rows={2}
@@ -431,87 +435,99 @@ export default function NurseDashboard({
                   value={symptoms}
                   onChange={(e) => setSymptoms(e.target.value)}
                   placeholder="e.g. High fever for 3 days, dry cough, weakness, breathing difficulty on stairs."
-                  style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "13px", fontFamily: "inherit" }}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:bg-white transition"
                 />
               </div>
 
               {/* Vitals Recording Grid */}
-              <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "12px", border: "1px solid #e2e8f0", marginBottom: "16px" }}>
-                <div style={{ fontSize: "12px", fontWeight: "800", color: "#065f46", textTransform: "uppercase", marginBottom: "10px" }}>
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                <div className="text-xs font-bold text-teal-800 uppercase">
                   Clinical Vital Signs (Optional — Missing vitals will NOT block intake)
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px", marginBottom: "10px" }}>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <label style={{ display: "block", fontSize: "11px", color: "#475569", marginBottom: "2px" }}>Heart Rate (bpm)</label>
+                    <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                      Heart Rate (bpm)
+                    </label>
                     <input
                       type="number"
                       value={heartRate}
                       onChange={(e) => setHeartRate(e.target.value)}
                       placeholder="e.g. 88"
-                      style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "13px" }}
+                      className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800"
                     />
                   </div>
                   <div>
-                    <label style={{ display: "block", fontSize: "11px", color: "#475569", marginBottom: "2px" }}>SpO2 (%)</label>
+                    <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                      SpO2 (%)
+                    </label>
                     <input
                       type="number"
                       value={spo2}
                       onChange={(e) => setSpo2(e.target.value)}
                       placeholder="e.g. 96"
-                      style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "13px" }}
+                      className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800"
                     />
                   </div>
                   <div>
-                    <label style={{ display: "block", fontSize: "11px", color: "#475569", marginBottom: "2px" }}>Temperature (°F)</label>
+                    <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                      Temperature (°F)
+                    </label>
                     <input
                       type="number"
                       step="0.1"
                       value={temperature}
                       onChange={(e) => setTemperature(e.target.value)}
                       placeholder="e.g. 98.6"
-                      style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "13px" }}
+                      className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800"
                     />
                   </div>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px" }}>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <label style={{ display: "block", fontSize: "11px", color: "#475569", marginBottom: "2px" }}>Systolic BP (mmHg)</label>
+                    <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                      Systolic BP (mmHg)
+                    </label>
                     <input
                       type="number"
                       value={systolicBp}
                       onChange={(e) => setSystolicBp(e.target.value)}
                       placeholder="e.g. 120"
-                      style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "13px" }}
+                      className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800"
                     />
                   </div>
                   <div>
-                    <label style={{ display: "block", fontSize: "11px", color: "#475569", marginBottom: "2px" }}>Diastolic BP (mmHg)</label>
+                    <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                      Diastolic BP (mmHg)
+                    </label>
                     <input
                       type="number"
                       value={diastolicBp}
                       onChange={(e) => setDiastolicBp(e.target.value)}
                       placeholder="e.g. 80"
-                      style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "13px" }}
+                      className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800"
                     />
                   </div>
                   <div>
-                    <label style={{ display: "block", fontSize: "11px", color: "#475569", marginBottom: "2px" }}>Respiration Rate</label>
+                    <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                      Respiration Rate (/min)
+                    </label>
                     <input
                       type="number"
                       value={respiratoryRate}
                       onChange={(e) => setRespiratoryRate(e.target.value)}
                       placeholder="e.g. 18"
-                      style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "13px" }}
+                      className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-800"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Nurse Observations */}
-              <div style={{ marginBottom: "16px" }}>
-                <label style={{ display: "block", fontSize: "12px", fontWeight: "700", color: "#334155", marginBottom: "4px" }}>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
                   Nurse Observations / Physical Appearance
                 </label>
                 <input
@@ -519,20 +535,20 @@ export default function NurseDashboard({
                   value={observations}
                   onChange={(e) => setObservations(e.target.value)}
                   placeholder="e.g. Pallor visible, conscious and oriented, ambulatory without support."
-                  style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "13px" }}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-teal-500 focus:bg-white transition"
                 />
               </div>
 
               {/* Emergency Escalation Checkbox */}
-              <div style={{ marginBottom: "20px", display: "flex", alignItems: "center", gap: "8px" }}>
+              <div className="flex items-center gap-2 p-3 bg-rose-50 border border-rose-200 rounded-xl">
                 <input
                   type="checkbox"
                   id="escalateCheck"
                   checked={escalateToDoctor}
                   onChange={(e) => setEscalateToDoctor(e.target.checked)}
-                  style={{ width: "16px", height: "16px" }}
+                  className="rounded text-rose-600 focus:ring-rose-500 w-4 h-4"
                 />
-                <label htmlFor="escalateCheck" style={{ fontSize: "13px", color: "#b91c1c", fontWeight: "700" }}>
+                <label htmlFor="escalateCheck" className="text-xs text-rose-800 font-bold cursor-pointer">
                   Escalate Immediately to Doctor (Forces Emergency Status)
                 </label>
               </div>
@@ -541,53 +557,37 @@ export default function NurseDashboard({
               <button
                 type="submit"
                 disabled={submittingIntake}
-                style={{
-                  width: "100%",
-                  background: "linear-gradient(135deg, #065f46 0%, #047857 100%)",
-                  color: "#ffffff",
-                  border: "none",
-                  borderRadius: "12px",
-                  padding: "14px",
-                  fontSize: "14.5px",
-                  fontWeight: "800",
-                  cursor: "pointer",
-                  boxShadow: "0 4px 14px rgba(6, 95, 70, 0.3)"
-                }}
+                className="w-full py-3 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-2"
               >
+                <Check className="w-4 h-4" />
                 {submittingIntake ? "Registering & Running Triage..." : "Save Patient Intake & Assign Triage Priority"}
               </button>
             </form>
           </div>
 
           {/* Right Column: Live Physiological Safety Gauge */}
-          <div>
-            <div style={{ background: "#ffffff", borderRadius: "18px", border: "1px solid #e2e8f0", padding: "24px", boxShadow: "0 2px 8px rgba(0,0,0,0.03)", marginBottom: "20px" }}>
-              <h4 style={{ fontSize: "16px", fontWeight: "700", color: "#0f172a", marginBottom: "12px" }}>
+          <div className="lg:col-span-5 space-y-4">
+            <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-3">
+              <h4 className="text-sm font-bold text-slate-900">
                 Real-Time Physiological Risk Monitor
               </h4>
-              <p style={{ fontSize: "12.5px", color: "#64748b", margin: "0 0 16px 0" }}>
+              <p className="text-xs text-slate-500">
                 Deterministic safety bounds evaluate vital numbers dynamically as you type.
               </p>
 
               {vitalWarnings.length === 0 ? (
-                <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#166534", padding: "14px", borderRadius: "10px", fontSize: "13px", fontWeight: "600" }}>
-                  ✓ All entered physiological values are within safe outpatient limits.
+                <div className="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-semibold flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  All entered physiological values are within safe outpatient limits.
                 </div>
               ) : (
-                <div style={{ display: "grid", gap: "8px" }}>
+                <div className="space-y-2">
                   {vitalWarnings.map((w, i) => (
                     <div
                       key={i}
-                      style={{
-                        background: w.startsWith("🔴") ? "#fef2f2" : "#fffbeb",
-                        border: w.startsWith("🔴") ? "1px solid #fecaca" : "1px solid #fde68a",
-                        color: w.startsWith("🔴") ? "#991b1b" : "#92400e",
-                        padding: "10px 14px",
-                        borderRadius: "8px",
-                        fontSize: "13px",
-                        fontWeight: "700"
-                      }}
+                      className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs font-bold flex items-center gap-2"
                     >
+                      <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
                       {w}
                     </div>
                   ))}
@@ -595,14 +595,14 @@ export default function NurseDashboard({
               )}
             </div>
 
-            <div style={{ background: "#ffffff", borderRadius: "18px", border: "1px solid #e2e8f0", padding: "20px 24px" }}>
-              <h4 style={{ fontSize: "15px", fontWeight: "700", color: "#0f172a", marginBottom: "8px" }}>
+            <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-2">
+              <h4 className="text-sm font-bold text-slate-900">
                 Nursing Intake Workflow Rules
               </h4>
-              <ul style={{ paddingLeft: "18px", fontSize: "12.5px", color: "#64748b", lineHeight: 1.65, margin: 0 }}>
-                <li>Vital signs are optional — never deny or delay intake if a vitals instrument is unavailable.</li>
-                <li>Red-flag physiological warnings will automatically bump the case to <strong>🔴 Emergency</strong> priority.</li>
-                <li>Intake immediately syncs into the Doctor Clinical Workspace queue.</li>
+              <ul className="text-xs text-slate-600 space-y-1.5 list-disc pl-4 leading-relaxed">
+                <li>Vital signs are optional — never delay intake if a vitals instrument is temporarily unavailable.</li>
+                <li>Red-flag physiological warnings will automatically bump the case to Emergency priority.</li>
+                <li>Intake slips immediately sync into the Doctor Clinical Workspace queue.</li>
               </ul>
             </div>
           </div>

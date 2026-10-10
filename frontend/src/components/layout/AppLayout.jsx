@@ -4,6 +4,7 @@ import TopHeader from "./TopHeader";
 import MobileBottomNav from "./MobileBottomNav";
 import ContextPanel from "./ContextPanel";
 import GlobalSearchModal from "./GlobalSearchModal";
+import FloatingSanaAssistant from "../common/FloatingSanaAssistant";
 
 export default function AppLayout({
   children,
@@ -49,6 +50,7 @@ export default function AppLayout({
         mobileOpen={mobileSidebarOpen}
         onCloseMobile={() => setMobileSidebarOpen(false)}
         userRole={user?.role || "PATIENT"}
+        user={user}
       />
 
       {/* 2. Main Content Wrapper */}
@@ -90,7 +92,13 @@ export default function AppLayout({
         user={user}
       />
 
-      {/* 4. Global Search & Command Modal */}
+      {/* 4. Global Floating SANA Assistant (Android-inspired Floating Action) */}
+      <FloatingSanaAssistant
+        goTo={goTo}
+        currentPath={currentPath}
+      />
+
+      {/* 5. Global Search & Command Modal */}
       <GlobalSearchModal
         isOpen={searchModalOpen}
         onClose={() => setSearchModalOpen(false)}
@@ -99,3 +107,4 @@ export default function AppLayout({
     </div>
   );
 }
+

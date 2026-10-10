@@ -96,11 +96,11 @@ WELCOME_MESSAGES = {
 # Language Switch Phrases (e.g. "अब हिंदी में बात करो", "speak in odia")
 LANGUAGE_SWITCH_PATTERNS = [
     # Hindi triggers
-    (r"(?:अब\s+)?हिंदी\s+में\s+(?:बात\s+करो|बोलो|बताओ|कहो)", "hi"),
+    (r"(?:अब\s+)?हिंदी\s+में\s+(?:बात\s+करो|बात\s+कीजिए|बोलिए|बोलो|बताओ|बताइए|कहो)", "hi"),
     (r"(?:switch\s+to|speak\s+in|talk\s+in|in)\s+hindi", "hi"),
     (r"\bhindi\s+please\b", "hi"),
     # Odia triggers
-    (r"(?:ଏବେ\s+)?ଓଡ଼ିଆ(?:ରେ)?\s+(?:କୁହ|କଥା\s+ହୁଅ|କହ|କଥାବାର୍ତ୍ତା\s+କର)", "or"),
+    (r"(?:ଏବେ\s+)?ଓଡ଼ିଆ(?:ରେ)?\s+(?:କୁହ|କୁହନ୍ତୁ|କହନ୍ତୁ|କଥା\s+ହୁଅ|କଥା\s+ହୁଅନ୍ତୁ|କହ|କଥାବାର୍ତ୍ତା\s+କର|କଥାବାର୍ତ୍ତା\s+କରନ୍ତୁ)", "or"),
     (r"(?:switch\s+to|speak\s+in|talk\s+in|in)\s+odia", "or"),
     (r"\bodia\s+please\b", "or"),
     (r"\boriya\b", "or"),

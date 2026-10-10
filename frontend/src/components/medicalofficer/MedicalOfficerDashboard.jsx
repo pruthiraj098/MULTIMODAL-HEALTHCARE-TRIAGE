@@ -1,10 +1,28 @@
 // ============================================================
-// HealthTriage AI - Medical Officer Dashboard (Section 10)
+// HealthTriage AI - Medical Officer Dashboard
 // Facility Operational Oversight, Escalation Management, & Trend Surveillance
 // ============================================================
 
 import React, { useState, useEffect, useMemo } from "react";
+import {
+  ShieldAlert,
+  Activity,
+  AlertTriangle,
+  Clock,
+  FileText,
+  Users,
+  Building2,
+  TrendingUp,
+  Printer,
+  ChevronRight,
+  ArrowRight,
+  RefreshCw,
+  Flame,
+  CheckCircle2,
+} from "lucide-react";
 import { API_URL } from "../../config";
+import EmptyState from "../common/EmptyState";
+import StatusBadge from "../common/StatusBadge";
 
 export default function MedicalOfficerDashboard({
   goTo = () => {},
@@ -22,7 +40,7 @@ export default function MedicalOfficerDashboard({
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [activeTab, setActiveTab] = useState("overview"); // "overview" | "escalations" | "surveillance" | "referrals"
+  const [activeTab, setActiveTab] = useState("overview"); // "overview" | "surveillance" | "referrals"
 
   const fetchDashboard = async () => {
     setLoading(true);
@@ -55,198 +73,156 @@ export default function MedicalOfficerDashboard({
   const recentReferrals = dashboardData?.recent_referrals || [];
   const clusters = dashboardData?.cluster_trends || {};
   const anomalies = dashboardData?.anomalies || [];
-  const kpis = dashboardData?.facility_kpis || {};
 
   return (
-    <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "24px 20px" }}>
-      {/* Banner */}
-      <div
-        style={{
-          background: "linear-gradient(135deg, #0f766e 0%, #115e59 100%)",
-          color: "#ffffff",
-          borderRadius: "20px",
-          padding: "24px 30px",
-          marginBottom: "24px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: "16px",
-          boxShadow: "0 10px 25px -5px rgba(15, 118, 110, 0.3)"
-        }}
-      >
-        <div>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(255, 255, 255, 0.2)", color: "#ffffff", padding: "3px 10px", borderRadius: "12px", fontSize: "11px", fontWeight: "700", marginBottom: "6px" }}>
-            <span>🏛️</span> CLINICAL LEADERSHIP &amp; PUBLIC HEALTH
+    <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
+      {/* Top Banner */}
+      <div className="bg-white/85 backdrop-blur-2xl rounded-3xl border border-white/95 p-6 sm:p-7 shadow-[0_20px_50px_-12px_rgba(16,36,90,0.08),0_0_0_1px_rgba(83,216,245,0.12)] flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#2563FF] to-[#53D8F5] flex items-center justify-center text-white shrink-0 shadow-[0_8px_20px_rgba(37,99,255,0.3)]">
+            <Building2 className="w-6 h-6" />
           </div>
-          <h1 style={{ fontSize: "24px", fontWeight: "800", margin: "0 0 4px 0" }}>
-            Medical Officer Facility Dashboard
-          </h1>
-          <p style={{ fontSize: "13.5px", color: "#ccfbf1", margin: 0 }}>
-            Facility operational oversight, emergency escalation clearance, workload distribution, and cluster trends.
-          </p>
+          <div>
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-teal-50 text-teal-800 border border-teal-200">
+                Clinical Leadership
+              </span>
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-sky-50 text-[#2563FF] border border-sky-200">
+                Facility MOIC Desk
+              </span>
+            </div>
+            <h1 className="text-xl sm:text-2xl font-extrabold text-[#10245A] tracking-tight">
+              Medical Officer Facility Dashboard
+            </h1>
+            <p className="text-xs sm:text-sm text-[#687797]">
+              Facility operational oversight, emergency escalation clearance, workload distribution, and cluster trends.
+            </p>
+          </div>
         </div>
 
-        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-          <div style={{ background: "rgba(255, 255, 255, 0.12)", padding: "8px 16px", borderRadius: "12px", border: "1px solid rgba(255, 255, 255, 0.2)", textAlign: "right" }}>
-            <div style={{ fontSize: "14px", fontWeight: "700", color: "#ffffff" }}>
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="px-4 py-2.5 rounded-2xl bg-slate-50/80 border border-slate-200/80 text-right backdrop-blur-sm">
+            <div className="text-xs font-extrabold text-[#10245A]">
               {user?.full_name || "Medical Officer"}
             </div>
-            <div style={{ fontSize: "11px", color: "#ccfbf1" }}>Medical Officer in Charge (MOIC)</div>
+            <div className="text-[10px] text-teal-600 font-bold">Medical Officer in Charge (MOIC)</div>
           </div>
           <button
             onClick={() => goTo("/public-health")}
-            style={{
-              background: "#ffffff",
-              color: "#0f766e",
-              border: "none",
-              borderRadius: "10px",
-              padding: "10px 16px",
-              fontSize: "13px",
-              fontWeight: "700",
-              cursor: "pointer"
-            }}
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#2563FF] to-[#7657FF] hover:opacity-95 text-white font-extrabold text-xs shadow-[0_8px_20px_rgba(37,99,255,0.3)] transition flex items-center gap-1.5"
           >
-            Public Health View →
+            Public Health View <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
 
       {/* KPI Cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "14px", marginBottom: "24px" }}>
-        <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "16px 18px", borderLeft: "5px solid #dc2626" }}>
-          <div style={{ fontSize: "11.5px", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>Emergencies</div>
-          <div style={{ fontSize: "24px", fontWeight: "800", color: "#dc2626", marginTop: "2px" }}>{counts.emergency || 0}</div>
-          <div style={{ fontSize: "11px", color: "#94a3b8" }}>Immediate care</div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+        <div className="p-5 rounded-3xl bg-white/85 backdrop-blur-xl border border-white/95 border-l-4 border-l-rose-500 shadow-[0_16px_40px_-10px_rgba(16,36,90,0.06)]">
+          <span className="text-[11px] font-extrabold text-[#687797] uppercase tracking-wider">Emergencies</span>
+          <div className="text-2xl font-black text-rose-600 mt-1">{counts.emergency || 0}</div>
+          <div className="text-[11px] text-slate-400 mt-0.5 font-medium">Immediate care</div>
         </div>
-        <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "16px 18px", borderLeft: "5px solid #f59e0b" }}>
-          <div style={{ fontSize: "11.5px", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>Urgent Cases</div>
-          <div style={{ fontSize: "24px", fontWeight: "800", color: "#f59e0b", marginTop: "2px" }}>{counts.urgent || 0}</div>
-          <div style={{ fontSize: "11px", color: "#94a3b8" }}>Prioritized</div>
+        <div className="p-5 rounded-3xl bg-white/85 backdrop-blur-xl border border-white/95 border-l-4 border-l-amber-500 shadow-[0_16px_40px_-10px_rgba(16,36,90,0.06)]">
+          <span className="text-[11px] font-extrabold text-[#687797] uppercase tracking-wider">Urgent Cases</span>
+          <div className="text-2xl font-black text-amber-600 mt-1">{counts.urgent || 0}</div>
+          <div className="text-[11px] text-slate-400 mt-0.5 font-medium">Prioritized review</div>
         </div>
-        <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "16px 18px", borderLeft: "5px solid #2563eb" }}>
-          <div style={{ fontSize: "11.5px", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>Pending Review</div>
-          <div style={{ fontSize: "24px", fontWeight: "800", color: "#2563eb", marginTop: "2px" }}>{pendingReviews.length}</div>
-          <div style={{ fontSize: "11px", color: "#94a3b8" }}>Awaiting doctor seal</div>
+        <div className="p-5 rounded-3xl bg-white/85 backdrop-blur-xl border border-white/95 border-l-4 border-l-sky-500 shadow-[0_16px_40px_-10px_rgba(16,36,90,0.06)]">
+          <span className="text-[11px] font-extrabold text-[#687797] uppercase tracking-wider">Pending Review</span>
+          <div className="text-2xl font-black text-[#2563FF] mt-1">{pendingReviews.length}</div>
+          <div className="text-[11px] text-slate-400 mt-0.5 font-medium">Awaiting doctor seal</div>
         </div>
-        <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "16px 18px", borderLeft: "5px solid #7c3aed" }}>
-          <div style={{ fontSize: "11.5px", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>Referrals</div>
-          <div style={{ fontSize: "24px", fontWeight: "800", color: "#7c3aed", marginTop: "2px" }}>{dashboardData?.total_referrals || 0}</div>
-          <div style={{ fontSize: "11px", color: "#94a3b8" }}>Higher centers</div>
+        <div className="p-5 rounded-3xl bg-white/85 backdrop-blur-xl border border-white/95 border-l-4 border-l-purple-500 shadow-[0_16px_40px_-10px_rgba(16,36,90,0.06)]">
+          <span className="text-[11px] font-extrabold text-[#687797] uppercase tracking-wider">Referrals</span>
+          <div className="text-2xl font-black text-purple-600 mt-1">{dashboardData?.total_referrals || 0}</div>
+          <div className="text-[11px] text-slate-400 mt-0.5 font-medium">Higher centers</div>
         </div>
-        <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "16px 18px", borderLeft: "5px solid #10b981" }}>
-          <div style={{ fontSize: "11.5px", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>Total Intake</div>
-          <div style={{ fontSize: "24px", fontWeight: "800", color: "#10b981", marginTop: "2px" }}>{counts.all || 0}</div>
-          <div style={{ fontSize: "11px", color: "#94a3b8" }}>Facility census</div>
+        <div className="p-5 rounded-3xl bg-white/85 backdrop-blur-xl border border-white/95 border-l-4 border-l-emerald-500 shadow-[0_16px_40px_-10px_rgba(16,36,90,0.06)] col-span-2 sm:col-span-1">
+          <span className="text-[11px] font-extrabold text-[#687797] uppercase tracking-wider">Total Intake</span>
+          <div className="text-2xl font-black text-emerald-600 mt-1">{counts.all || 0}</div>
+          <div className="text-[11px] text-slate-400 mt-0.5 font-medium">Facility census</div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: "10px", borderBottom: "1px solid #e2e8f0", paddingBottom: "12px", marginBottom: "20px" }}>
+      <div className="flex flex-wrap gap-2 pb-1">
         <button
           onClick={() => setActiveTab("overview")}
-          style={{
-            background: activeTab === "overview" ? "#0f766e" : "#f1f5f9",
-            color: activeTab === "overview" ? "#ffffff" : "#475569",
-            border: "none",
-            borderRadius: "10px",
-            padding: "8px 18px",
-            fontSize: "13px",
-            fontWeight: "700",
-            cursor: "pointer"
-          }}
+          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition ${
+            activeTab === "overview"
+              ? "bg-gradient-to-r from-[#2563FF] to-[#7657FF] text-white shadow-[0_4px_15px_rgba(37,99,255,0.3)]"
+              : "bg-white/80 hover:bg-white text-slate-700 border border-white/90 backdrop-blur-sm"
+          }`}
         >
-          🏥 Facility Overview &amp; Escalations ({escalatedCases.length})
+          Facility Overview & Escalations ({escalatedCases.length})
         </button>
         <button
           onClick={() => setActiveTab("surveillance")}
-          style={{
-            background: activeTab === "surveillance" ? "#0f766e" : "#f1f5f9",
-            color: activeTab === "surveillance" ? "#ffffff" : "#475569",
-            border: "none",
-            borderRadius: "10px",
-            padding: "8px 18px",
-            fontSize: "13px",
-            fontWeight: "700",
-            cursor: "pointer"
-          }}
+          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition ${
+            activeTab === "surveillance"
+              ? "bg-gradient-to-r from-[#2563FF] to-[#7657FF] text-white shadow-[0_4px_15px_rgba(37,99,255,0.3)]"
+              : "bg-white/80 hover:bg-white text-slate-700 border border-white/90 backdrop-blur-sm"
+          }`}
         >
-          📊 Cluster Trends &amp; Anomaly Warnings
+          Cluster Trends & Surveillance
         </button>
         <button
           onClick={() => setActiveTab("referrals")}
-          style={{
-            background: activeTab === "referrals" ? "#0f766e" : "#f1f5f9",
-            color: activeTab === "referrals" ? "#ffffff" : "#475569",
-            border: "none",
-            borderRadius: "10px",
-            padding: "8px 18px",
-            fontSize: "13px",
-            fontWeight: "700",
-            cursor: "pointer"
-          }}
+          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition ${
+            activeTab === "referrals"
+              ? "bg-gradient-to-r from-[#2563FF] to-[#7657FF] text-white shadow-[0_4px_15px_rgba(37,99,255,0.3)]"
+              : "bg-white/80 hover:bg-white text-slate-700 border border-white/90 backdrop-blur-sm"
+          }`}
         >
-          📑 Outgoing Referrals ({recentReferrals.length})
+          Outgoing Referrals ({recentReferrals.length})
         </button>
       </div>
 
       {/* TAB 1: FACILITY OVERVIEW & ESCALATED CASES */}
       {activeTab === "overview" && (
-        <div style={{ display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: "24px" }}>
-          {/* Left: Critical Escalations Requiring MO Review */}
-          <div style={{ background: "#ffffff", borderRadius: "18px", border: "1px solid #e2e8f0", padding: "24px", boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
-            <h3 style={{ fontSize: "17px", fontWeight: "700", color: "#0f172a", marginBottom: "14px" }}>
-              🚨 Critical Clinical Escalations
-            </h3>
-            <p style={{ fontSize: "13px", color: "#64748b", margin: "0 0 16px 0" }}>
-              Cases escalated by community health workers or nurses requiring senior physician review.
-            </p>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Left: Critical Escalations */}
+          <div className="lg:col-span-7 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-4">
+            <div className="border-b border-slate-100 pb-3">
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <Flame className="w-5 h-5 text-rose-600" />
+                Critical Clinical Escalations
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Cases escalated by community health workers or nurses requiring senior physician review.
+              </p>
+            </div>
 
             {escalatedCases.length === 0 ? (
-              <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#166534", padding: "16px", borderRadius: "12px", fontSize: "13px" }}>
-                ✓ No active clinical escalations pending. All facility triage streams are progressing normally.
+              <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                No active clinical escalations pending. All facility triage streams are progressing normally.
               </div>
             ) : (
-              <div style={{ display: "grid", gap: "12px" }}>
+              <div className="space-y-3">
                 {escalatedCases.map((c) => (
                   <div
                     key={c.id}
-                    style={{
-                      background: "#fff5f5",
-                      border: "1px solid #fecaca",
-                      borderRadius: "12px",
-                      padding: "16px",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center"
-                    }}
+                    className="p-4 rounded-xl bg-rose-50/40 border border-rose-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                   >
                     <div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-                        <span style={{ background: "#dc2626", color: "#ffffff", padding: "2px 8px", borderRadius: "6px", fontSize: "10.5px", fontWeight: "800" }}>
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-600 text-white uppercase">
                           ESCALATED
                         </span>
-                        <strong style={{ fontSize: "14.5px", color: "#0f172a" }}>{c.patient_name || "Patient"}</strong>
-                        <span style={{ fontSize: "12px", color: "#64748b" }}>Case #{c.id}</span>
+                        <strong className="text-sm font-bold text-slate-900">{c.patient_name || "Patient"}</strong>
+                        <span className="text-xs text-slate-500">Case #{c.id}</span>
                       </div>
-                      <div style={{ fontSize: "13px", color: "#334155" }}>
+                      <div className="text-xs text-slate-700">
                         <strong>Complaint:</strong> {c.symptoms}
                       </div>
                     </div>
                     <button
                       onClick={() => goTo("/queue")}
-                      style={{
-                        background: "#dc2626",
-                        color: "#ffffff",
-                        border: "none",
-                        borderRadius: "8px",
-                        padding: "8px 14px",
-                        fontSize: "12.5px",
-                        fontWeight: "700",
-                        cursor: "pointer"
-                      }}
+                      className="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-sm transition self-start sm:self-auto shrink-0"
                     >
-                      Clear &amp; Direct →
+                      Clear & Direct →
                     </button>
                   </div>
                 ))}
@@ -255,28 +231,28 @@ export default function MedicalOfficerDashboard({
           </div>
 
           {/* Right: Operational Workload Breakdown */}
-          <div style={{ background: "#ffffff", borderRadius: "18px", border: "1px solid #e2e8f0", padding: "24px" }}>
-            <h3 style={{ fontSize: "17px", fontWeight: "700", color: "#0f172a", marginBottom: "14px" }}>
+          <div className="lg:col-span-5 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-4">
+            <h3 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">
               Facility Workload Distribution
             </h3>
-            <div style={{ display: "grid", gap: "12px" }}>
-              <div style={{ background: "#f8fafc", padding: "14px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
-                <div style={{ fontSize: "12px", color: "#64748b" }}>Active Facility Mode</div>
-                <div style={{ fontSize: "15px", fontWeight: "700", color: "#0f172a", marginTop: "2px" }}>
+            <div className="space-y-3 text-xs">
+              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
+                <span className="text-slate-500 block">Active Facility Mode</span>
+                <span className="text-sm font-bold text-slate-900 block mt-0.5">
                   Government Hospital / Sub-District Hospital
-                </div>
+                </span>
               </div>
-              <div style={{ background: "#f8fafc", padding: "14px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
-                <div style={{ fontSize: "12px", color: "#64748b" }}>Doctor Caseload Throughput</div>
-                <div style={{ fontSize: "15px", fontWeight: "700", color: "#0f172a", marginTop: "2px" }}>
+              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
+                <span className="text-slate-500 block">Doctor Caseload Throughput</span>
+                <span className="text-sm font-bold text-slate-900 block mt-0.5">
                   {counts.all > 0 ? `${Math.round(((counts.all - pendingReviews.length) / counts.all) * 100)}% Reviewed` : "100% Up to date"}
-                </div>
+                </span>
               </div>
-              <div style={{ background: "#f8fafc", padding: "14px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
-                <div style={{ fontSize: "12px", color: "#64748b" }}>Emergency Referral Routing</div>
-                <div style={{ fontSize: "15px", fontWeight: "700", color: "#0f172a", marginTop: "2px" }}>
+              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
+                <span className="text-slate-500 block">Emergency Referral Routing</span>
+                <span className="text-sm font-bold text-slate-900 block mt-0.5">
                   Designated District Trauma Care (108 Fleet Active)
-                </div>
+                </span>
               </div>
             </div>
           </div>
@@ -285,33 +261,38 @@ export default function MedicalOfficerDashboard({
 
       {/* TAB 2: CLUSTER TRENDS & SURVEILLANCE */}
       {activeTab === "surveillance" && (
-        <div style={{ background: "#ffffff", borderRadius: "18px", border: "1px solid #e2e8f0", padding: "24px" }}>
-          <h3 style={{ fontSize: "18px", fontWeight: "800", color: "#0f172a", marginBottom: "8px" }}>
-            Regional Symptom Cluster Surveillance
-          </h3>
-          <p style={{ fontSize: "13.5px", color: "#64748b", margin: "0 0 24px 0" }}>
-            De-identified statistical symptom groupings (Zero PII). Early decision support for epidemiological vigilance.
-          </p>
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-5">
+          <div>
+            <h3 className="text-base font-bold text-slate-900">
+              Regional Symptom Cluster Surveillance
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              De-identified statistical symptom groupings (Zero PII). Early decision support for epidemiological vigilance.
+            </p>
+          </div>
 
           {anomalies.length > 0 && (
-            <div style={{ background: "#fffbeb", border: "1px solid #fde68a", color: "#92400e", padding: "16px", borderRadius: "12px", marginBottom: "20px" }}>
-              <div style={{ fontWeight: "700", marginBottom: "4px" }}>⚠️ Early Decision Support Notice:</div>
-              <div style={{ fontSize: "13px" }}>
+            <div className="p-4 bg-amber-50 border border-amber-200 text-amber-900 rounded-xl text-xs space-y-1">
+              <div className="font-bold flex items-center gap-1.5">
+                <AlertTriangle className="w-4 h-4 text-amber-600" />
+                Early Decision Support Notice:
+              </div>
+              <div className="text-amber-800">
                 "Unusual health activity detected relative to historical baseline — requires public-health review." (Deterministic rule: no autonomous outbreak declaration).
               </div>
             </div>
           )}
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px" }}>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
             {Object.entries(clusters).map(([cat, count]) => (
-              <div key={cat} style={{ background: "#f8fafc", borderRadius: "14px", padding: "18px", border: "1px solid #e2e8f0", textAlign: "center" }}>
-                <div style={{ fontSize: "12.5px", color: "#64748b", fontWeight: "700", textTransform: "capitalize" }}>
+              <div key={cat} className="p-4 bg-slate-50 rounded-xl border border-slate-200/80 text-center">
+                <span className="text-xs font-bold text-slate-600 capitalize block">
                   {cat} Cases
-                </div>
-                <div style={{ fontSize: "28px", fontWeight: "800", color: "#0f766e", marginTop: "4px" }}>
+                </span>
+                <span className="text-2xl font-black text-teal-700 block mt-1">
                   {count}
-                </div>
-                <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "2px" }}>30-day census</div>
+                </span>
+                <span className="text-[11px] text-slate-400 font-medium">30-day census</span>
               </div>
             ))}
           </div>
@@ -320,39 +301,33 @@ export default function MedicalOfficerDashboard({
 
       {/* TAB 3: OUTGOING REFERRALS */}
       {activeTab === "referrals" && (
-        <div style={{ background: "#ffffff", borderRadius: "18px", border: "1px solid #e2e8f0", padding: "24px" }}>
-          <h3 style={{ fontSize: "17px", fontWeight: "700", color: "#0f172a", marginBottom: "16px" }}>
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-4">
+          <h3 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">
             Sealed Clinical Referral Notes
           </h3>
           {recentReferrals.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "40px", color: "#64748b" }}>
-              No higher-center referrals recorded for this reporting period.
-            </div>
+            <EmptyState
+              icon={FileText}
+              title="No higher-center referrals recorded"
+              description="No specialist transfers have been initiated during this reporting period."
+            />
           ) : (
-            <div style={{ display: "grid", gap: "12px" }}>
+            <div className="space-y-3">
               {recentReferrals.map((ref) => (
                 <div
                   key={ref.id}
-                  style={{
-                    background: "#f8fafc",
-                    border: "1px solid #e2e8f0",
-                    borderRadius: "12px",
-                    padding: "16px",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center"
-                  }}
+                  className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                 >
                   <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-                      <span style={{ background: "#7c3aed", color: "#ffffff", padding: "2px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: "800" }}>
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800">
                         {ref.priority || "URGENT"}
                       </span>
-                      <strong style={{ fontSize: "14.5px", color: "#0f172a" }}>
+                      <strong className="text-sm font-bold text-slate-900">
                         Specialty: {ref.specialty_required}
                       </strong>
                     </div>
-                    <div style={{ fontSize: "13px", color: "#475569" }}>
+                    <div className="text-xs text-slate-600">
                       Receiving Center: <strong>{ref.receiving_facility}</strong> • Transport: {ref.transport_mode}
                     </div>
                   </div>
@@ -360,18 +335,9 @@ export default function MedicalOfficerDashboard({
                     href={`${API_URL}/api/referrals/${ref.id}/print`}
                     target="_blank"
                     rel="noreferrer"
-                    style={{
-                      background: "#f1f5f9",
-                      border: "1px solid #cbd5e1",
-                      borderRadius: "8px",
-                      padding: "8px 14px",
-                      fontSize: "12.5px",
-                      color: "#1e293b",
-                      textDecoration: "none",
-                      fontWeight: "600"
-                    }}
+                    className="px-3.5 py-1.5 rounded-lg bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold text-xs shadow-xs transition flex items-center gap-1.5 self-start sm:self-auto"
                   >
-                    🖨️ Print Referral Slip
+                    <Printer className="w-3.5 h-3.5" /> Print Referral Slip
                   </a>
                 </div>
               ))}

@@ -1857,6 +1857,8 @@ def sana_config():
     """Returns SANA metadata, languages, and emergency info."""
     from language_service import SUPPORTED_LANGUAGES
 
+    from services.voice_service import get_tts_provider_info
+
     # Support all 6 primary Indian languages
     primary_langs = ["en", "hi", "or", "bn", "te", "ta"]
     languages = [
@@ -1867,6 +1869,7 @@ def sana_config():
             "flag": SUPPORTED_LANGUAGES[code]["flag"],
             "stt_code": SUPPORTED_LANGUAGES[code]["stt_code"],
             "tts_code": SUPPORTED_LANGUAGES[code]["tts_code"],
+            "tts_provider": get_tts_provider_info(code),
         }
         for code in primary_langs
         if code in SUPPORTED_LANGUAGES

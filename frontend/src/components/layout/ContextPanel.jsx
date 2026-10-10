@@ -22,9 +22,9 @@ export default function ContextPanel({
 }) {
   const quickPrompts = [
     "Check my symptoms",
-    "Explain latest lab report",
-    "What medicine do I take now?",
-    "Review blood pressure baseline"
+    "Explain my latest report",
+    "Review my health",
+    "Prepare questions for my doctor",
   ];
 
   const handleQuickPrompt = (prompt) => {
